@@ -1,0 +1,226 @@
+<div id = "bancosModel">
+
+<div class="page-title">
+      <div class="title_left">
+        <h3>Bancos</h3>
+      </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+	<div class="row">
+
+	  <div class="clearfix"></div>
+
+	  <div class="col-md-12 col-sm-12 col-xs-12">
+		<div class="x_panel">
+		   <div class="x_panel">
+				<div class="x_title">
+					<!--<button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bs-example-modal-lg">Large modal</button>-->
+					<button  class="btn btn-primary" data-bind="click: addBancoShow">
+					  <i class="fa fa-plus"></i> Banco
+					</button>
+					<h2>Filtros</h2>
+					<ul class="nav navbar-left panel_toolbox">
+					
+					  <li>
+						<a class="closeFilters" data-toggle="collapse" data-target="#collapseFilters" >
+							<i class="fa fa-filter"></i>
+							
+						</a>
+					  </li>
+					  <li class="">
+						
+					  </li>
+
+					</ul>
+					
+					<div class="clearfix"></div>
+				  </div>
+				  <div class="x_content collapse" id ="collapseFilters">
+
+					
+					<form id="demo-form">
+						<div class="form-group">
+							<div class="row">
+								<div class="col-md-3 col-sm-3 col-xs-12">
+									<label for="">Id</label>
+									<input type="text" id="emailSearch" class="form-control text-uppercase" data-bind="textinput: idSearch"/>
+								</div>
+								<div class="col-md-3 col-sm-3 col-xs-12">
+									<label for="">Nombres:</label>
+									<input type="text" id="nombreSearch" class="form-control text-uppercase" data-bind="textinput: nombreSearch" />
+								</div>
+								<div class="col-md-3 col-sm-3 col-xs-12">
+									<label for="">Ruta:</label>
+									<input type="text" id="apellidoSearch" class="form-control text-uppercase" data-bind="textinput: rutaSearch"  />
+								</div>
+							</div>
+							
+						</div>	
+						<div class="row pull-left">
+							<button  class="btn btn-primary" data-bind="click: loadBancosTable">
+							  <i class="fa fa-search"></i> Buscar
+							</button>	
+						</div>                      	
+					</form>
+					
+
+				  </div>
+				</div>
+		  <div class="x_content">
+
+			<table class="table table-bordered" id = "bancosTable">
+			  <thead>
+				<tr>
+				  <th>Id</th>
+				  <th>Nombres</th>
+				  <th>Head</th>
+				  <th>Ruta</th>
+				  <th>Notas</th>
+				  <th>Gestión</th>
+				</tr>
+			  </thead>
+			  <tbody data-bind="foreach:  { data: bancosList, as: 'banco' } ">
+				 <tr>
+					<td data-bind="text: banco.BANCO_ID"></td>
+					<td data-bind="text: banco.NOMBRE"></td>
+					<td data-bind="text: banco.HEAD"></td>
+					<td data-bind="text: banco.RUTA"></td>
+					<td data-bind="text: banco.NOTAS"></td>
+					<td>
+						<i class="fa fa-edit actionIcon" data-bind="click: function() {  editarBanco(banco)}" title ="Editar"></i>
+						
+					</td>
+				</tr>
+			  </tbody>
+			</table>
+
+		  </div>
+		</div>
+	  </div>
+
+	</div>
+	
+	<!-- CREAR 	BANCO-->
+	<div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true" id = "addBancoModal">
+		<div class="modal-dialog modal-lg">
+		  <div class="modal-content">
+
+		    <div class="modal-header">
+		      <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+		      </button>
+		      <h4 class="modal-title" id="myModalLabel">Agregar Banco</h4>
+		    </div>
+		    <div class="modal-body">
+		    <form id = "divGuardarUsuario" class="form-horizontal form-label-left" data-bind="submit : gaurdarBanco" >
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12">Id Banco</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Identificador Bancario" data-bind="value: formAddIdBanco" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Nombre</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Nombre Banco" data-bind="value: formAddNombreBanco" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Head</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Nombres" data-bind="value: fromAddHeadBanco" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Ruta</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Apellidos" data-bind="value: formAddRutaBanco" required>
+                </div> 
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Notas</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+				  <textarea class="form-control text-uppercase" rows="3" placeholder="Notas ... " data-bind="textInput: fromAddNotasBanco"></textarea>
+				  
+				  </textarea>
+                  
+                </div> 
+              </div>
+			  
+
+				<div class="modal-footer">
+				  <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+				  <button type="submit" class="btn btn-primary">Guardar</button>
+				</div>
+			  
+            </form>
+		    </div>
+		    
+
+		  </div>
+		</div>
+	</div>
+	<!-- CREAR USUARIO END-->
+	
+	<!-- EDIT BANCO -->
+	<div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true" id = "editBancoModal">
+		<div class="modal-dialog modal-lg">
+		  <div class="modal-content">
+
+		    <div class="modal-header">
+		      <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+		      </button>
+		      <h4 class="modal-title" id="myModalLabel">Editar Banco</h4>
+		    </div>
+		    <div class="modal-body">
+		    <form  class="form-horizontal form-label-left" data-bind="submit : guardarEditarBancos" >
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12">Id Banco</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <span type="text" class="form-control text-uppercase" placeholder="Identificador Bancario" data-bind="text:  formEditIdBanco">
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Nombre</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Nombre Banco" data-bind="value: formEditNombreBanco" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Head</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Nombres" data-bind="value: fromEditHeadBanco" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Ruta</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Apellidos" data-bind="value: formEditRutaBanco" required>
+                </div> 
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Notas</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+				  <textarea class="form-control text-uppercase" rows="3" placeholder="Notas ... " data-bind="textInput: fromEditNotasBanco"></textarea>
+				  
+				  </textarea>
+                  
+                </div> 
+              </div>
+
+				<div class="modal-footer">
+				  <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+				  <button type="submit" class="btn btn-primary">Guardar</button>
+				</div>
+			  
+            </form>
+		    </div>
+		    
+
+		  </div>
+		</div>
+	</div>
+	<!-- EDIT BANCO END-->
+	
+</div>
