@@ -13,7 +13,8 @@ define(['api','jquery','ko'], function(api,$,ko){
         	self.logout = function(){
 				
 	        	api.ajaxCom("user","logout",{},function(response){
-                
+                    
+                    
 					$resp = api.chkLogin();
 
 				},false);
@@ -68,7 +69,6 @@ define(['api','jquery','ko'], function(api,$,ko){
             	
 	        	api.ajaxCom("user","login",info,function(response){
 
-
 					if(response.data.status){
 						
 						self.user("");	
@@ -89,7 +89,6 @@ define(['api','jquery','ko'], function(api,$,ko){
         },
         initialize: function(){
 			
-			console.log("hola");
         	ko.applyBindings(new this.menusViewModel(), document.getElementById("menusWrapper"));        	
         	ko.applyBindings(new this.loginViewModel(), document.getElementById("login-box"));        	
         	

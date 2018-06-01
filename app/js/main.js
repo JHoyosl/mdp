@@ -34,7 +34,7 @@ require.config({
 		'smartWizard':'../../theme/vendors/jQuery-Smart-Wizard/js/jquery.smartWizard',
 		'theme':'../../theme/build/js/custom.min',
 		'moment_es':'https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/locale/es',
-		'validate':'https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate'
+		'validate':'https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator'
     	
     },
 	 

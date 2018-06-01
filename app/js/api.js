@@ -19,8 +19,6 @@ define([], function(){
 				method: 'POST',
 				type: 'POST', // For jQuery < 1.9
 				success : function(response){ 
-						
-					// console.log(response);
 					
 					try{
 						
@@ -183,6 +181,39 @@ define([], function(){
 			
 		},
 
+		//modal de aceptar o cancelar
+		aceptCancelMessage: function(message, title, acpetFunction, yesTitle = "Aceptar", noTitle = "Cacnelar"){
+
+			console.log("acept mees");
+			$("#aceptCancelMessage").modal('show');
+
+			$("#aceptCancelMessageButtonMessage").html(message);
+			$("#aceptCancelMessageButtonTitle").html(title);
+			$("#cancelMessageButton").html(noTitle);
+
+			$("#aceptMessageButton").html(yesTitle);
+			$("#aceptMessageButton").click(function(){
+				acpetFunction();
+				});
+ 
+		},
+		aceptMessage: function(message, title, acpetFunction, yesTitle = "Aceptar"){
+
+			console.log("acept mees");
+			$("#aceptMessageModal").modal('show');
+
+			$("#aceptMessageButtonMessage").html(message);
+			$("#aceptMessageButtonTitle").html(title);
+			
+
+			$("#buttonAceptModal").html(yesTitle);
+			$("#buttonAceptModal").click(function(){
+				acpetFunction();
+				});
+ 
+		},
+
+
 		getTarget: function(){
 
 			var a = location.href; 
@@ -213,9 +244,10 @@ define([], function(){
 		},
 		chkLogin: function(){
 
+
 			var self = this;
 			this.ajaxCom("user","chkLogin",{},function(response){
-
+				
 				if(response.data.status){
 					
 					$('#login-box').hide();
