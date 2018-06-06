@@ -68,8 +68,9 @@
                   </li>
 				  <li><a><i class="fa fa-file-excel-o"></i> Formatos <span class="fa fa-chevron-down"></span></a>
 					<ul class="nav child_menu">
-					  <li><a href="javascript:void(0)" data-bind="click: loadAddFormatoView">Listar</a></li>
-					  <li><a href="javascript:void(0)" data-bind="click: loadAddFormatoView">Agregar</a></li>
+					  <li><a href="javascript:void(0)" data-bind="click: loadListFormatoView">Listar</a></li>
+					  <li><a href="javascript:void(0)" data-bind="click: loadAddFormatoBanco">Bancos</a></li>
+					  <li><a href="javascript:void(0)" data-bind="click: loadAddFormatoContable">Contabilidad</a></li>
 					  
 					  
 					</ul>
@@ -374,7 +375,7 @@
               <p><span id = "aceptMessageButtonMessage"></span></p>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-primary" id = "buttonAceptModal">yes</button>
+              <button type="button" class="btn btn-primary" id = "buttonAceptModal" data-dismiss="modal">yes</button>
             </div>
 
           </div>

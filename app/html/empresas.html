@@ -105,15 +105,52 @@
 		    <div class="modal-body">
 		    <form id = "divGuardarUsuario" class="form-horizontal form-label-left" data-bind="submit : gaurdarEmpresa" >
               <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12">NIT</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12">NIT:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
                   <input type="text" class="form-control text-uppercase" placeholder="999999999-9" data-bind="value: formAddIdEmpresa" required>
                 </div>
               </div>
 			  <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Razón Social</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">RAZÓN SOCIAL:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="RAZÓN SOCIAL" data-bind="value: formAddNombreEmpresa" required>
+                  <input type="text" class="form-control text-uppercase" placeholder="RAZÓN SOCIAL"  data-bind="value: formAddNombreEmpresa" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">SECTOR (CIIU):</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="CIIU" maxlength="10" data-bind="value: formAddNombreEmpresa" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">DIRECCIÓN:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="DIRECCIÓN" data-bind="value: formAddNombreEmpresa" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">DEPARTAMENTO:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <select class="form-control" data-bind="options: deptoList,
+										   value: addSelectedDepto,
+										   optionsText: 'descripcion',
+										   optionsCaption: 'Seleccion...',
+										   event:{change: getCiudades }" ></select>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">CIUDAD:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <select class="form-control" data-bind="options: ciudadList,
+										   value: addSelectedCiudad,
+										   optionsText: 'descripcion',
+										   optionsCaption: 'Seleccion...'" ></select>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">TELÉFONO:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Teléfono" data-bind="value: formAddNombreEmpresa" required>
                 </div>
               </div>
 			  

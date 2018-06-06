@@ -36,8 +36,17 @@ define(['api','jquery','ko'], function(api,$,ko){
                 api.target("empresas");
                  
             };
-			self.loadAddFormatoView = function () {
-                api.target("addFormato");
+			self.loadAddFormatoBanco = function () {
+                api.target("addFormatoBanco");
+                 
+            };
+			self.loadAddFormatoContable = function () {
+                api.target("addFormatoContable");
+                 
+            };
+
+            self.loadListFormatoView = function () {
+                api.target("listarFormato");
                  
             };
 

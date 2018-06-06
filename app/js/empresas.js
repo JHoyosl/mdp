@@ -6,10 +6,14 @@ define(['api','jquery','ko','moment','validate','boostrapDatePicker','bootstrap'
 			
 			//lista de empresas
 			self.empresaList = ko.observableArray([]);
+			self.deptoList = ko.observableArray([]);
+			self.ciudadList = ko.observableArray([]);
 			
 			//add form variables
             self.formAddIdEmpresa = ko.observable("").extend({ uppercase: true });
             self.formAddNombreEmpresa = ko.observable("").extend({ uppercase: true });
+            self.addSelectedDepto = ko.observable();
+            self.addSelectedCiudad = ko.observable();
 
 			//edit form variables
             self.formEditIdEmpresa = ko.observable("").extend({ uppercase: true });
@@ -19,7 +23,21 @@ define(['api','jquery','ko','moment','validate','boostrapDatePicker','bootstrap'
             self.idSearch = ko.observable("").extend({ uppercase: true });
             self.nombreSearch = ko.observable("").extend({ uppercase: true });
 			
+			
+			
+			self.getCiudades = function(){
+				
+				api.getCiudades(self.addSelectedDepto().id, self.ciudadList);
 
+			}
+			
+			self.loadMaestros = function(){
+				
+				api.getDeptos(self.deptoList);
+				
+			}
+			
+			
 			self.guardarEditarBancos = function(){
 				
 				var info = {};
@@ -116,7 +134,7 @@ define(['api','jquery','ko','moment','validate','boostrapDatePicker','bootstrap'
         	ko.applyBindings(new this.empresasModel(), document.getElementById("empresasModel"));   
 			
 			self.loadEmpresaTable();
-			// self.loadMaestros();
+			self.loadMaestros();
 			//$('#fechaNac').datetimepicker({format: 'YYYY-MM-DD',locale: 'ru'});
         },
 	}

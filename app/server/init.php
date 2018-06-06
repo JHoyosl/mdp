@@ -34,36 +34,45 @@ class entryPoint{
 		
 		session_start();
 		
-		$mName = $this->params["methodName"];
-
-		require_once("db.php");
-		require_once("mailer.php");
-		require_once("api.php");
-		require_once($this->params["className"].".php");
-
-		$class = __NAMESPACE__ . '\\'.$this->params["className"];
 		
-		$instancia = new $class(); 
-		
-		$method = $this->params["methodName"];
+		if(isset($_SESSION["user"]) || $this->params["method"] == "logout" || $this->params["method"] == "chkLogin"
+			|| $this->params["method"] == "login"){
+			
+			$mName = $this->params["methodName"];
 
-		try{
+			require_once("db.php");
+			require_once("mailer.php");
+			require_once("api.php");
+			require_once($this->params["className"].".php");
+
+			$class = __NAMESPACE__ . '\\'.$this->params["className"];
 			
-			$exec = null;
+			$instancia = new $class(); 
 			
-			$exec = $instancia->$method($this->params["data"]);
+			$method = $this->params["methodName"];
+
+			try{
+				
+				$exec = null;
+				
+				$exec = $instancia->$method($this->params["data"]);
+				
+				$resp = array(	"data"=>$exec,
+								"exception"=>"");
+				return $resp;
+
+			}catch(Exception $e){
+				$resp = array(	"data"=>$exec,
+								"exception"=>$e->getMessage());
+				return $resp;	
+			}
+		}else{
 			
-			$resp = array(	"data"=>$exec,
-							"exception"=>"");
+			$resp = array(	"data"=>"000",
+							"exception"=>"session: error");
 			return $resp;
-
-		}catch(Exception $e){
-			$resp = array(	"data"=>$exec,
-							"exception"=>$e->getMessage());
-			return $resp;	
 		}
-		
- 
+	
 	}
 }
 

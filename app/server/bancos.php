@@ -19,12 +19,92 @@ class bancos{
 
 	}
 	
+	function getFormatMap($info){
+
+		$str = "SELECT 
+				MAP,
+				ESTRUCTURA
+				FROM 
+				formato_mapeo 
+				WHERE 
+				formato_mapeo.ID = ".$info["ID"];
+
+		$formato = $this->db->query($str);
+
+		$str = "SELECT
+				maestro_formato_recaudo.ID,
+				maestro_formato_recaudo.DESCRIPCION,
+				maestro_formato_recaudo.TYPE
+				FROM
+				maestro_formato_recaudo";
+
+		$maestro = $this->db->query($str);
+
+		$resp["message"] = array($formato[0], $maestro);
+		$resp["status"] = true;
+
+		return $resp;
+
+	}
+
+	function getFormatoListTable($info){
+
+		$whereArray = [];
+		$whereString = "";
+		
+		$whereArray[] = "formato_mapeo.FUENTE = '0' OR (formato_mapeo.BANCO = '".$_SESSION["empresa"]."' AND formato_mapeo.FUENTE = '1')";
+		
+		if($info["banco"] != ""){
+
+			$whereArray[] = "bancos.BANCO_ID LIKE UPPER('%".$info["banco"]."%')";
+
+		}
+		if($info["codigo"] != ""){
+
+			$whereArray[] = "formato_mapeo.COD_FORMATO LIKE UPPER('%".$info["codigo"]."%')";
+
+		}
+		if($info["frecuencia"] != ""){
+
+			$whereArray[] = "formato_mapeo.FRECUENCIA  = '".$info["frecuencia"]."'";
+
+		}
+		
+
+		if(count($whereArray) > 0){
+
+			$whereString = "WHERE ".implode(" AND ", $whereArray);
+
+		}
+
+		$str = "SELECT
+				formato_mapeo.ID,
+				formato_mapeo.COD_FORMATO,
+				formato_mapeo.DESCRIPCION,
+				formato_mapeo.FRECUENCIA,
+				formato_mapeo.BANCO, 
+				IF(bancos.NOMBRE IS NULL, 'CONTABLE', bancos.NOMBRE) AS NOMBRE,
+				IF(bancos.BANCO_ID IS NULL, '".$_SESSION["empresa"]."', bancos.BANCO_ID) AS BANCO_ID
+				FROM
+				formato_mapeo
+				LEFT OUTER JOIN bancos
+				ON formato_mapeo.BANCO = bancos.BANCO_ID ".$whereString;
+				
+		$query = $this->db->query($str);
+		
+		$resp["message"] = $query;
+		$resp["status"] = true;
+
+		return $resp;
+
+	}
+
 	function uniqueCodFormato($codFormato){
 
 		$str = "SELECT
-				mdp.formato_mapeo.COD_FORMATO
+				formato_mapeo.COD_FORMATO
 				FROM
-				mdp.formato_mapeo
+				formato_mapeo
 				WHERE 
 				formato_mapeo.COD_FORMATO = '".$codFormato."'";
 
@@ -44,19 +124,80 @@ class bancos{
 
 	}
 
+	function validateMap($map,$fuente){
+
+		$errorArray = array();
+		
+		if($fuente == 1){
+			
+			$str = "SELECT
+					maestro_formato_contable.ID,
+					maestro_formato_contable.DESCRIPCION,
+					maestro_formato_contable.TYPE
+					FROM
+					maestro_formato_contable
+					WHERE 
+					TYPE = '1'";
+			
+		}else{
+			
+			$str = "SELECT
+					maestro_formato_recaudo.ID,
+					maestro_formato_recaudo.DESCRIPCION,
+					maestro_formato_recaudo.TYPE
+					FROM
+					maestro_formato_recaudo
+					WHERE 
+					TYPE = '1'";
+			
+		}
+		
+		
+
+		$query = $this->db->query($str);
+
+
+		for($i = 0; $i<count($query); $i++){
+
+			if(!in_array($query[$i]["ID"],$map)){
+
+				$errorArray[] = $query[$i]["DESCRIPCION"];
+
+			}
+
+		}
+		return $errorArray;
+ 
+	}
+
 	function guardarFormatoRecaudo($info){
 
+		$chkMandatory = $this->validateMap($info["map"],$info["fuente"]);
 
+		if(count($chkMandatory) > 0){
+
+			$resp["message"] = $chkMandatory;
+			$resp["status"] = false;
+
+			return $resp;
+		}
+		
+		if($info["banco"] == ""){
+			
+			$info["banco"] = $_SESSION["empresa"];
+			
+		}
+		
 		if($this->uniqueCodFormato($info["codFormato"])){
 
 			$jsonStruct = addslashes(json_encode($info["estructura"]));
-
+			
 			$str = "INSERT INTO formato_mapeo
-					(BANCO, COD_FORMATO, DESCRIPCION, MAP, ESTRUCTURA)
+					(BANCO, COD_FORMATO, DESCRIPCION, MAP, ESTRUCTURA, FRECUENCIA, FUENTE)
 					VALUES
 					(
 					 '".$info["banco"]."','".$info["codFormato"]."','".$info["descripcion"]."',
-					 '".json_encode($info["map"])."','".$jsonStruct."'
+					 '".json_encode($info["map"])."','".$jsonStruct."','".$info["frecuencia"]."','".$info["fuente"]."'
 					)";
 			
 			$query = $this->db->query($str);
@@ -173,16 +314,37 @@ class bancos{
 		return $cell;
 
 	}
+	
+	function getFormatoListContable(){
+		
+		$str = "SELECT
+				maestro_formato_contable.ID,
+				IF(maestro_formato_contable.TYPE = 1,concat(maestro_formato_contable.DESCRIPCION,'*'),maestro_formato_contable.DESCRIPCION) as DESCRIPCION,
+				maestro_formato_contable.DESCRIPCION as ORDERED,
+				maestro_formato_contable.TYPE
+				FROM
+				maestro_formato_contable 
+				ORDER BY ORDERED ASC";
+				
+		$query = $this->db->query($str);
+		
+		$resp["message"] = $query;
+		$resp["status"] = true;
 
+		return $resp;
+
+	}
+	
 	function getFormatoList(){
 
 		$str = "SELECT
 				maestro_formato_recaudo.ID,
-				maestro_formato_recaudo.DESCRIPCION,
+				IF(maestro_formato_recaudo.TYPE = 1,concat(maestro_formato_recaudo.DESCRIPCION,'*'),maestro_formato_recaudo.DESCRIPCION) as DESCRIPCION,
+				maestro_formato_recaudo.DESCRIPCION as ORDERED,
 				maestro_formato_recaudo.TYPE
 				FROM
 				maestro_formato_recaudo 
-				ORDER BY DESCRIPCION ASC";
+				ORDER BY ORDERED ASC";
 				
 		$query = $this->db->query($str);
 		
@@ -241,9 +403,14 @@ class bancos{
 		$str = "SELECT
 				bancos.BANCO_ID,
 				bancos.NOMBRE,
-				bancos.HEAD,
-				bancos.RUTA,
-				bancos.NOTAS
+				bancos.MONEDA,
+				bancos.TELEFONO,
+				bancos.CONTACTO,
+				bancos.EMAIL,
+				bancos.PORTAL,
+				bancos.COMISION,
+				bancos.CANALES,
+				bancos.COD_COMP
 				FROM
 				bancos ".$whereString;
 				
@@ -257,17 +424,21 @@ class bancos{
 	}
 	
 	function editarBanco($info){
-
-
+		
 		$str = "UPDATE bancos 
 				SET 
 				NOMBRE = '".$info["nombre"]."',
-				HEAD = '".$info["head"]."',
-				RUTA = '".$info["ruta"]."',
-				NOTAS = '".$info["notas"]."' 
+				MONEDA = '".$info["moneda"]."',
+				TELEFONO = '".$info["telefono"]."',
+				CONTACTO = '".$info["contacto"]."',
+				EMAIL = '".$info["email"]."',
+				PORTAL = '".$info["portal"]."',
+				COMISION = '".$info["comision"]."',
+				CANALES = '".$info["canal"]."',
+				COD_COMP = '".$info["codComp"]."'
 				WHERE 
 				BANCO_ID = '".$info["bancoId"]."'";
-
+				
 		$this->db->query($str);
 
 		$send["status"] = true;
@@ -292,11 +463,11 @@ class bancos{
 		if(count($query_id) == 0){
 			
 			$str = "INSERT INTO bancos 
-					(BANCO_ID, NOMBRE, HEAD, RUTA, NOTAS)
+					(BANCO_ID, NOMBRE, MONEDA, TELEFONO, CONTACTO, EMAIL, PORTAL, COMISION, CANALES, COD_COMP)
 					VALUES
-					('".$info["bancoId"]."','".$info["nombre"]."','".$info["head"]."','".$info["ruta"]."','".$info["notas"]."')";
-			
-			$this->db->query($str);	
+					('".$info["bancoId"]."','".$info["nombre"]."','".$info["moneda"]."','".$info["telefono"]."','".$info["contacto"]."',
+					 '".$info["email"]."','".$info["portal"]."','".$info["comision"]."','".$info["canal"]."','".$info["codComp"]."')";
+
 			
 		}else{
 			

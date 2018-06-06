@@ -26,7 +26,7 @@ define([], function(){
 						
 						if(resp.data == "000"){
 							
-							this.target("");
+							this.chkLogin();
 
 						}else{
 							
@@ -150,14 +150,13 @@ define([], function(){
 		},
 		//Consume del servidor la interfaz solicitada
 		target: function(target){
-
 			
 			var data = {};
 			data.target = target;
 
 			this.ajaxCom("ui", "load", data, function(response){
 				
-				
+				console.log(response);
 				var resp = response.data;
 				var info = resp.info;
 				
@@ -212,8 +211,6 @@ define([], function(){
 				});
  
 		},
-
-
 		getTarget: function(){
 
 			var a = location.href; 
@@ -236,10 +233,57 @@ define([], function(){
 
 
 		},
-		
 		userType: function(){
 			
 			return userObj.tipo;
+			
+		},
+		getDeptos: function(deptoArray){
+			
+			this.ajaxCom("maestros","getDeptos",{},function(response){
+					
+				var tmpOpt = response.data.info;
+				var opciones = [];
+				
+				for(var i = 0; i<tmpOpt.length; i++){
+					
+					opciones.push(new function(){
+
+							this.id = tmpOpt[i]["ID"];
+							this.descripcion = tmpOpt[i]["DESCRIPCION"];
+							
+						});
+					
+				}
+				deptoArray(opciones);
+					
+			});
+		},
+		getCiudades: function(deptoId, ciudadArray){
+			
+			var info = {};
+				
+			info.deptoCode = deptoId;
+			
+			this.ajaxCom("maestros","getCiudades",info,function(response){
+				
+				console.log(response);
+				var tmpOpt = response.data.info;
+				var opciones = [];
+				
+				for(var i = 0; i<tmpOpt.length; i++){
+					
+					opciones.push(new function(){
+
+							this.id = tmpOpt[i]["ID"];
+							this.descripcion = tmpOpt[i]["DESCRIPCION"];
+							
+						});
+					
+				}
+				ciudadArray(opciones);
+					
+			});
 			
 		},
 		chkLogin: function(){

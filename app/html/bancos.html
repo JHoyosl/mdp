@@ -73,24 +73,31 @@
 			<table class="table table-bordered" id = "bancosTable">
 			  <thead>
 				<tr>
-				  <th>Id</th>
-				  <th>Nombres</th>
-				  <th>Head</th>
-				  <th>Ruta</th>
-				  <th>Notas</th>
+				  <th>Cod. Comp.</th>
+				  <th>Nit</th>
+				  <th>Nombre</th>
+				  <th>Moneda</th>
+				  <th>Teléfono</th>
+				  <th>Email</th>
+				  <th>Contacto</th>
+				  <th>Comisión</th>
+				  <th>Canales</th>
 				  <th>Gestión</th>
 				</tr>
 			  </thead>
 			  <tbody data-bind="foreach:  { data: bancosList, as: 'banco' } ">
 				 <tr>
+					<td data-bind="text: banco.COD_COMP"></td>
 					<td data-bind="text: banco.BANCO_ID"></td>
 					<td data-bind="text: banco.NOMBRE"></td>
-					<td data-bind="text: banco.HEAD"></td>
-					<td data-bind="text: banco.RUTA"></td>
-					<td data-bind="text: banco.NOTAS"></td>
+					<td data-bind="text: banco.MONEDA"></td>
+					<td data-bind="text: banco.TELEFONO"></td>
+					<td data-bind="text: banco.EMAIL"></td>
+					<td data-bind="text: banco.CONTACTO"></td>
+					<td data-bind="text: banco.COMISION"></td>
+					<td data-bind="text: banco.CANALES"></td>
 					<td>
-						<i class="fa fa-edit actionIcon" data-bind="click: function() {  editarBanco(banco)}" title ="Editar"></i>
-						
+						<i class="fa fa-edit actionIcon" data-bind="click: function() {editarBanco(banco)}" title ="Editar"></i>
 					</td>
 				</tr>
 			  </tbody>
@@ -115,40 +122,68 @@
 		    <div class="modal-body">
 		    <form id = "divGuardarUsuario" class="form-horizontal form-label-left" data-bind="submit : gaurdarBanco" >
               <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12">Id Banco</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12">Código Compensación</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="Identificador Bancario" data-bind="value: formAddIdBanco" required>
+                  <input type="text" class="form-control text-uppercase" placeholder="Código Compensación" data-bind="value: formAddCodComp" required>
                 </div>
               </div>
 			  <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Nombre</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Nombre Entidad:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="Nombre Banco" data-bind="value: formAddNombreBanco" required>
+                  <input type="text" class="form-control text-uppercase" placeholder="Nombre Entidad" data-bind="value: formAddNombreBanco" required>
                 </div>
               </div>
 			  <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Head</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12">NIT:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="Nombres" data-bind="value: fromAddHeadBanco" required>
+                  <input type="text" class="form-control text-uppercase" placeholder="NIT" data-bind="value: formAddIdBanco" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Moneda:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <select class="form-control" data-bind="options: monedaList,
+										   value: formAddMoneda,
+										   optionsCaption: 'Seleccion...'" ></select>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Teléfono:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Teléfono" data-bind="value: formAddTelefono" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Contacto:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Contacto" data-bind="value: formAddContacto" required>
                 </div>
               </div>
               <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Ruta</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Email:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="Apellidos" data-bind="value: formAddRutaBanco" required>
+                  <input type="text" class="form-control text-uppercase" placeholder="Email" data-bind="value: formAddEmail" required>
                 </div> 
               </div>
 			  <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Notas</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Portal Empresarial:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-				  <textarea class="form-control text-uppercase" rows="3" placeholder="Notas ... " data-bind="textInput: fromAddNotasBanco"></textarea>
-				  
-				  </textarea>
-                  
-                </div> 
+                  <input type="text" class="form-control text-uppercase" placeholder="URL PROTAL" data-bind="value: formAddUrlPortal" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Comisión Tx:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Costo comisión transacción" data-bind="value: formAddComisionTx" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Canales Tx:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Canales Transaccionales" data-bind="value: formAddCanalTx" required>
+                </div>
               </div>
 			  
-
 				<div class="modal-footer">
 				  <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
 				  <button type="submit" class="btn btn-primary">Guardar</button>
@@ -176,37 +211,66 @@
 		    <div class="modal-body">
 		    <form  class="form-horizontal form-label-left" data-bind="submit : guardarEditarBancos" >
               <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12">Id Banco</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12">Código Compensación:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <span type="text" class="form-control text-uppercase" placeholder="Identificador Bancario" data-bind="text:  formEditCodComp">
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12">Nit:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
                   <span type="text" class="form-control text-uppercase" placeholder="Identificador Bancario" data-bind="text:  formEditIdBanco">
                 </div>
               </div>
 			  <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Nombre</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Nombre Entidad:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
                   <input type="text" class="form-control text-uppercase" placeholder="Nombre Banco" data-bind="value: formEditNombreBanco" required>
                 </div>
               </div>
 			  <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Head</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Moneda:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="Nombres" data-bind="value: fromEditHeadBanco" required>
+                  <select class="form-control" data-bind="options: monedaList,
+										   value: formEditMoneda,
+										   optionsCaption: 'Seleccion...'" ></select>
                 </div>
               </div>
               <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Ruta</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Teléfono:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="Apellidos" data-bind="value: formEditRutaBanco" required>
+                  <input type="text" class="form-control text-uppercase" placeholder="Teléfono" data-bind="value: formEditTelefono" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Contacto:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Contacto" data-bind="value: formEditContacto" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Email:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Email" data-bind="value: formEditEmail" required>
                 </div> 
               </div>
 			  <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Notas</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Portal Empresarial:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-				  <textarea class="form-control text-uppercase" rows="3" placeholder="Notas ... " data-bind="textInput: fromEditNotasBanco"></textarea>
-				  
-				  </textarea>
-                  
-                </div> 
+                  <input type="text" class="form-control text-uppercase" placeholder="URL PROTAL" data-bind="value: formEditUrlPortal" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Comisión Tx:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Costo comisión transacción" data-bind="value: formEditComisionTx" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Canales Tx:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Canales Transaccionales" data-bind="value: formEditCanalTx" required>
+                </div>
               </div>
 
 				<div class="modal-footer">

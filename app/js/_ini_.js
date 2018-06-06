@@ -10,6 +10,10 @@ define(['api','jquery','ko'], function(api,$,ko){
 			//EXTEND KO UPPER
 	    	ko.extenders.uppercase = function(target, option) {
 				target.subscribe(function(newValue) {
+					if(newValue == null){
+						
+						newValue = "";
+					}
 				   target(newValue.toUpperCase());
 				});
 				return target;

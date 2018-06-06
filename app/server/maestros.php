@@ -11,7 +11,8 @@ class maestros{
 
 
 	}
-	 
+	
+	
 	function getCentroList($info){
 		
 		if($_SESSION["tipo"] == 1){
@@ -94,12 +95,14 @@ class maestros{
 	}
 	
 	function getDeptos($info){
-
-		$str = "SELECT 
-				master_deptos.DEPTO, 
-					master_deptos.`NAME`
-				FROM master_deptos";
-
+		
+		$str = "SELECT
+				maestro_deptos.DEPTO AS ID,
+				maestro_deptos.`NAME` AS DESCRIPCION
+				FROM
+				maestro_deptos
+				ORDER BY maestro_deptos.NAME ASC";
+				
 		$resp = $this->db->query($str);
 
 		$send["status"] = true;
@@ -107,16 +110,19 @@ class maestros{
 
 		return $send;
 		
-
 	}
 
-	function getCities($info){
+	function getCiudades($info){
 
-		$str = "SELECT master_cities.`NAME`, 
-					master_cities.CITY
-				FROM master_cities
-				WHERE master_cities.DEPTO = '".$info["deptoCode"]."'
-				ORDER BY master_cities.`NAME` ASC";
+		$str = "SELECT
+				maestro_ciudades.CITY AS ID,
+				maestro_ciudades.DEPTO,
+				maestro_ciudades.`NAME` AS DESCRIPCION
+				FROM
+				maestro_ciudades
+				WHERE
+				maestro_ciudades.DEPTO = '".$info["deptoCode"]."'
+				ORDER BY maestro_ciudades.`NAME` ASC";
 		
 
 		$resp = $this->db->query($str);
