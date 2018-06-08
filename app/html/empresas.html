@@ -71,13 +71,22 @@
 				<tr>
 				  <th>Nit</th>
 				  <th>Nombres</th>
-				  <th>Gestión</th>
+				  <th>Sector</th>
+				  <th>Dirección</th>
+				  <th>Departamento</th>
+				  <th>Ciudad</th>
+				  <th>Teléfono</th>
 				</tr>
 			  </thead>
 			  <tbody data-bind="foreach:  { data: empresaList, as: 'empresa' } ">
 				 <tr>
 					<td data-bind="text: empresa.NIT"></td>
 					<td data-bind="text: empresa.RAZON_SOCIAL"></td>
+					<td data-bind="text: empresa.SECTOR"></td>
+					<td data-bind="text: empresa.DIRECCION"></td>
+					<td data-bind="text: empresa.DEPTO_NOMBRE"></td>
+					<td data-bind="text: empresa.CIUDAD_NOMBRE"></td>
+					<td data-bind="text: empresa.TELEFONO"></td>
 					<td>
 						<i class="fa fa-edit actionIcon" data-bind="click: function() {  editarEmpresa(empresa)}" title ="Editar"></i>
 						
@@ -103,7 +112,7 @@
 		      <h4 class="modal-title" id="myModalLabel">Agregar Empresa</h4>
 		    </div>
 		    <div class="modal-body">
-		    <form id = "divGuardarUsuario" class="form-horizontal form-label-left" data-bind="submit : gaurdarEmpresa" >
+		    <form id = "divGuardarUsuario" class="form-horizontal form-label-left" data-bind="submit : guardarEmpresa" >
               <div class="form-group">
                 <label class="control-label col-md-3 col-sm-3 col-xs-12">NIT:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
@@ -119,13 +128,13 @@
 			  <div class="form-group">
                 <label class="control-label col-md-3 col-sm-3 col-xs-12 ">SECTOR (CIIU):</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="CIIU" maxlength="10" data-bind="value: formAddNombreEmpresa" required>
+                  <input type="text" class="form-control text-uppercase" placeholder="CIIU" maxlength="10" data-bind="value: formAddSector" required>
                 </div>
               </div>
 			  <div class="form-group">
                 <label class="control-label col-md-3 col-sm-3 col-xs-12 ">DIRECCIÓN:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="DIRECCIÓN" data-bind="value: formAddNombreEmpresa" required>
+                  <input type="text" class="form-control text-uppercase" placeholder="DIRECCIÓN" data-bind="value: formAddDireccion" required>
                 </div>
               </div>
 			  <div class="form-group">
@@ -135,7 +144,7 @@
 										   value: addSelectedDepto,
 										   optionsText: 'descripcion',
 										   optionsCaption: 'Seleccion...',
-										   event:{change: getCiudades }" ></select>
+										   event:{change: getAddCiudades }" ></select>
                 </div>
               </div>
 			  <div class="form-group">
@@ -150,7 +159,7 @@
 			  <div class="form-group">
                 <label class="control-label col-md-3 col-sm-3 col-xs-12 ">TELÉFONO:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="Teléfono" data-bind="value: formAddNombreEmpresa" required>
+                  <input type="text" class="form-control text-uppercase" placeholder="Teléfono" data-bind="value: formAddTelefono" required>
                 </div>
               </div>
 			  
@@ -179,7 +188,7 @@
 		      <h4 class="modal-title" id="myModalLabel">Editar Empresa</h4>
 		    </div>
 		    <div class="modal-body">
-		    <form  class="form-horizontal form-label-left" data-bind="submit : guardarEditarBancos" >
+		    <form  class="form-horizontal form-label-left" data-bind="submit : guardarEditarEmpresa" >
               <div class="form-group">
                 <label class="control-label col-md-3 col-sm-3 col-xs-12">Nit</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
@@ -190,6 +199,45 @@
                 <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Nombre</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
                   <input type="text" class="form-control text-uppercase" placeholder="Nombre Banco" data-bind="value: formEditNombreEmpresa" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">SECTOR (CIIU):</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="CIIU" maxlength="10" data-bind="value: formEditSector" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">DIRECCIÓN:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="DIRECCIÓN" data-bind="value: formEditDireccion" required>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">DEPARTAMENTO:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <select class="form-control" data-bind="options: deptoList,
+										   value: editSelectedDepto,
+										   optionsText: 'descripcion',
+										   optionsValue: 'id',
+										   optionsCaption: 'Seleccion...',
+										   event:{change: getEditCiudades }" ></select>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">CIUDAD:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <select class="form-control" data-bind="options: ciudadList,
+										   value: editSelectedCiudad,
+										   optionsText: 'descripcion',
+										   optionsValue: 'id',
+										   optionsCaption: 'Seleccion...'" ></select>
+                </div>
+              </div>
+			  <div class="form-group">
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">TELÉFONO:</label>
+                <div class="col-md-9 col-sm-9 col-xs-12">
+                  <input type="text" class="form-control text-uppercase" placeholder="Teléfono" data-bind="value: formEditTelefono" required>
                 </div>
               </div>
 			  

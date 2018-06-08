@@ -39,24 +39,22 @@
 				  </div>
 				  <div class="x_content collapse" id ="collapseFilters">
 
-					
 					<form id="demo-form">
 						<div class="form-group">
 							<div class="row">
 								<div class="col-md-3 col-sm-3 col-xs-12">
-									<label for="">Id</label>
-									<input type="text" id="emailSearch" class="form-control text-uppercase" data-bind="textinput: idSearch"/>
+									<label for="">Cod. Compensación:</label>
+									<input type="text" id="emailSearch" class="form-control text-uppercase" data-bind="textinput: CodCompSearch"/>
 								</div>
 								<div class="col-md-3 col-sm-3 col-xs-12">
-									<label for="">Nombres:</label>
+									<label for="">Nit</label>
+									<input type="text" id="apellidoSearch" class="form-control text-uppercase" data-bind="textinput: nitSearch"  />
+								</div>
+								<div class="col-md-3 col-sm-3 col-xs-12">
+									<label for="">Nombre:</label>
 									<input type="text" id="nombreSearch" class="form-control text-uppercase" data-bind="textinput: nombreSearch" />
 								</div>
-								<div class="col-md-3 col-sm-3 col-xs-12">
-									<label for="">Ruta:</label>
-									<input type="text" id="apellidoSearch" class="form-control text-uppercase" data-bind="textinput: rutaSearch"  />
-								</div>
 							</div>
-							
 						</div>	
 						<div class="row pull-left">
 							<button  class="btn btn-primary" data-bind="click: loadBancosTable">
@@ -70,32 +68,37 @@
 				</div>
 		  <div class="x_content">
 
-			<table class="table table-bordered" id = "bancosTable">
+			<table class="table table-bordered " id = "bancosTable">
 			  <thead>
 				<tr>
-				  <th>Cod. Comp.</th>
-				  <th>Nit</th>
-				  <th>Nombre</th>
-				  <th>Moneda</th>
-				  <th>Teléfono</th>
-				  <th>Email</th>
-				  <th>Contacto</th>
-				  <th>Comisión</th>
-				  <th>Canales</th>
-				  <th>Gestión</th>
+				  <th class="text-center">Cod. Comp.</th>
+				  <th class="text-center">Nit</th>
+				  <th class="text-center">Nombre</th>
+				  <th class="text-center">Moneda</th>
+				  <th class="text-center">Portal</th>
+				  <th class="text-center">Gestión</th>
 				</tr>
 			  </thead>
 			  <tbody data-bind="foreach:  { data: bancosList, as: 'banco' } ">
 				 <tr>
-					<td data-bind="text: banco.COD_COMP"></td>
-					<td data-bind="text: banco.BANCO_ID"></td>
-					<td data-bind="text: banco.NOMBRE"></td>
-					<td data-bind="text: banco.MONEDA"></td>
-					<td data-bind="text: banco.TELEFONO"></td>
-					<td data-bind="text: banco.EMAIL"></td>
-					<td data-bind="text: banco.CONTACTO"></td>
-					<td data-bind="text: banco.COMISION"></td>
-					<td data-bind="text: banco.CANALES"></td>
+					<td data-bind="text: banco.COD_COMP" class="text-center"></td>
+					<td data-bind="text: banco.BANCO_ID" class="text-center"></td>
+					<td data-bind="text: banco.NOMBRE" ></td>
+					<td data-bind="text: banco.MONEDA" class="text-center"></td>
+					<td>
+					<!-- ko if: banco.PORTAL == 1 -->   
+				    	<label class="switch">
+						  <input type="checkbox" checked disabled>
+						  <span class="slider round"></span>
+						</label>
+					 <!-- /ko -->
+					<!-- ko ifnot: banco.PORTAL == 1 -->
+				    	<label class="switch">
+						  <input type="checkbox"  disabled>
+						  <span class="slider round"></span>
+						</label>
+					<!-- /ko -->
+					</td>
 					<td>
 						<i class="fa fa-edit actionIcon" data-bind="click: function() {editarBanco(banco)}" title ="Editar"></i>
 					</td>
@@ -213,13 +216,13 @@
               <div class="form-group">
                 <label class="control-label col-md-3 col-sm-3 col-xs-12">Código Compensación:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <span type="text" class="form-control text-uppercase" placeholder="Identificador Bancario" data-bind="text:  formEditCodComp">
+                  <input type="text" class="form-control text-uppercase" placeholder="Identificador Bancario" data-bind="value: formEditCodComp">
                 </div>
               </div>
 			  <div class="form-group">
                 <label class="control-label col-md-3 col-sm-3 col-xs-12">Nit:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <span type="text" class="form-control text-uppercase" placeholder="Identificador Bancario" data-bind="text:  formEditIdBanco">
+                  <span type="text" class="form-control text-uppercase" placeholder="Identificador Bancario" data-bind="text: formEditIdBanco">
                 </div>
               </div>
 			  <div class="form-group">
@@ -237,41 +240,15 @@
                 </div>
               </div>
               <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Teléfono:</label>
+                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Portal:</label>
                 <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="Teléfono" data-bind="value: formEditTelefono" required>
+                  <label class="switch">
+					  <input type="checkbox" data-bind="checked: formEditPortal">
+					  <span class="slider round"></span>
+					</label>
                 </div>
               </div>
-			  <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Contacto:</label>
-                <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="Contacto" data-bind="value: formEditContacto" required>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Email:</label>
-                <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="Email" data-bind="value: formEditEmail" required>
-                </div> 
-              </div>
-			  <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Portal Empresarial:</label>
-                <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="URL PROTAL" data-bind="value: formEditUrlPortal" required>
-                </div>
-              </div>
-			  <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Comisión Tx:</label>
-                <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="Costo comisión transacción" data-bind="value: formEditComisionTx" required>
-                </div>
-              </div>
-			  <div class="form-group">
-                <label class="control-label col-md-3 col-sm-3 col-xs-12 ">Canales Tx:</label>
-                <div class="col-md-9 col-sm-9 col-xs-12">
-                  <input type="text" class="form-control text-uppercase" placeholder="Canales Transaccionales" data-bind="value: formEditCanalTx" required>
-                </div>
-              </div>
+			 
 
 				<div class="modal-footer">
 				  <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>

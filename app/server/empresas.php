@@ -23,7 +23,14 @@ class empresas{
 
 		$str = "UPDATE empresas
 				SET 
-				RAZON_SOCIAL = '".$info["nombre"]."'";
+				RAZON_SOCIAL = '".$info["nombre"]."',
+				SECTOR = '".$info["sector"]."',
+				DIRECCION = '".$info["direccion"]."',
+				TELEFONO = '".$info["telefono"]."',
+				CIUDAD = '".$info["ciudad"]."',
+				DEPARTAMENTO = '".$info["depto"]."'
+				WHERE 
+				NIT = '".$info["nit"]."'";
 
 		$this->db->query($str);
 
@@ -58,10 +65,21 @@ class empresas{
 		}
 
 		$str = "SELECT
+				empresas.CIUDAD AS CIUDAD_ID,
+				maestro_ciudades.`NAME` AS CIUDAD_NOMBRE,
+				empresas.DEPARTAMENTO AS DEPTO_ID,
+				maestro_deptos.`NAME` AS DEPTO_NOMBRE,
 				empresas.NIT,
-				empresas.RAZON_SOCIAL
+				empresas.RAZON_SOCIAL,
+				empresas.SECTOR,
+				empresas.DIRECCION,
+				empresas.TELEFONO
 				FROM
-				empresas ".$whereString;
+				empresas
+				LEFT OUTER JOIN maestro_ciudades
+				ON empresas.CIUDAD = maestro_ciudades.CITY 
+				LEFT OUTER JOIN maestro_deptos
+				ON empresas.DEPARTAMENTO = maestro_deptos.DEPTO ".$whereString;
 				
 		$query = $this->db->query($str);
 		
@@ -86,9 +104,10 @@ class empresas{
 		if(count($query) == 0){
 
 			$str = "INSERT INTO empresas 
-					(NIT, RAZON_SOCIAL)
+					(NIT, RAZON_SOCIAL,SECTOR,DIRECCION,DEPARTAMENTO,CIUDAD,TELEFONO)
 					VALUES 
-					('".$info["nit"]."','".$info["nombre"]."')";
+					('".$info["nit"]."','".$info["nombre"]."','".$info["sector"]."',
+				     '".$info["direccion"]."','".$info["depto"]."','".$info["ciudad"]."','".$info["telefono"]."')";
 
 			$query = $this->db->query($str);
 

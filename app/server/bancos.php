@@ -19,6 +19,8 @@ class bancos{
 
 	}
 	
+	
+	
 	function getFormatMap($info){
 
 		$str = "SELECT 
@@ -52,7 +54,7 @@ class bancos{
 		$whereArray = [];
 		$whereString = "";
 		
-		$whereArray[] = "formato_mapeo.FUENTE = '0' OR (formato_mapeo.BANCO = '".$_SESSION["empresa"]."' AND formato_mapeo.FUENTE = '1')";
+		$whereArray[] = "((formato_mapeo.BANCO = '".$_SESSION["empresa"]."' AND formato_mapeo.FUENTE = '1') OR formato_mapeo.FUENTE = '0')";
 		
 		if($info["banco"] != ""){
 
@@ -267,6 +269,7 @@ class bancos{
 				break;
 			
 			case "csv":
+			case "CSV":
 					
 					//CONVERSIÓN DE ARCHIVO A UTF-8
 					$csvFile = mb_convert_encoding(file_get_contents($_FILES[0]['tmp_name']), "UTF-8");
@@ -291,7 +294,6 @@ class bancos{
 		
 	}
 	
-
 	function fileExplode($file, $delimiter){
 
 		$rows = explode("\n",$file);
@@ -377,9 +379,9 @@ class bancos{
 		$whereArray = [];
 		$whereString = "";
 
-		if($info["bancoId"] != ""){
+		if($info["codComp"] != ""){
 
-			$whereArray[] = "bancos.BANCO_ID LIKE UPPER('%".$info["bancoId"]."%')";
+			$whereArray[] = "bancos.COD_COMP LIKE '%".$info["codComp"]."%'";
 
 		}
 		if($info["nombre"] != ""){
@@ -387,9 +389,9 @@ class bancos{
 			$whereArray[] = "bancos.NOMBRE LIKE UPPER('%".$info["nombre"]."%')";
 
 		}
-		if($info["ruta"] != ""){
+		if($info["nit"] != ""){
 
-			$whereArray[] = "bancos.RUTA UPPER('%".$info["ruta"]."%')";
+			$whereArray[] = "bancos.BANCO_ID LIKE '%".$info["nit"]."%'";
 
 		}
 		
@@ -401,16 +403,11 @@ class bancos{
 		}
 
 		$str = "SELECT
+				bancos.COD_COMP,
 				bancos.BANCO_ID,
 				bancos.NOMBRE,
 				bancos.MONEDA,
-				bancos.TELEFONO,
-				bancos.CONTACTO,
-				bancos.EMAIL,
-				bancos.PORTAL,
-				bancos.COMISION,
-				bancos.CANALES,
-				bancos.COD_COMP
+				bancos.PORTAL
 				FROM
 				bancos ".$whereString;
 				
@@ -427,18 +424,13 @@ class bancos{
 		
 		$str = "UPDATE bancos 
 				SET 
+				COD_COMP = '".$info["codComp"]."',
 				NOMBRE = '".$info["nombre"]."',
 				MONEDA = '".$info["moneda"]."',
-				TELEFONO = '".$info["telefono"]."',
-				CONTACTO = '".$info["contacto"]."',
-				EMAIL = '".$info["email"]."',
-				PORTAL = '".$info["portal"]."',
-				COMISION = '".$info["comision"]."',
-				CANALES = '".$info["canal"]."',
-				COD_COMP = '".$info["codComp"]."'
+				PORTAL = '".$info["portal"]."'
 				WHERE 
 				BANCO_ID = '".$info["bancoId"]."'";
-				
+
 		$this->db->query($str);
 
 		$send["status"] = true;

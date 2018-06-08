@@ -50,6 +50,11 @@ define(['api','jquery','ko'], function(api,$,ko){
                  
             };
 
+            self.loadVincularFormato = function () {
+                api.target("vincularFormato");
+                 
+            };
+
 
         },
 

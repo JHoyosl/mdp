@@ -26,17 +26,13 @@ define(['api','jquery','ko','moment','validate','boostrapDatePicker','bootstrap'
             self.formEditNombreBanco = ko.observable("").extend({ uppercase: true });
 			self.formEditCodComp = ko.observable("").extend({ uppercase: true });
 			self.formEditMoneda = ko.observable();
-			self.formEditTelefono = ko.observable("").extend({ uppercase: true });
-			self.formEditContacto = ko.observable("").extend({ uppercase: true });
-			self.formEditEmail = ko.observable("").extend({ uppercase: true });
-			self.formEditUrlPortal = ko.observable("").extend({ uppercase: true });
-			self.formEditComisionTx = ko.observable("").extend({ uppercase: true });
-			self.formEditCanalTx = ko.observable("").extend({ uppercase: true });
+			self.formEditPortal = ko.observable(true);
+			
 			
 			//search bancos form variables
-            self.idSearch = ko.observable("").extend({ uppercase: true });
+            self.CodCompSearch = ko.observable("").extend({ uppercase: true });
             self.nombreSearch = ko.observable("").extend({ uppercase: true });
-			self.rutaSearch = ko.observable("").extend({ uppercase: true });
+			self.nitSearch = ko.observable("").extend({ uppercase: true });
 			
 			//options variables 
 			self.monedaList = ko.observableArray(["COP","USD"]);
@@ -50,14 +46,10 @@ define(['api','jquery','ko','moment','validate','boostrapDatePicker','bootstrap'
 				info.nombre = self.formEditNombreBanco();
 				info.codComp = self.formEditCodComp();
 				info.moneda = self.formEditMoneda();
-				info.telefono = self.formEditTelefono();	
-				info.contacto = self.formEditContacto();	
-				info.email = self.formEditEmail();	
-				info.portal = self.formEditUrlPortal();	
-				info.comision = self.formEditComisionTx();	
-				info.canal = self.formEditCanalTx();		
+				info.portal = self.formEditPortal();		
 				
 				console.log(info);
+
 				api.ajaxCom("bancos","editarBanco",info,function(response){
 					
 					console.log(response);
@@ -125,17 +117,12 @@ define(['api','jquery','ko','moment','validate','boostrapDatePicker','bootstrap'
 			
 			self.editarBanco = function(banco){
 				
-				console.log(banco);
 				self.formEditIdBanco(banco.BANCO_ID);
 				self.formEditNombreBanco(banco.NOMBRE);
 				self.formEditCodComp(banco.COD_COMP);
 				self.formEditMoneda(banco.MONEDA);
-				self.formEditTelefono(banco.TELEFONO);	
-				self.formEditContacto(banco.CONTACTO);	
-				self.formEditEmail(banco.EMAIL);	
-				self.formEditUrlPortal(banco.PORTAL);	
-				self.formEditComisionTx(banco.COMISION);	
-				self.formEditCanalTx(banco.CANALES);		
+				self.formEditPortal(banco.PORTAL);	
+					
 
 				$( "#editBancoModal" ).modal( "show");
 			}
@@ -145,9 +132,9 @@ define(['api','jquery','ko','moment','validate','boostrapDatePicker','bootstrap'
 				
 				var info = {};
 
-				info.bancoId = self.idSearch();
+				info.codComp = self.CodCompSearch();
 				info.nombre = self.nombreSearch();
-				info.ruta = self.rutaSearch();
+				info.nit = self.nitSearch();
 
 				api.ajaxCom("bancos","getBancosList",info,function(response){
 					
@@ -161,7 +148,6 @@ define(['api','jquery','ko','moment','validate','boostrapDatePicker','bootstrap'
 
 					self.bancosList(table);
 					
-
 				});
 				
 			}

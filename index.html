@@ -19,10 +19,11 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.47/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/jquery-date-range-picker/0.18.0/daterangepicker.min.css" rel="stylesheet">
 	
-	<link href="theme/vendors/jQuery-Smart-Wizard/styles/smart_wizard.css" rel="stylesheet" type="text/css">
+  <link href="theme/vendors/jQuery-Smart-Wizard/styles/smart_wizard.css" rel="stylesheet" type="text/css">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/switchery/0.8.2/switchery.min.css" rel="stylesheet" type="text/css">
 	
     <!-- Custom Theme Style -->
-    <link href="theme/build/css/custom.min.css" rel="stylesheet">
+    <link href="theme/build/css/custom.css" rel="stylesheet">
     <link href="app/css/custom.css" rel="stylesheet">
   </head>
 
@@ -66,15 +67,16 @@
                       <li><a href="javascript:void(0)" data-bind="click: loadUsuarioView">Usuarios</a></li>
                     </ul>
                   </li>
-				  <li><a><i class="fa fa-file-excel-o"></i> Formatos <span class="fa fa-chevron-down"></span></a>
-					<ul class="nav child_menu">
-					  <li><a href="javascript:void(0)" data-bind="click: loadListFormatoView">Listar</a></li>
-					  <li><a href="javascript:void(0)" data-bind="click: loadAddFormatoBanco">Bancos</a></li>
-					  <li><a href="javascript:void(0)" data-bind="click: loadAddFormatoContable">Contabilidad</a></li>
-					  
-					  
-					</ul>
-				  </li>
+        				  <li><a><i class="fa fa-file-excel-o"></i> Formatos <span class="fa fa-chevron-down"></span></a>
+        					<ul class="nav child_menu">
+        					  <li><a href="javascript:void(0)" data-bind="click: loadListFormatoView">Listar</a></li>
+        					  <li><a href="javascript:void(0)" data-bind="click: loadAddFormatoBanco">Bancos</a></li>
+                    <li><a href="javascript:void(0)" data-bind="click: loadAddFormatoContable">Contabilidad</a></li>
+        					  <li><a href="javascript:void(0)" data-bind="click: loadVincularFormato">Vincular</a></li>
+        					  
+        					  
+        					</ul>
+        				  </li>
                   <li><a><i class="fa fa-table"></i> Tables <span class="fa fa-chevron-down"></span></a>
                     <ul class="nav child_menu">
                       <li><a href="tables.html">Tables</a></li>

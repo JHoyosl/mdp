@@ -33,10 +33,10 @@ class entryPoint{
 		$logs = "";
 		
 		session_start();
+		 
 		
-		
-		if(isset($_SESSION["user"]) || $this->params["method"] == "logout" || $this->params["method"] == "chkLogin"
-			|| $this->params["method"] == "login"){
+		if(isset($_SESSION["user"]) || $this->params["methodName"] == "logout" || $this->params["methodName"] == "chkLogin"
+			|| $this->params["methodName"] == "login"){
 			
 			$mName = $this->params["methodName"];
 

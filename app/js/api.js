@@ -98,8 +98,10 @@ define([], function(){
 							
 							if(resp.data == "000"){
 								
-								this.target("");
-
+								// this.target("");
+								alert("Sessión caducada");
+								location.reload();
+								
 							}else{
 								
 								handler(resp);
@@ -259,7 +261,7 @@ define([], function(){
 					
 			});
 		},
-		getCiudades: function(deptoId, ciudadArray){
+		getCiudades: function(deptoId, ciudadArray, cityObservable = false, cityId = false){ //cityObservable debe tener el valor a seleccionar
 			
 			var info = {};
 				
@@ -282,7 +284,11 @@ define([], function(){
 					
 				}
 				ciudadArray(opciones);
+				
+				if(cityObservable != false){
 					
+					cityObservable(cityId);
+				}
 			});
 			
 		},
