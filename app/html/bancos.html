@@ -85,7 +85,7 @@
 					<td data-bind="text: banco.BANCO_ID" class="text-center"></td>
 					<td data-bind="text: banco.NOMBRE" ></td>
 					<td data-bind="text: banco.MONEDA" class="text-center"></td>
-					<td>
+					<td class="text-center">
 					<!-- ko if: banco.PORTAL == 1 -->   
 				    	<label class="switch">
 						  <input type="checkbox" checked disabled>
@@ -99,7 +99,7 @@
 						</label>
 					<!-- /ko -->
 					</td>
-					<td>
+					<td class="text-center">
 						<i class="fa fa-edit actionIcon" data-bind="click: function() {editarBanco(banco)}" title ="Editar"></i>
 					</td>
 				</tr>

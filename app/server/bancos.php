@@ -19,7 +19,185 @@ class bancos{
 
 	}
 	
+	function desVincularFormato($info){
+
+		$str = "DELETE FROM formato_empresa 
+				WHERE 
+				NIT = '".$_SESSION["empresa"]."' AND 
+				FORMATO_ID = '".$info["id"]."'";
+
+		try{
+
+			$query = $this->db->query($str);
+
+		}catch(\Exception $e){
+
+			$resp["message"] = $e->getMessage();
+			$resp["status"] = false;
+
+			return $resp;
+		}
+		
+		
+		$resp["message"] = $str;
+		$resp["status"] = true;
+
+		return $resp;
+	}
+
+	function vincularFormato($info){
+
+
+		$str = "INSERT INTO formato_empresa 
+				(NIT, FORMATO_ID)
+				VALUES 
+				('".$_SESSION["empresa"]."','".$info["id"]."')";
+		
+		try{
+
+			$query = $this->db->query($str);
+
+		}catch(\Exception $e){
+
+			$resp["message"] = $e->getMessage();
+			$resp["status"] = false;
+
+			return $resp;
+		}
+		
+		
+		$resp["message"] = "";
+		$resp["status"] = true;
+
+		return $resp;
+
+
+	}
+
+	function getFormatoVinculado($info){
+
+		$str = "SELECT
+				formato_mapeo.ID,
+				formato_mapeo.COD_FORMATO,
+				formato_mapeo.DESCRIPCION,
+				formato_mapeo.FRECUENCIA,
+				formato_mapeo.BANCO, 
+				IF(bancos.NOMBRE IS NULL, 'CONTABLE', bancos.NOMBRE) AS NOMBRE,
+				IF(bancos.BANCO_ID IS NULL, '".$_SESSION["empresa"]."', bancos.BANCO_ID) AS BANCO_ID
+				FROM
+				formato_empresa
+				RIGHT JOIN formato_mapeo
+				ON formato_empresa.FORMATO_ID = formato_mapeo.ID 
+				JOIN bancos
+				ON formato_mapeo.BANCO = bancos.BANCO_ID
+				WHERE 
+				formato_mapeo.FRECUENCIA = '".$info["frecuencia"]."' AND 
+				formato_empresa.FORMATO_ID IS NOT NULL
+				ORDER BY 
+				NOMBRE, COD_FORMATO";
+
+		$query = $this->db->query($str);
+		
+		$resp["message"] = $query;
+		$resp["status"] = true;
+
+		return $resp;
+
+	}
 	
+	function getFormatoContableNoVinculado($info){
+
+
+		$str = "SELECT
+				formato_mapeo.ID,
+				formato_mapeo.BANCO,
+				formato_mapeo.COD_FORMATO,
+				formato_mapeo.DESCRIPCION,
+				formato_mapeo.FUENTE,
+				formato_mapeo.FRECUENCIA,
+				'CONTABLE' AS NOMBRE
+				FROM
+				formato_mapeo
+				LEFT OUTER JOIN formato_empresa
+				ON formato_mapeo.ID = formato_empresa.FORMATO_ID
+				WHERE
+				formato_mapeo.FUENTE = 1 AND 
+				formato_mapeo.FRECUENCIA = '".$info["frecuencia"]."' AND 
+				formato_mapeo.BANCO = '".$_SESSION["empresa"]."' AND 
+				formato_empresa.NIT IS NULL";
+
+		$query = $this->db->query($str);
+		
+		$resp["message"] = $query;
+		$resp["status"] = true;
+
+		return $resp;
+
+	}
+
+	function getFormatoContableVinculado($info){
+
+
+		$str = "SELECT
+				formato_mapeo.ID,
+				formato_mapeo.BANCO,
+				formato_mapeo.COD_FORMATO,
+				formato_mapeo.DESCRIPCION,
+				formato_mapeo.FUENTE,
+				formato_mapeo.FRECUENCIA,
+				'CONTABLE' AS NOMBRE
+				FROM
+				formato_mapeo
+				LEFT OUTER JOIN formato_empresa
+				ON formato_mapeo.ID = formato_empresa.FORMATO_ID
+				WHERE
+				formato_mapeo.FUENTE = 1 AND 
+				formato_mapeo.FRECUENCIA = '".$info["frecuencia"]."' AND 
+				formato_mapeo.BANCO = '".$_SESSION["empresa"]."' AND 
+				formato_empresa.NIT IS NOT NULL";
+
+		$query = $this->db->query($str);
+		
+		$resp["message"] = $query;
+		$resp["status"] = true;
+
+		return $resp;
+
+	}
+
+	function getFormatoExternoNoVinculado($info){
+
+
+		$str = "SELECT
+				formato_mapeo.ID,
+				formato_mapeo.COD_FORMATO,
+				formato_mapeo.DESCRIPCION,
+				formato_mapeo.FRECUENCIA,
+				formato_mapeo.BANCO, 
+				formato_mapeo.FUENTE, 
+				IF(bancos.NOMBRE IS NULL, 'CONTABLE', bancos.NOMBRE) AS NOMBRE,
+				IF(bancos.BANCO_ID IS NULL, '".$_SESSION["empresa"]."', bancos.BANCO_ID) AS BANCO_ID
+				FROM
+				formato_empresa
+				RIGHT JOIN formato_mapeo
+				ON formato_empresa.FORMATO_ID = formato_mapeo.ID 
+				JOIN bancos
+				ON formato_mapeo.BANCO = bancos.BANCO_ID
+				WHERE 
+				formato_mapeo.FRECUENCIA = '".$info["frecuencia"]."' AND 
+				formato_empresa.FORMATO_ID IS NULL
+				ORDER BY 
+				NOMBRE, COD_FORMATO";
+
+		$query = $this->db->query($str);
+		
+		$resp["message"] = $query;
+		$resp["status"] = true;
+
+		return $resp;
+
+	}
+
 	
 	function getFormatMap($info){
 
@@ -79,7 +257,7 @@ class bancos{
 
 		}
 
-		$str = "SELECT
+		$str = "SELECT DISTINCT
 				formato_mapeo.ID,
 				formato_mapeo.COD_FORMATO,
 				formato_mapeo.DESCRIPCION,
@@ -195,11 +373,11 @@ class bancos{
 			$jsonStruct = addslashes(json_encode($info["estructura"]));
 			
 			$str = "INSERT INTO formato_mapeo
-					(BANCO, COD_FORMATO, DESCRIPCION, MAP, ESTRUCTURA, FRECUENCIA, FUENTE)
+					(BANCO, COD_FORMATO, DESCRIPCION, MAP, ESTRUCTURA, FRECUENCIA, FUENTE, ENCABEZADOS)
 					VALUES
 					(
 					 '".$info["banco"]."','".$info["codFormato"]."','".$info["descripcion"]."',
-					 '".json_encode($info["map"])."','".$jsonStruct."','".$info["frecuencia"]."','".$info["fuente"]."'
+					 '".json_encode($info["map"])."','".$jsonStruct."','".$info["frecuencia"]."','".$info["fuente"]."','".$info["encabezado"]."'
 					)";
 			
 			$query = $this->db->query($str);
