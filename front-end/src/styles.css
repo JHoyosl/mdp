@@ -1,0 +1,10 @@
+.actionIcon{
+
+	padding: 5px;
+	font-size: 18px;
+	cursor: pointer;
+}
+
+.consolicado th, .consolicado td{
+	padding: 5px !important;
+}

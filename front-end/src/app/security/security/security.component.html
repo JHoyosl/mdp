@@ -1,0 +1,196 @@
+<div class="col-md-12">
+  <div class="card">
+    <div class="card-body">
+      <h3 class="card-title">Seguridad</h3>
+      <h6 class="card-subtitle">Gestion de Seguridad</h6>
+      <ngb-tabset #tabSet >
+        <ngb-tab title="Usuario - Rol" id="usaurioRol" >
+          <ng-template ngbTabContent>
+            <div class="row">
+              <div class="col-md-4 col-xs-12">
+                <div class="card">
+                  <div class="card-body">
+                      <h4 class="card-title">Seleccion Usuario</h4>
+                      <input type="text" [(ngModel)]="searchUser" (ngModelChange)="listarUsuarios($event)">
+                  </div>
+                  <div class="card" >
+                    <ul class="list-group list-group-flush">
+
+                      <li class="list-group-item" *ngFor="let user of userSearchArray">
+                        <div class="form-check">
+                          <input class="form-check-input" 
+                            type="radio" 
+                            name="userRadio" 
+                            id="rol{{user.id}}" 
+                            (change)="chooseUser(user)"
+                            [value]="user.id">
+                          <label class="form-check-label" for="user{{user.id}}">
+                            {{ user.email }}
+                          </label>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PERMISSIONS -->
+              <div class="col-md-8 col-xs-12">
+                <div class="card">
+                  <div class="card-body">
+                    <button class="btn btn-outline-primary" style="border: 1px solid #ccc; float:right;"
+                    (click)="open(addPemissionForm)">
+                      <i class="fa fa-plus"></i></button>
+                      <h4 class="card-title">Listado Permisos</h4>
+                  </div>
+                  <div class="row">
+                    <div class="col-6" *ngFor="let role of rolesList">
+                      <div class="card" >
+                        <ul class="list-group list-group-flush">
+                          <li class="list-group-item">
+                            <div class="form-check">
+                              <input 
+                                [checked] = role.selected
+                                class="form-check-input" type="checkbox" 
+                                value="" id="role{{role.id}}"
+                                (change)="chooseUserRol(role)">
+                              <label class="form-check-label" for="role{{role.id}}">
+                              {{ role.name }}
+                              </label>
+                            </div>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                    
+
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </ngb-tab>
+      
+        <ngb-tab title="Rol - Permiso" id="rolPermiso" >
+          <ng-template ngbTabContent>
+            <div class="row">
+              <div class="col-md-4 col-xs-12">
+                <div class="card">
+                  <div class="card-body">
+                    <button class="btn btn-outline-primary" style="border: 1px solid #ccc; float:right;"
+                    (click)="open(addRolForm)">
+                      <i class="fa fa-plus"></i></button>
+                      <h4 class="card-title">Listado Roles</h4>
+                  </div>
+                  <div class="card" >
+                    <ul class="list-group list-group-flush">
+
+                      <li class="list-group-item" *ngFor="let rol of roles">
+                        <div class="form-check">
+                          <input class="form-check-input" 
+                            type="radio" 
+                            name="roles" 
+                            id="rol{{rol.id}}" 
+                            (change)="chooseRol(rol)"
+                            [value]="rol.id">
+                          <label class="form-check-label" for="rol{{rol.id}}">
+                            {{ rol.name }}
+                          </label>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PERMISSIONS -->
+              <div class="col-md-8 col-xs-12">
+                <div class="card">
+                  <div class="card-body">
+                    <button class="btn btn-outline-primary" style="border: 1px solid #ccc; float:right;"
+                    (click)="open(addPemissionForm)">
+                      <i class="fa fa-plus"></i></button>
+                      <h4 class="card-title">Listado Permisos</h4>
+                  </div>
+                  <div class="row">
+                    <div class="col-6" *ngFor="let permission of permissions">
+                      <div class="card" >
+                        <ul class="list-group list-group-flush">
+                          <li class="list-group-item">
+                            <div class="form-check">
+                              <input 
+                                [checked] = permission.selected
+                                class="form-check-input" type="checkbox" 
+                                value="" id="permission{{permission.id}}"
+                                (change)="choosePermission(permission)">
+                              <label class="form-check-label" for="permission{{permission.id}}">
+                              {{ permission.name }}
+                              </label>
+                            </div>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                    
+
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </ngb-tab>
+      </ngb-tabset>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ADD ROL-->
+<ng-template #addRolForm let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Crear Rol</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form>
+      <div class="form-group">
+        <label for="newRolName">Nombre del rol</label>
+        <div class="input-group">
+          <input id="newRolName" class="form-control" placeholder="Administrador" 
+            [(ngModel)]="newRolName"
+            name="newRolName">
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-dark" (click)="saveNewRol()">Save</button>
+  </div>
+</ng-template>
+
+<!-- Modal ADD PERMISSION -->
+<ng-template #addPemissionForm let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Crear Permiso</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form>
+      <div class="form-group">
+        <label for="newPermisionName">Nombre del Permiso</label>
+        <div class="input-group">
+          <input id="newPermisionName" class="form-control" placeholder="Editar Usuario" 
+            [(ngModel)]="newPermisionName"
+            name="newPermisionName">
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-dark" (click)="saveNewPermission()">Save</button>
+  </div>
+</ng-template>
+

@@ -1,0 +1,453 @@
+
+
+<div class="row">
+  <!-- <button (click)="onClick( tabset)">name</button> -->
+  
+<div class="col-md-12">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Conciliaciones</h3>
+            <h6 class="card-subtitle">Gestion de Conciliaciones</h6>
+            <ngb-tabset #tabSet >
+              
+              <ngb-tab title="Listado" id="List" >
+                <ng-template ngbTabContent>
+                    <!-- LISTADO DE PROCESOS -->
+                    <div class="row">
+                      <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Listado Tipo de Transacciones</h4>
+                                <h6 class="card-subtitle">Tipo de Transacciones Creadas</h6>
+                            </div>
+                            <div class="table-responsive m-t-20">
+                                <table class="table table-bordered table-responsive-md  ">
+                                    <thead class ="bg-info text-white border border-info">
+                                        <tr>
+                                            <th scope="col">#</th>
+                                            <th scope="col">Creado Por</th>
+                                            <th scope="col">Creado</th>
+                                            <th scope="col">Cerrado Por</th>
+                                            <th scope="col">Cerrado</th>
+                                            <th scope="col">Estado</th>
+                                            <th scope="col"></th>
+                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody >
+                                        <tr *ngFor="let process of procesList; let i=index">
+                                            <th scope="row">{{process.id}}</th>
+                                            <td>{{ process.users_create.email }}</td>
+                                            <td class="text-center">{{ process.fecha_ini }}</td>
+                                            <td>{{ process.users_close==null?'':process.users_close.email }}</td>
+                                            <td class="text-center">{{ process.fecha_end }}</td>
+                                            <td class="text-center">{{ process.status=="CLOSE"?"CERRADO":"ABIERTO" }}</td>
+                                            <td class="text-center"><i (click)="viewConciliacion(process)" 
+                                                  title = "Ver" 
+                                                  class="ti-search actionIcon"></i></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                </ng-template>
+              </ngb-tab>
+
+              <ngb-tab title="Conciliar" id="conciliar" >
+                <ng-template ngbTabContent>
+                  <div class="card-body">
+                    <h3 class="card-title">Conciliaión de Cuentas</h3>
+                    <h6 class="card-subtitle">Cargue de información para conciliar cuentas</h6>
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="row">
+                          <div class="col-sm-12 col-md-6">
+                            <table class="table table-striped consolicado" style="width:100%">
+                              <tr>
+                                <th>Fecha Inicial</th>
+                                <td>
+                                  <span class = "text-right" ></span>
+                                </td>
+                                <th>Fecha FInal</th>
+                                <td>
+                                  <span class = "text-right" ></span>
+                                </td>
+                              </tr>
+                              <tr>
+                                <th>Crédito Bancos</th>
+                                <td>
+                                  <span class = "text-right" ></span>
+                                </td>
+                                <th>Crédito Bancos</th>
+                                <td>
+                                  <span class = "text-right" ></span>
+                                </td>
+                              </tr>
+                              
+                            </table>
+                          </div>
+                          <div class="col-sm-12 col-md-6">
+                              <h3 class="card-title">Información Contable</h3>
+                              <div class="custom-file">
+                                <input type="file"  class="custom-file-input" id="customFileLang" lang="en" (change)="onContableFileChange($event.target.files)">
+                                <label class="custom-file-label" for="customFileLang">Seleccionar Archivo</label>
+                              </div>
+                            </div>
+                        </div>
+                        
+                      </div>
+                    </div>
+                    <div class="card" *ngFor="let bank of conciliarBanks; let i=index">
+                      <div class="card-body" >
+                        <div class="x_panel">
+                          <div class="x_title">
+                          <h2><span>{{bank.name}}</span> <small></small></h2>
+                          </div>
+                          <div class="row">
+                            <div class="col-xs-12 col-md-4" *ngFor="let account of bank.data; let i=index">
+                              <!-- Card -->
+                              <div class="card">
+                                <div class="card-body">
+                                  <div class="x_panel tile">
+                                      <i title = "cargar" 
+                                        style="border: 1px solid #ccc; float:right"
+                                        class="ti-upload actionIcon "
+                                        (click)="chooseUploadFile(account)"></i>
+                                    <h6 class="card-subtitle">Exterena: {{account.bank_account}}</h6>
+                                    <h6 class="card-subtitle">Loca: {{account.local_account}}</h6>
+                                    
+                                  </div>
+                                  <div class="x_content">
+                                    <table class="table table-striped consolicado" style="width:100%">
+                                      <tr>
+                                        <th>
+                                        Saldo Extracto
+                                        </th>
+                                        <td>
+                                        <span class = "text-right" >
+                                          <input>
+                                          </span>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <th>
+                                        Saldo Ext. Ant.
+                                        </th>
+                                        <td>
+                                          <span class = "text-right" >{{ account.conciliarInfo.antExterno | currency}}</span>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <th>
+                                        Crédito Bancos
+                                        </th>
+                                        <td>
+                                        <span class = "text-right" >{{ account.conciliarInfo.creditExternal | currency}}</span>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <th>
+                                        Crédito Libros
+                                        </th>
+                                        <td>
+                                          <span class = "text-right" > {{account.conciliarInfo.creditLocal | currency}}</span>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <th>
+                                        Debito Bancos
+                                        </th>
+                                        <td>
+                                        <span class = "text-right" >{{ account.conciliarInfo.debitExternal | currency }}</span>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <th>
+                                        Debito Libros
+                                        </th>
+                                        <td>
+                                          <span class = "text-right" >{{ account.conciliarInfo.debitLocal | currency }}</span>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <th>
+                                        Saldo Contable
+                                        </th>
+                                        <td>
+                                          <span class = "text-right" >
+                                              <input>
+                                          </span>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <th>
+                                        Saldo Cont. Ant
+                                        </th>
+                                        <td>
+                                            <span class = "text-right" >{{ account.conciliarInfo.antLocal | currency}}</span>
+                                        </td>
+                                      </tr>
+                                    </table>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>  
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </ng-template>
+              </ngb-tab>    
+
+              <ngb-tab title="Detalle" id="detalle" [disabled]="true">
+                <ng-template ngbTabContent>
+                  <div class="card-body">
+                    <h3 class="card-title">Conciliaión de Cuentas</h3>
+                    <h6 class="card-subtitle">Estos son los valores de la conciliación</h6>
+                    <div class="card" *ngFor="let bank of banksViewIniInfo; let i=index">
+                      <div class="card-body" >
+                       
+                            <div>
+                              <div class="x_panel">
+                                <div class="x_title">
+                                <h2><span>{{bank.name}}</span> <small></small></h2>
+                                </div>
+                                <div class="row">
+                                    <!-- column -->
+                                    <div class="col-xs-12 col-md-4" *ngFor="let account of bank.data; let i=index">
+                                        <!-- Card -->
+                                        
+                                            <div class="x_panel tile">
+                                    
+                                                <h6 class="card-subtitle">Exterena: {{account.account.bank_account}}</h6>
+                                                <h6 class="card-subtitle">Loca: {{account.account.local_account}}</h6>
+                                            
+                                          </div>
+                                          <div class="x_content">
+                                            <table class="table table-striped consolicado" style="width:100%">
+                                            <tr>
+                                              <th>
+                                              Saldo Extracto
+                                              </th>
+                                              <td>
+                                              <span class = "text-right" >
+                                               {{ account.balance_externo | currency }}
+                                                </span>
+                                              </td>
+                                            </tr>
+                                            <tr>
+                                              <th>
+                                              Crédito Bancos
+                                              </th>
+                                              <td>
+                                              <span class = "text-right" >{{ account.credit_externo | currency}}</span>
+                                              </td>
+                                            </tr>
+                                            <tr>
+                                              <th>
+                                              Crédito Libros
+                                              </th>
+                                              <td>
+                                                <span class = "text-right" > {{account.credit_local | currency}}</span>
+                                              </td>
+                                            </tr>
+                                            <tr>
+                                              <th>
+                                              Debito Bancos
+                                              </th>
+                                              <td>
+                                              <span class = "text-right" >{{ account.debit_externo | currency }}</span>
+                                              </td>
+                                            </tr>
+                                            <tr>
+                                              <th>
+                                              Debito Libros
+                                              </th>
+                                              <td>
+                                                <span class = "text-right" >{{ account.debit_local | currency }}</span>
+                                              </td>
+                                            </tr>
+                                            
+                                            <tr>
+                                              <th>
+                                              Saldo Contable
+                                              </th>
+                                              <td>
+                                                <span class = "text-right" >
+                                                  {{ account.balance_local | currency }}
+                                                </span>
+                                              </td>
+                                            </tr>
+                                           
+                                            </table>
+                                          
+                                        </div>
+                                        </div>
+                                        <!-- Card -->
+                                    </div>
+                                    <!-- column -->
+                                </div>
+                                <div class="x_content">
+                                
+                                <div class="col-xs-12 cold-md-4  " *ngFor="let account of bank.data; let i=index">
+                                  
+                                
+                                </div>
+                              </div>
+                            </div>
+
+
+                      </div>
+                    </div>
+                  </div>
+                </ng-template>
+              </ngb-tab>
+
+              <ngb-tab title="Inicial" id="inicial" [disabled]="disableInicial">
+                <ng-template ngbTabContent>
+                  <!-- CARGUE INICIAL -->
+                  
+                  <div class="card" >
+                    <div class="card-body" *ngIf="isUploadFile">
+                      <h3 class="card-title">Conciliación Inicial</h3>
+                      <h6 class="card-subtitle">Seleccione el archivo para realizar la conciliación inical</h6>
+                      <div class="custom-file">
+                        <input type="file"  class="custom-file-input" id="customFileLang" lang="en" (change)="onFileChange($event.target.files)">
+                        <label class="custom-file-label" for="customFileLang">Seleccionar Archivo</label>
+                      </div>
+                    </div>
+
+                    <div class="card-body" *ngIf="!isUploadFile">
+                        <h3 class="card-title">Conciliación Inicial</h3>
+                        <h6 class="card-subtitle">Finalizar Proceso</h6>
+                        <div class="col-lg-6 mx-auto">
+                          <div class="form-group row">
+                            <label for="username" class="col-sm-3 control-label">Fecha de Cierre</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+
+                                    <input type="date" ngbDatepicker #d="ngbDatepicker" [(ngModel)]="fechaCierre"/>
+                                    
+                                    
+                                    
+                                    
+                                        
+                                </div>
+                            </div>
+                          </div>
+                          <div class="form-group row">
+                              <div class="col-sm-9">
+                                  <button 
+                                    type="button" 
+                                    (click) = "confirmConciliar()"
+                                    class="btn btn-info m-r-5 waves-effect waves-light">Confirmar Conciliación</button>
+                                  <button type="button" 
+                                    (click) = "cancelIniConciliar()"
+                                    class="btn btn-danger m-r-5 waves-effect waves-light">
+                                    Cancelar Conciliación</button>
+                              </div>
+                          </div>
+                        </div>
+                        
+                      </div>
+                  </div>
+                  <!-- CARGUE INICIAL END -->
+                  
+                  <!-- CONCILIACIÓN INICIAL *ngFor="let item of externalIniArray"-->
+                  
+                  <div class="card" *ngIf="hasIniDisplay">
+                    <div class="card-body">
+                      <h3 class="card-title">Conciliaión de Cuentas</h3>
+                      <h6 class="card-subtitle">Estos son los valores de la conciliación inicial</h6>
+                      <div class="card" *ngFor="let bank of banksIniInfo; let i=index">
+                        <h3 class="card-title">Conciliaión de Cuentas</h3>
+                        <div class="card-body" >
+                            <h2><span>{{bank.name}}</span> <small></small></h2>
+                          <div class = "row" >
+                              <div class="card-columns">
+                                <div class="card" *ngFor="let account of bank.data; let i=index">
+                                  <div class="card-body">
+                                    <div class="x_panel tile">
+                                      <h6 class="card-subtitle">Exterena: {{account.external_account}}</h6>
+                                      <h6 class="card-subtitle">Loca: {{account.local_account}}</h6>
+                                      <div class="x_content">
+                                        <table class="table table-striped consolicado" style="width:100%">
+                                          <tr><th>Saldo Extracto</th>
+                                            <td>
+                                              <span class = "text-right" >
+                                                <input type="number" 
+                                                  [(ngModel)]="account.saldoExtracto"
+                                                  placeholder="0.00"
+                                                  (change)='calcTotal(account)'>
+                                              </span>
+                                            </td>
+                                          </tr>
+                                          <tr><th>Crédito Bancos</th>
+                                            <td>
+                                              <span class = "text-right" >{{(account.creditExternal==null?0:account.creditExternal) | currency}}</span>
+                                            </td>
+                                          </tr>
+                                          <tr><th>Crédito Libros</th>
+                                            <td>
+                                              <span class = "text-right" > {{(account.creditLocal==null?0:account.creditLocal) | currency}}</span>
+                                            </td>
+                                          </tr>
+                                          <tr><th>Debito Bancos</th>
+                                            <td>
+                                              <span class = "text-right" >{{(account.debitExternal==null?0:account.debitExternal) | currency }}</span>
+                                            </td>
+                                          </tr>
+                                          <tr><th>Debito Libros</th>
+                                            <td>
+                                              <span class = "text-right" >{{(account.debitLocal==null?0:account.debitLocal) | currency }}</span>
+                                            </td>
+                                          </tr>
+                                          <tr><th>Total</th>
+                                            <td>
+                                              <span class = "text-right" >{{(account.total==null?0:account.total) | currency }}</span>
+                                            </td>
+                                          </tr>
+                                          <tr><th>Saldo Contable</th>
+                                            <td>
+                                              <span class = "text-right" >
+                                                 <input type="number" 
+                                                  [(ngModel)]="account.saldoContable"
+                                                  placeholder="0.00"
+                                                  (change)='calcTotal(account)'></span>
+                                            </td>
+                                          </tr>
+                                          <tr><th>Cuadre</th>
+                                            <td>
+                                              <span class = "text-right" >{{(account.cuadre==null?0:account.cuadre) | currency }}</span>
+                                            </td>
+                                          </tr>
+                                        </table>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>   
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- CONCILIACIÓN INICIAL END-->
+                </ng-template>
+              </ngb-tab>
+              
+            </ngb-tabset>
+      </div>
+    </div>
+    
+  </div>
+
+  <input 
+    type="file"  
+    class="custom-file-input" 
+    id="uploadAccountFile" lang="en" (change)="uploadAccountFile($event.target.files)">
+</div>

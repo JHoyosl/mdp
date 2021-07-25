@@ -1,0 +1,204 @@
+<div class="row">
+  <!-- <button (click)="onClick( tabset)">name</button> -->
+  
+<div class="col-md-12">
+  <div class="card">
+      <div class="card-body">
+          <h3 class="card-title">Conciliaciones</h3>
+          <h6 class="card-subtitle">Gestion de Conciliaciones</h6>
+          <ngb-tabset #tabSet >
+            <ngb-tab title="Listado" id="List" >
+              <ng-template ngbTabContent>
+                  <!-- LISTADO DE PROCESOS -->
+                  <div class="row">
+                    <div class="col-lg-6 mx-auto">
+                      <div class="card">
+                          <div class="card-body">
+                              <h4 class="card-title">Listado de Cuadres </h4>
+                              <h6 class="card-subtitle">Cuadres ordenados por fecha</h6>
+                          </div>
+                          <div class="table-responsive m-t-20">
+                              <table class="table table-bordered table-responsive-md  ">
+                                  <thead class ="bg-info text-white border border-info">
+                                      <tr class="text-center">
+                                          <th scope="col">Fecha</th>
+                                          <th scope="col">Estado</th>
+                                          <th scope="col"></th>
+                                          
+                                      </tr>
+                                  </thead>
+                                  <tbody >
+                                      <tr *ngFor="let item of balanceList; let i=index">
+                                          <td class="text-center">{{ item.fecha | date: 'yyyy-MM-dd' }}</td>
+                                          <td class="text-center">{{ item.status }}</td>
+                                          <td class="text-center"><i (click)="vieBalanceDetalle(item)" 
+                                                title = "Ver" 
+                                                class="ti-zoom-in actionIcon"></i></td>
+                                      </tr>
+                                  </tbody>
+                              </table>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+              </ng-template>
+            </ngb-tab>
+            <ngb-tab title="Proceso" id="Proceso" >
+              <ng-template ngbTabContent>
+                  <!-- LISTADO DE PROCESOS -->
+                  <div class="row">
+                    <div class="col-lg-12 mx-auto">
+                      <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Cuadres Operativos </h4>
+                            <h6 class="card-subtitle">Proceso de Cuadre </h6>
+                            <h6 class="card-title" *ngIf="showConvenios"><i class="ti-download actionIcon" (click)="downloadResultado()">Descarga Resultado</i></h6>
+                            
+                            <div class="col-lg-4 mx-auto">
+                              <div class="form-group row">
+                                <label  class="col-sm-3 control-label">Fecha:</label>
+                                <div class="col-sm-9 form-group">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="ti-calendar"></i>
+                                            </span>
+                                        </div>
+                                        <input 
+                                          type="date" 
+                                          class="form-control"  
+                                          placeholder=""
+                                          [(ngModel)]="balanceDate"
+                                          (change)="dateChange($event)">
+                                    </div>
+                                    
+                                </div>
+                                
+                              </div>
+                              
+                              <div class="custom-file form-group" >
+                                <input type="file"  class="custom-file-input" id="customFileLang" lang="en" (change)="onFileChange($event.target.files)">
+                                <label class="custom-file-label" for="customFileLang">Cargar Balance</label>
+                              </div>
+                            </div>
+                            <span><i class="ti-download actionIcon" (click)="downloadBalance()" *ngIf="showConvenios">Descarga Balance</i></span>
+                            <div class="row">
+
+                            </div>
+                            <div class="card" *ngIf="showConvenios">
+                                <div class="col-md-12">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <ngb-tabset type="pills">
+                                              <ngb-tab title="Convenios">
+                                                <ng-template ngbTabContent>
+                                                  <div class="card-body">
+                                                    <h4 class="card-title">Convenios</h4>
+                                                    <h6 class="card-title"><i class="ti-download actionIcon" (click)="downloadConvenio()" >Descarga Convenio</i></h6>
+                                                    <div class="col-lg-6" >
+                                                      <div class="x_content">
+                                                        <table class="table table-striped consolicado" style="width:100%; font-size: 12px;">
+                                                          <tr>
+                                                            <th>Cuenta</th>
+                                                            <th>Linea</th>
+                                                            <th>Nombre</th>
+                                                            <th class="text-right">Contable</th>
+                                                            <th class="text-right">Operativo</th>
+                                                            <th class="text-right">Diferencia
+                                                          </tr>
+                                                          <tr *ngFor="let item of convenios.indices; let i=index">
+                                                            <td>{{ item.cuenta}}</td>
+                                                            <td>{{ item.linea}}</td>
+                                                            <td>{{ item.nombre}}</td>
+                                                            <td class="text-right">{{ item.contable | currency}}</td>
+                                                            <td class="text-right">{{ item.operativo | currency}}</td>
+                                                            <td class="text-right">{{ item.diferencia | currency}}</td>
+                                                          </tr>
+                                                        </table>
+                                                      </div>
+                                                      <div class="col-lg-6">
+                                                          <input type="file"  class="custom-file-input" id="customFileLang" lang="en" 
+                                                            (change)="convenioChange($event.target.files)">
+                                                          <label class="custom-file-label" for="customFileLang">Cargar Convenios</label>
+                                                        </div>
+                                                    </div>
+                                                  </div>
+                                                </ng-template>
+                                              </ngb-tab>
+                                              <ngb-tab>
+                                                <ng-template ngbTabTitle><b>Balance</b></ng-template>
+                                                <ng-template ngbTabContent>
+                                                  <!-- Row -->
+                                                  <div class="row">
+                                                      <div class="col-12 m-t-30">
+                                                          <h4 class="m-b-0">Naturaleza de Cuentas</h4>
+                                                          <p class="text-muted m-t-0 font-12">Cuentas inconsistentes por su naturaleza</p>
+                                                      </div>
+                                                      <div class="col-md-6">
+                                                          <div class="card">
+                                                              <div class="card-body">
+                                                                <h3 class="card-title">Contabilidad</h3>
+                                                                <table class="table table-striped consolicado" style="width:100%; font-size: 12px;">
+                                                                    <tr>
+                                                                      <th>Cuenta</th>
+                                                                      <th>Descripción</th>
+                                                                      <th>Naturaleza</th>
+                                                                      <th class="text-right">T. Slado</th>
+                                                                      <th class="text-right">Saldo Actual</th>
+                                                                    </tr>
+                                                                    <tr *ngFor="let item of convenios.nautralezaContable; let i=index">
+                                                                      <td>{{ item.cuenta_maestro}}</td>
+                                                                      <td>{{ item.descripcion}}</td>
+                                                                      <td>{{ item.naturaleza}}</td>
+                                                                      <td class="text-right">{{ item.tipo_saldo}}</td>
+                                                                      <td class="text-right">{{ item.saldo_actual | currency}}</td>
+                                                                    </tr>
+                                                                </table>
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                                                      <div class="col-md-6">
+                                                          <div class="card">
+                                                              <div class="card-body">
+                                                                  <h3 class="card-title">Operativo</h3>
+                                                                  <table class="table table-striped consolicado" style="width:100%; font-size: 12px;">
+                                                                      <tr>
+                                                                        <th>Cuenta</th>
+                                                                        <th>Descripción</th>
+                                                                        <th>Naturaleza</th>
+                                                                        <th class="text-right">T. Slado</th>
+                                                                        <th class="text-right">Saldo Actual</th>
+                                                                      </tr>
+                                                                      <tr *ngFor="let item of convenios.nautralezaOperativa; let i=index">
+                                                                        <td>{{ item.cuenta_maestro}}</td>
+                                                                        <td>{{ item.descripcion}}</td>
+                                                                        <td>{{ item.naturaleza}}</td>
+                                                                        <td class="text-right">{{ item.tipo_saldo}}</td>
+                                                                        <td class="text-right">{{ item.saldo_actual | currency}}</td>
+                                                                      </tr>
+                                                                  </table>
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                                  <!-- End Row -->
+                                                </ng-template>
+                                              </ngb-tab>
+                                            </ngb-tabset>
+                                    </div>
+                                  </div>
+                                </div>
+                              
+                            </div>
+                        </div>
+                          
+                      </div>
+                  </div>
+                </div>
+              </ng-template>
+            </ngb-tab>
+          </ngb-tabset>
+        </div>
+      </div>
+    </div>
+  </div>

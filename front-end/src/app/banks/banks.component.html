@@ -1,0 +1,305 @@
+
+
+<div class="row">
+  <!-- <button (click)="onClick( tabset)">name</button> -->
+  
+<div class="col-md-12">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Crear Banco</h3>
+            <h6 class="card-subtitle">Creación de Bancos para el sistema</h6>
+            <ngb-tabset #tabSet >
+              <ngb-tab title="Listado" id="List">
+                <ng-template ngbTabContent>
+                    <!-- LISTADO DE USUARIOS -->
+                  <div class="row">
+
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Listado de Bancos</h4>
+                                <h6 class="card-subtitle">Bancos Existentes</h6>
+                            </div>
+                            <div class="table-responsive m-t-20">
+                                <table class="table table-bordered table-responsive-md  ">
+                                    <thead class ="bg-info text-white border border-info">
+                                        <tr >
+                                            <th scope="col" class="text-center">Código Compensación Banco</th>
+                                            <th scope="col" class="text-center">Nombre</th>
+                                            <th scope="col" class="text-center">NIT</th>
+                                            <th scope="col" class="text-center">Detalle Moneda</th>
+                                            <th scope="col" class="text-center">Portal</th>
+                                            <th scope="col" class="text-center"></th>
+                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody >
+                                        <tr *ngFor="let bank of bankList; let i=index">
+                                            <td class="text-center">{{ bank.cod_comp }}</td>
+                                            <td>{{ bank.name }}</td>
+                                            <td>{{ bank.nit }}</td>
+                                            <td>{{ bank.currency }}</td>
+                                            <td>{{ bank.portal }}</td>
+                                            <td><i (click)="editBank(bank)" 
+                                                  title = "Editar" 
+                                                  class="ti-pencil-alt actionIcon"></i>
+                                                <i (click)="removeBank(bank)" 
+                                                  title = "Eliminar" 
+                                                  class="ti-trash actionIcon"></i></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                  </div>
+                </ng-template>
+              </ngb-tab>
+              <ngb-tab id="New" title="Agregar">
+                  <!-- FORMULARIO -->
+                <ng-template ngbTabContent>
+                  <div class="row ">
+                    
+                    <div class="col-lg-6 mx-auto">
+                      <div class="card">
+                          <div class="card-body">
+                              <h4 class="card-title">Agregar Banco</h4>
+                              <h6 class="card-subtitle">Formulario para adición de bancos</h6>
+                              <form class="form-horizontal p-t-20" (ngSubmit)="save( f ) " #f="ngForm">
+                                  <div class="form-group row">
+                                      <label for="username" class="col-sm-3 control-label">Cod Banco*</label>
+                                      <div class="col-sm-9">
+                                          <div class="input-group">
+                                              <div class="input-group-prepend">
+                                                  <span class="input-group-text">
+                                                      <i class="ti-view-list-alt"></i>
+                                                  </span>
+                                              </div>
+                                              <input type="text" 
+                                                  class="form-control"  
+                                                  placeholder="Código de Compensación"
+                                                  [(ngModel)] = "bank.cod_comp"
+                                                  name = "nit"
+                                                  id = "nit"
+                                                  required>
+                                                  
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <div class="form-group row">
+                                      <label for="email4" class="col-sm-3 control-label">Nombre*</label>
+                                      <div class="col-sm-9">
+                                          <div class="input-group">
+                                              <div class="input-group-prepend">
+                                                  <span class="input-group-text">
+                                                      <i class="ti-pencil"></i>
+                                                  </span>
+                                              </div>
+                                              <input type="text" 
+                                                  class="form-control" 
+                                                  placeholder="Nombre del Banco"
+                                                  [(ngModel)]="bank.name"
+                                                  name = "name">
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <div class="form-group row">
+                                          <label for="email4" class="col-sm-3 control-label">Nit*</label>
+                                          <div class="col-sm-9">
+                                              <div class="input-group">
+                                                  <div class="input-group-prepend">
+                                                      <span class="input-group-text">
+                                                          <i class="ti-agenda"></i>
+                                                      </span>
+                                                  </div>
+                                                  <input type="text" 
+                                                      class="form-control" 
+                                                      placeholder="Nit del banco o entidad externa"
+                                                      [(ngModel)]="bank.nit"
+                                                      name = "phone">
+                                              </div>
+                                          </div>
+                                      </div>
+                                    <div class="form-group row">
+                                        <label for="email4" class="col-sm-3 control-label">Portal*</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <fieldset class="radio">
+                                                    <label>
+                                                        <input 
+                                                        [(ngModel)]="bank.portal"
+                                                          type="radio" name="portal" value="1" checked> Si
+                                                    </label>
+                                                </fieldset>
+                                            </div>      
+                                            <div class="input-group"> 
+                                                <fieldset class="radio disabled">
+                                                    <label>
+                                                        <input [(ngModel)]="bank.portal" 
+                                                          type="radio" name="portal" value="0" > No
+                                                    </label>
+                                                </fieldset>
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                  <div class="form-group row">
+                                      <label for="web" class="col-sm-3 control-label">Detalle de Moneda*</label>
+                                      <div class="col-sm-9">
+                                          <div class="input-group">
+                                              <div class="input-group-prepend">
+                                                  <span class="input-group-text">
+                                                      <i class="ti-filter"></i>
+                                                  </span>
+                                              </div>
+                                              <select class="custom-select" 
+                                                  name="currency"
+                                                  [(ngModel)]="bank.currency">
+                                                  <option selected>Selección...</option>
+                                                  <option>COP</option>
+                                                  
+                                              </select>
+                                          </div>
+                                      </div>
+                                  </div>
+                                  
+                                  <div class="form-group row m-b-0">
+                                      <div class="offset-sm-3 col-sm-9">
+                                          <button type="submit" class="btn btn-info m-r-5 waves-effect waves-light">Crear</button>
+                                          <button type="submit" class="btn btn-danger m-r-5 waves-effect waves-light">Cancelar</button>
+                                      </div>
+                                  </div>
+                              </form>
+                          </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </ng-template>
+              </ngb-tab>
+              <ngb-tab title="Editar"  id='updateTab' [disabled]="updateDisabled">
+                  <ng-template ngbTabContent>
+                      <div class="row ">
+                          <div class="col-lg-6 mx-auto">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h4 class="card-title">Editar Banco</h4>
+                                    <h6 class="card-subtitle">Formulario para actualización de información</h6>
+                                    <form class="form-horizontal p-t-20" (ngSubmit)="update( f2 ) " #f2="ngForm">
+                                        <div class="form-group row">
+                                            <label for="username" class="col-sm-3 control-label">Cod Banco*</label>
+                                            <div class="col-sm-9">
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">
+                                                            <i class="ti-view-list-alt"></i>
+                                                        </span>
+                                                    </div>
+                                                    <input type="text" 
+                                                        class="form-control"  
+                                                        placeholder="Código de Compensación"
+                                                        [(ngModel)] = "bankUpdate.cod_comp"
+                                                        name = "nit"
+                                                        id = "nit"
+                                                        required>
+                                                        
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label for="email4" class="col-sm-3 control-label">Nombre*</label>
+                                            <div class="col-sm-9">
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">
+                                                            <i class="ti-pencil"></i>
+                                                        </span>
+                                                    </div>
+                                                    <input type="text" 
+                                                        class="form-control" 
+                                                        placeholder="Nombre del Banco"
+                                                        [(ngModel)]="bankUpdate.name"
+                                                        name = "name">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                                <label for="email4" class="col-sm-3 control-label">Nit*</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">
+                                                                <i class="ti-agenda"></i>
+                                                            </span>
+                                                        </div>
+                                                        <input type="text" 
+                                                            class="form-control" 
+                                                            placeholder="Nit del Registrado"
+                                                            [(ngModel)]="bankUpdate.nit"
+                                                            name = "phone">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="email4" class="col-sm-3 control-label">Portal*</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <fieldset class="radio">
+                                                            <label>
+                                                                <input 
+                                                                [(ngModel)]="bankUpdate.portal"
+                                                                type="radio" name="portal" value="1" checked> Si
+                                                            </label>
+                                                        </fieldset>
+                                                    </div>      
+                                                    <div class="input-group"> 
+                                                        <fieldset class="radio disabled">
+                                                            <label>
+                                                                <input [(ngModel)]="bankUpdate.portal" 
+                                                                type="radio" name="portal" value="0" > No
+                                                            </label>
+                                                        </fieldset>
+                                                        
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <div class="form-group row">
+                                            <label for="web" class="col-sm-3 control-label">Detalle de Moneda*</label>
+                                            <div class="col-sm-9">
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">
+                                                            <i class="ti-filter"></i>
+                                                        </span>
+                                                    </div>
+                                                    <select class="custom-select" 
+                                                        name="currency"
+                                                        [(ngModel)]="bankUpdate.currency">
+                                                        <option selected>Selección...</option>
+                                                        <option>COP</option>
+                                                        
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group row m-b-0">
+                                            <div class="offset-sm-3 col-sm-9">
+                                                <button type="submit" class="btn btn-info m-r-5 waves-effect waves-light">Actualizar</button>
+                                                <button type="submit" class="btn btn-danger m-r-5 waves-effect waves-light">Cancelar</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                          </div>
+    
+                      </div>
+                  </ng-template>
+                </ngb-tab>
+            </ngb-tabset>
+    </div>
+    </div>
+</div>
+</div>

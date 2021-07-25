@@ -1,0 +1,454 @@
+
+
+<div class="row">
+    <!-- <button (click)="onClick( tabset)">name</button> -->
+    
+  <div class="col-md-12">
+      <div class="card">
+          <div class="card-body">
+              <h3 class="card-title">Gestion de Cuentas</h3>
+              <h6 class="card-subtitle">Gestion de Cuentas</h6>
+              <ngb-tabset #tabSet >
+                <ngb-tab title="Listado" id="List">
+                  <ng-template ngbTabContent>
+                      <!-- LISTADO DE USUARIOS -->
+                    <div class="row">
+  
+                      <div class="col-12">
+                          <div class="card">
+                              <div class="card-body">
+                                  <h4 class="card-title">Listado de Cuentas</h4>
+                                  <h6 class="card-subtitle">Cuentas Existentes</h6>
+                              </div>
+                              <div class="table-responsive m-t-20">
+                                  <table class="table table-bordered table-responsive-md  ">
+                                      <thead class ="bg-info text-white border border-info">
+                                          <tr class="text-center">
+                                              <th scope="col" class="text-center">#</th>
+                                              <th scope="col">Banco</th>
+                                              <th scope="col">Tipo</th>
+                                              <th scope="col">Cuenta Exterena</th>
+                                              <th scope="col">Cuenta Interna</th>
+                                              <th scope="col">Moneda</th>
+                                              
+                                              <th scope="col"></th>
+                                              
+                                          </tr>
+                                      </thead>
+                                      <tbody >
+                                          <tr *ngFor="let account of accountsList; let i=index">
+                                              <th scope="row" class="text-center">{{account.id}}</th>
+                                              <td>{{ account.banks.name }}</td>
+                                              <td class="text-center">{{ account.acc_type == "checking"?"Corriente":"Ahorros" }}</td>
+                                              <td class="text-center">{{ account.bank_account }}</td>
+                                              <td class="text-center">{{ account.local_account }}</td>
+                                              <td class="text-center">{{ account.banks.currency }}</td>
+                                              <td><i (click)="editAccount(account)" 
+                                                    title = "Editar" 
+                                                    class="ti-pencil-alt actionIcon"></i>
+                                                    <i (click)="setFromatShow(account)" 
+                                                    title = "Formato" 
+                                                    class="ti-link actionIcon"></i></td>
+                                          </tr>
+                                      </tbody>
+                                  </table>
+                              </div>
+                          </div>
+                      </div>
+                      
+                    </div>
+                  </ng-template>
+                </ngb-tab>
+                <ngb-tab id="New" title="Agregar">
+                    <!-- FORMULARIO -->
+                  <ng-template ngbTabContent>
+                    <div class="row ">
+                      <div class="col-lg-6 mx-auto">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Agregar Cuenta</h4>
+                                <h6 class="card-subtitle">Formulario para adición de cuenta</h6>
+                                <form class="form-horizontal p-t-20" (ngSubmit)="storeAccount( f ) " #f="ngForm">
+                                    <div class="form-group row">
+                                        <label for="username" class="col-sm-3 control-label">Entidad</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">
+                                                        <i class="ti-home"></i>
+                                                    </span>
+                                                </div>
+                                                <select class="custom-select" 
+                                                    name="bank_id"
+                                                    [(ngModel)]="newAccount.bank_id"
+                                                    required>
+                                                    <option *ngFor="let bank of banksList"
+                                                      [value]=bank.id>{{bank.name}}</option>
+                                                    
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label for="email4" class="col-sm-3 control-label">Tipo Cuenta</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">
+                                                        <i class="ti-view-list"></i>
+                                                    </span>
+                                                </div>
+                                                <select class="custom-select" 
+                                                    name="acc_type"
+                                                    [(ngModel)]="newAccount.acc_type"
+                                                    required>
+                                                    <option value="saving">Ahorro</option>                                                    
+                                                    <option value="checking">Corriente</option>                                                    
+                                                </select>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                            <label for="email4" class="col-sm-3 control-label">Cuenta Externa</label>
+                                            <div class="col-sm-9">
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text">
+                                                            <i class="fas fa-sort-numeric-up"></i>
+                                                        </span>
+                                                    </div>
+                                                    <input type="text" 
+                                                        class="form-control" 
+                                                        placeholder="# de Cuenta Externa - Banco"
+                                                        [(ngModel)]="newAccount.bank_account"
+                                                        name = "bank_account"
+                                                        required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                      <div class="form-group row">
+                                          <label for="email4" class="col-sm-3 control-label">Cuenta Interna</label>
+                                          <div class="col-sm-9">
+                                              <div class="input-group">
+                                                  <div class="input-group-prepend">
+                                                      <span class="input-group-text">
+                                                          <i class="fas fa-sort-numeric-up"></i>
+                                                      </span>
+                                                  </div>
+                                                  <input type="text" 
+                                                      class="form-control" 
+                                                      placeholder="# de Cuenta Local - contable"
+                                                      [(ngModel)]="newAccount.local_account"
+                                                      name = "local_account"
+                                                      required>
+                                              </div>
+                                          </div>
+                                      </div>  
+                                    
+                                    
+                                    <div class="form-group row m-b-0">
+                                        <div class="offset-sm-3 col-sm-9">
+                                            <button type="submit" class="btn btn-info m-r-5 waves-effect waves-light">Crear</button>
+                                            <button type="button" class="btn btn-danger m-r-5 waves-effect waves-light">Cancelar</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                      </div>
+  
+                    </div>
+                  </ng-template>
+                </ngb-tab>
+                <ngb-tab title="Editar"  id='updateTab' [disabled]="updateDisabled">
+                    <ng-template ngbTabContent>
+                        <div class="row ">
+                            <div class="col-lg-6 mx-auto">
+                              <div class="card">
+                                  <div class="card-body">
+                                      <h4 class="card-title">Editar Banco</h4>
+                                      <h6 class="card-subtitle">Formulario para actualización de información</h6>
+                                        <form class="form-horizontal p-t-20" (ngSubmit)="update( f2 ) " #f2="ngForm">
+                                            <div class="form-group row">
+                                                <label for="username" class="col-sm-3 control-label">Entidad</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">
+                                                                <i class="ti-home"></i>
+                                                            </span>
+                                                        </div>
+                                                        <select class="custom-select" 
+                                                            name="bank_id"
+                                                            [(ngModel)]="updateAccount.bank_id"
+                                                            required>
+                                                            <option *ngFor="let bank of banksList"
+                                                              [value]=bank.id>{{bank.name}}</option>
+                                                            
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="email4" class="col-sm-3 control-label">Tipo Cuenta</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">
+                                                                <i class="ti-view-list"></i>
+                                                            </span>
+                                                        </div>
+                                                        <select class="custom-select" 
+                                                            name="acc_type"
+                                                            [(ngModel)]="updateAccount.acc_type"
+                                                            required>
+                                                            <option value="saving">Ahorro</option>                                                    
+                                                            <option value="checking">Corriente</option>                                                    
+                                                        </select>
+        
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="email4" class="col-sm-3 control-label">Cuenta Externa</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">
+                                                                <i class="fas fa-sort-numeric-up"></i>
+                                                            </span>
+                                                        </div>
+                                                        <input type="text" 
+                                                            class="form-control" 
+                                                            placeholder="# de Cuenta Externa - Banco"
+                                                            [(ngModel)]="updateAccount.bank_account"
+                                                            name = "bank_account"
+                                                            required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="email4" class="col-sm-3 control-label">Cuenta Externa</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">
+                                                                <i class="fas fa-sort-numeric-up"></i>
+                                                            </span>
+                                                        </div>
+                                                        <input type="text" 
+                                                            class="form-control" 
+                                                            placeholder="# de Cuenta Local - contable"
+                                                            [(ngModel)]="updateAccount.local_account"
+                                                            name = "local_account"
+                                                            required>
+                                                    </div>
+                                                </div>
+                                            </div>  
+                                          
+                                            <div class="form-group row m-b-0">
+                                                <div class="offset-sm-3 col-sm-9">
+                                                    <button type="submit" class="btn btn-info m-r-5 waves-effect waves-light">Actualizar</button>
+                                                    <button type="submit" class="btn btn-danger m-r-5 waves-effect waves-light">Cancelar</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                  </div>
+                              </div>
+                            </div>
+      
+                        </div>
+                    </ng-template>
+                  </ngb-tab>
+
+                <ngb-tab title="Fromato"  id='format' [disabled]="updateDisabled">
+                    <ng-template ngbTabContent>
+                        <div class="row ">
+                            <div class="col-lg-6 mx-auto">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4 class="card-title">Selección de Formato</h4>
+                                        <h6 class="card-subtitle">Formato para lectura de archivos</h6>
+                                        <form class="form-horizontal p-t-20" (ngSubmit)="update( f2 ) " #f2="ngForm">
+                                            <div class="form-group row">
+                                                <label for="username" class="col-sm-3 control-label">Entidad</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">
+                                                                <i class="ti-lock"></i>
+                                                            </span>
+                                                        </div>
+                                                        <span class="form-control">{{setFormatAccount.banks.name}}</span>
+                                                        
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="email4" class="col-sm-3 control-label">Tipo Cuenta</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">
+                                                                    <i class="ti-lock"></i>
+                                                            </span>
+                                                        </div>
+                                                        <span class="form-control">{{setFormatAccount.acc_type}}</span>
+        
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="email4" class="col-sm-3 control-label">Cuenta Externa</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">
+                                                                    <i class="ti-lock"></i>
+                                                            </span>
+                                                        </div>
+                                                        <span class="form-control">{{setFormatAccount.local_account}}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="email4" class="col-sm-3 control-label">Cuenta Externa</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text">
+                                                                    <i class="ti-lock"></i>
+                                                            </span>
+                                                        </div>
+                                                        <span class="form-control">{{setFormatAccount.bank_account}}</span>
+                                                    </div>
+                                                </div>
+                                            </div>  
+                                            
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LISTADO DE FORMATOS -->
+                        <div class="row ">
+                            <div _ngcontent-c2="" class="col-sm-12 col-md-6">
+                                <div _ngcontent-c2="" class="card">
+                                    <div _ngcontent-c2="" class="card-body">
+                                        <h4 _ngcontent-c2="" class="card-title">Formato Internos</h4>
+                                        <h6 _ngcontent-c2="" class="card-subtitle">Formatos disponibles</h6>
+                                        <form _ngcontent-c2="" class="m-t-30 ng-untouched ng-pristine ng-valid" novalidate="">
+                                            <table class="table table-bordered table-responsive-md  ">
+                                                <thead class ="bg-info text-white border border-info">
+                                                    <tr class="text-center">
+                                                        <th scope="col" class="text-center">#</th>
+                                                        <th scope="col">Descripción</th>
+                                                        <th scope="col">Vista Previa</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody >
+                                                    <tr *ngFor="let format of formatInternolist; let i=index">
+                                                        <th scope="row" class="text-center">
+                                                                <input 
+                                                                (change)="localMapSelected(format)"
+                                                                type="radio" 
+                                                                name="radioLocal" 
+                                                                [(ngModel)]="setFormatAccount.companies.map_id"
+                                                                [value]="format.id">
+                                                        </th>
+                                                        <td class="text-center">{{ format.description }}</td>
+                                                        <td class="text-center">
+                                                            <i (click)="preview(format)" 
+                                                            title = "Previsualizar" 
+                                                            class="ti-new-window actionIcon"></i>
+                                                        </td>
+                                                        
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div _ngcontent-c2="" class="col-sm-12 col-md-6">
+                                <div _ngcontent-c2="" class="card">
+                                    <div _ngcontent-c2="" class="card-body">
+                                        <h4 _ngcontent-c2="" class="card-title">{{setFormatAccount.banks.name}} </h4>
+                                        <h6 _ngcontent-c2="" class="card-subtitle">Formatos Disponibles</h6>
+                                        <form _ngcontent-c2="" class="m-t-30 ng-untouched ng-pristine ng-valid" novalidate="">
+                                            <table class="table table-bordered table-responsive-md  ">
+                                                <thead class ="bg-info text-white border border-info">
+                                                    <tr class="text-center">
+                                                        <th scope="col" class="text-center">#</th>
+                                                        <th scope="col">Descripción</th>
+                                                        <th scope="col">Vista Previa</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody >
+                                                    <tr *ngFor="let format of formatExternolist; let i=index">
+                                                        <th scope="row" class="text-center">
+                                                            <input 
+                                                                (change)="externoMapSelected()"
+                                                                type="radio" 
+                                                                name="radioExterno" 
+                                                                [(ngModel)]="setFormatAccount.map_id"
+                                                                [value]="format.id">
+                                                        </th>
+                                                        <td class="text-center">{{ format.description }}</td>
+                                                        <td class="text-center">
+                                                            <i (click)="preview(format)" 
+                                                            title = "Previsualizar" 
+                                                            class="ti-new-window actionIcon"></i>
+                                                        </td>
+                                                        
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                    </ngb-tab>
+              </ngb-tabset>
+        </div>
+      </div>
+      <ng-template #content3 let-modal class="modal-lg">
+            <div class="modal-header ">
+                <h4 class="modal-title">{{modalInfo.title}}</h4>
+                <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body card">
+                <div class="row card-body">
+                    <div class="col-sm-12">
+                        <div *ngFor="let row of previewMap.mappedFields; let i=index"
+                            class="form-group">
+                            <label class="control-label col-form-label" for="inputcom">{{previewMap.fileRows[0][i]}}</label>
+                            <div class="row">
+                            <div class="col-sm-6">
+                                <!-- <input class="form-control" id="inputcom" placeholder="Company Here" type="text"> -->
+                                <span class="form-control">{{previewMap.fileRows[1][i]}}</span>
+                            </div>
+                            <div class="col-sm-6">
+                                    <span class="form-control">{{row.value==""?'N/A':row.value}}</span>
+                            </div>
+
+                            
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" (click)="modal.close('Close click')">Close</button>
+            </div>
+        </ng-template>
+  </div>
+ 
+
+</div>

@@ -1,0 +1,567 @@
+
+
+<div class="row">
+  <!-- <button (click)="onClick( tabset)">name</button> -->
+  
+<div class="col-md-12">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Gestión de Tipos de Transacciones</h3>
+            <h6 class="card-subtitle">Descripciones de los tipos de transaccion</h6>
+            <ngb-tabset #tabSet >
+              <ngb-tab title="Externos" id="externalList" *ngIf="isAdmin">
+                <ng-template ngbTabContent>
+                    <!-- LISTADO DE TIPOS DE TX EXTERNO -->
+                  <div class="row">
+
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Listado Tipo de Transacciones</h4>
+                                <h6 class="card-subtitle">Tipo de Transacciones Creadas</h6>
+                            </div>
+                            <div class="table-responsive m-t-20">
+                                <table class="table table-bordered table-responsive-md  ">
+                                    <thead class ="bg-info text-white border border-info">
+                                        <tr >
+                                            <th scope="col">#</th>
+                                            <th scope="col">Banco</th>
+                                            <th scope="col">Descipción</th>
+                                            <th scope="col">Transacción</th>
+                                            <th scope="col">Referencia</th>
+                                            <th scope="col">Tipo</th>
+                                            <th scope="col">Signo</th>
+                                            <th scope="col"></th>
+                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody >
+                                        <tr *ngFor="let txType of externalTxTypesList; let i=index">
+                                            <th scope="row">{{txType.id}}</th>
+                                            <td>{{ txType.banks.name }}</td>
+                                            <td>{{ txType.description }}</td>
+                                            <td class="text-center">{{ txType.tx }}</td>
+                                            <td class="text-center">{{ txType.reference }}</td>
+                                            <td class="text-center">{{ txType.type }}</td>
+                                            <td class="text-center">{{ txType.sign }}</td>
+                                            <td class="text-center"><i (click)="editExternalTx(txType)" 
+                                                  title = "Editar" 
+                                                  class="ti-pencil-alt actionIcon"></i></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                  </div>
+                </ng-template>
+              </ngb-tab>
+              <ngb-tab title="Locales" id="localList">
+                <ng-template ngbTabContent>
+                    <!-- LISTADO DE TIPOS TX INTERNOS -->
+                  <div class="row">
+
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Listado Tipo de Transacciones</h4>
+                                <h6 class="card-subtitle">Tipo de Transacciones Creadas</h6>
+                            </div>
+                            <div class="table-responsive m-t-20">
+                                <table class="table table-bordered table-responsive-md  ">
+                                    <thead class ="bg-info text-white border border-info">
+                                        <tr >
+                                            <th scope="col">#</th>
+                                            <th scope="col">Descipción</th>
+                                            <th scope="col">Transacción</th>
+                                            <th scope="col">Referencia</th>
+                                            <th scope="col">Signo</th>
+                                            <th scope="col"></th>
+                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody >
+                                        <tr *ngFor="let txType of localTxTypesList; let i=index">
+                                            <th scope="row">{{txType.id}}</th>
+                                            <td>{{ txType.description }}</td>
+                                            <td class="text-center">{{ txType.tx }}</td>
+                                            <td class="text-center">{{ txType.reference }}</td>
+                                            <td class="text-center">{{ txType.sign }}</td>
+                                            <td class="text-center"><i (click)="editLocalTx(txType)" 
+                                                  title = "Editar" 
+                                                  class="ti-pencil-alt actionIcon"></i></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                  </div>
+                </ng-template>
+              </ngb-tab>
+              <ngb-tab id="New" title="Agregar">
+                  <!-- FORMULARIO -->
+                <ng-template ngbTabContent>
+                  <div class="row ">
+                    <div class="col-lg-6 mx-auto">
+                      <div class="card">
+                          <div class="card-body">
+                            <h4 class="card-title">Crear Tipo de Transacción</h4>
+                            <h6 class="card-subtitle">Formulario para Creación de transacciones</h6>
+                            <div class="form-group row">
+                              <label for="username" class="col-sm-3 control-label">Tipo de Transacción</label>
+                                  <div class="col-sm-9">
+                                      <div class="input-group">
+                                          <div class="input-group-prepend">
+                                              <span class="input-group-text">
+                                                  <i class="ti-view-list-alt"></i>
+                                              </span>
+                                          </div>
+                                          <select class="custom-select" 
+                                              name="type"
+                                              [(ngModel)]="localSelected"
+                                              (change)="changeTypeSelected()"
+                                              required>
+                                              <option value=""></option>
+                                              <option value="externo" *ngIf="isAdmin">Externo</option>
+                                              <option value="local">Local</option>
+                                          </select>
+                                              
+                                      </div>
+                                  </div>
+                              </div>
+                              <form class="form-horizontal p-t-20" (ngSubmit)="storeExternalTxType( f ) " #f="ngForm" *ngIf="showExternal">
+                                <div class="form-group row">
+                                  <label for="username" class="col-sm-3 control-label">Banco*</label>
+                                  <div class="col-sm-9">
+                                      <div class="input-group">
+                                          <div class="input-group-prepend">
+                                              <span class="input-group-text">
+                                                  <i class="ti-view-list-alt"></i>
+                                              </span>
+                                          </div>
+                                          <select class="custom-select" 
+                                              name="bank_id"
+                                              [(ngModel)]="externalTxTypeNew.bank_id"
+                                              required>
+                                              <option *ngFor="let bank of banksList"
+                                                [value]=bank.id>{{bank.name}}</option>
+                                          </select>
+                                              
+                                      </div>
+                                  </div>
+                              </div>
+                              <div class="form-group row">
+                                <label for="email4" class="col-sm-3 control-label">Descripción*</label>
+                                <div class="col-sm-9">
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text">
+                                              <i class="ti-direction-alt"></i>
+                                          </span>
+                                      </div>
+                                      <input type="text" 
+                                          class="form-control" 
+                                          placeholder="Descripción"
+                                          name = "descrption"
+                                          oninput="this.value = this.value.toUpperCase()"
+                                          [(ngModel)]="externalTxTypeNew.description">
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="form-group row">
+                                <label for="email4" class="col-sm-3 control-label">Ttipo de Transaccción*</label>
+                                <div class="col-sm-9">
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text">
+                                              <i class="ti-direction-alt"></i>
+                                          </span>
+                                      </div>
+                                      <input type="text" 
+                                          class="form-control" 
+                                          oninput="this.value = this.value.toUpperCase()"
+                                          placeholder="Tipo de Transacción"
+                                          name = "tx"
+                                          [(ngModel)]="externalTxTypeNew.tx">
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="form-group row">
+                                <label for="email4" class="col-sm-3 control-label">Referencia*</label>
+                                <div class="col-sm-9">
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text">
+                                              <i class="ti-direction-alt"></i>
+                                          </span>
+                                      </div>
+                                      <input type="text" 
+                                          class="form-control" 
+                                          placeholder="Referencia"
+                                          oninput="this.value = this.value.toUpperCase()"
+                                          name = "reference"
+                                          [(ngModel)]="externalTxTypeNew.reference">
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="form-group row">
+                                <label for="email4" class="col-sm-3 control-label">Tipo</label>
+                                <div class="col-sm-9">
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text">
+                                              <i class="ti-direction-alt"></i>
+                                          </span>
+                                      </div>
+                                      <select class="custom-select" 
+                                          name="bank_id"
+                                          [(ngModel)]="externalTxTypeNew.type"
+                                          required>
+                                          <option value="SIMPLE">SIMPLE</option>
+                                          <option value="COMPUESTO">COMPUESTO</option>
+                                      </select>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="form-group row">
+                                <label for="email4" class="col-sm-3 control-label">Signo*</label>
+                                <div class="col-sm-9">
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text">
+                                              <i class="ti-direction-alt"></i>
+                                          </span>
+                                      </div>
+                                      <input type="text" 
+                                          class="form-control" 
+                                          oninput="this.value = this.value.toUpperCase()"
+                                          placeholder="Signo"
+                                          name = "sign"
+                                          [(ngModel)]="externalTxTypeNew.sign">
+                                  </div>
+                                </div>
+                              </div>
+                                          
+                              <div class="form-group row m-b-0">
+                                  <div class="offset-sm-3 col-sm-9">
+                                      <button type="submit" class="btn btn-info m-r-5 waves-effect waves-light">Crear</button>
+                                      <button (click)="cancel()"
+                                        type="button" class="btn btn-danger m-r-5 waves-effect waves-light">Cancelar</button>
+                                  </div>
+                              </div>
+                            </form>
+                            <form class="form-horizontal p-t-20" (ngSubmit)="storeLocalTxType( f3 ) " #f3="ngForm" *ngIf="showLocal">
+                              <div class="form-group row">
+                                <label for="email4" class="col-sm-3 control-label">Descripción*</label>
+                                <div class="col-sm-9">
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text">
+                                              <i class="ti-direction-alt"></i>
+                                          </span>
+                                      </div>
+                                      <input type="text" 
+                                          class="form-control" 
+                                          placeholder="Descripción"
+                                          name = "descrption"
+                                          oninput="this.value = this.value.toUpperCase()"
+                                          [(ngModel)]="localTxTypeNew.description">
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="form-group row">
+                                <label for="email4" class="col-sm-3 control-label">Ttipo de Transaccción*</label>
+                                <div class="col-sm-9">
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text">
+                                              <i class="ti-direction-alt"></i>
+                                          </span>
+                                      </div>
+                                      <input type="text" 
+                                          class="form-control" 
+                                          oninput="this.value = this.value.toUpperCase()"
+                                          placeholder="Tipo de Transacción"
+                                          name = "tx"
+                                          [(ngModel)]="localTxTypeNew.tx">
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="form-group row">
+                                <label for="email4" class="col-sm-3 control-label">Referencia*</label>
+                                <div class="col-sm-9">
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text">
+                                              <i class="ti-direction-alt"></i>
+                                          </span>
+                                      </div>
+                                      <input type="text" 
+                                          class="form-control" 
+                                          placeholder="Descripción"
+                                          oninput="this.value = this.value.toUpperCase()"
+                                          name = "reference"
+                                          [(ngModel)]="localTxTypeNew.reference">
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="form-group row">
+                                <label for="email4" class="col-sm-3 control-label">Signo*</label>
+                                <div class="col-sm-9">
+                                  <div class="input-group">
+                                      <div class="input-group-prepend">
+                                          <span class="input-group-text">
+                                              <i class="ti-direction-alt"></i>
+                                          </span>
+                                      </div>
+                                      <input type="text" 
+                                          class="form-control" 
+                                          oninput="this.value = this.value.toUpperCase()"
+                                          placeholder="Signo"
+                                          name = "sign"
+                                          [(ngModel)]="localTxTypeNew.sign">
+                                  </div>
+                                </div>
+                              </div>
+                                          
+                              <div class="form-group row m-b-0">
+                                  <div class="offset-sm-3 col-sm-9">
+                                      <button type="submit" class="btn btn-info m-r-5 waves-effect waves-light">Crear</button>
+                                      <button (click)="cancel()"
+                                        type="button" class="btn btn-danger m-r-5 waves-effect waves-light">Cancelar</button>
+                                  </div>
+                              </div>
+                            </form>
+                          </div>
+                      </div>
+                    </div>
+                  </div>
+                </ng-template>
+              </ngb-tab>
+              <ngb-tab title="Editar"  id='updateTab' [disabled]="updateDisabled">
+                <ng-template ngbTabContent>
+                  <div class="row ">
+                    <div class="col-lg-6 mx-auto">
+                      <div class="card">
+                        <div class="card-body">
+                          <h4 class="card-title">Editar Tipo de Transacción</h4>
+                          <h6 class="card-subtitle">Formulario para actualización de transacciones</h6>
+                          <form class="form-horizontal p-t-20" (ngSubmit)="updateExternal( f2 ) " #f2="ngForm" *ngIf="!showEditLoca">
+                            <div class="form-group row">
+                                <label for="username" class="col-sm-3 control-label">Banco*</label>
+                                <div class="col-sm-9">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">
+                                                <i class="ti-view-list-alt"></i>
+                                            </span>
+                                        </div>
+                                        <select class="custom-select" 
+                                            name="bank_id"
+                                            [(ngModel)]="externalTxTypeEdit.bank_id"
+                                            required>
+                                            <option *ngFor="let bank of banksList"
+                                              [value]=bank.id>{{bank.name}}</option>
+                                        </select>
+                                            
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                              <label for="email4" class="col-sm-3 control-label">Descripción*</label>
+                              <div class="col-sm-9">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="ti-direction-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" 
+                                        class="form-control" 
+                                        placeholder="Descripción"
+                                        name = "descrption"
+                                        oninput="this.value = this.value.toUpperCase()"
+                                        [(ngModel)]="externalTxTypeEdit.description">
+                                </div>
+                              </div>
+                            </div>
+                            <div class="form-group row">
+                              <label for="email4" class="col-sm-3 control-label">Ttipo de Transaccción*</label>
+                              <div class="col-sm-9">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="ti-direction-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" 
+                                        class="form-control" 
+                                        placeholder="Descripción"
+                                        oninput="this.value = this.value.toUpperCase()"
+                                        name = "tx"
+                                        [(ngModel)]="externalTxTypeEdit.tx">
+                                </div>
+                              </div>
+                            </div>
+                            <div class="form-group row">
+                              <label for="email4" class="col-sm-3 control-label">Referencia*</label>
+                              <div class="col-sm-9">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="ti-direction-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" 
+                                        class="form-control" 
+                                        placeholder="Descripción"
+                                        oninput="this.value = this.value.toUpperCase()"
+                                        name = "reference"
+                                        [(ngModel)]="externalTxTypeEdit.reference">
+                                </div>
+                              </div>
+                            </div>
+                            <div class="form-group row">
+                              <label for="email4" class="col-sm-3 control-label">Tipo</label>
+                              <div class="col-sm-9">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="ti-direction-alt"></i>
+                                        </span>
+                                    </div>
+                                    <select class="custom-select" 
+                                        name="type"
+                                        [(ngModel)]="externalTxTypeEdit.type"
+                                        required>
+                                        <option selected></option>
+                                        <option value="SIMPLE">SIMPLE</option>
+                                        <option value="COMPUESTO">COMPUESTO</option>
+                                    </select>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="form-group row">
+                              <label for="email4" class="col-sm-3 control-label">Signo*</label>
+                              <div class="col-sm-9">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="ti-direction-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" 
+                                        class="form-control" 
+                                        oninput="this.value = this.value.toUpperCase()"
+                                        placeholder="Signo"
+                                        name = "sign"
+                                        [(ngModel)]="externalTxTypeEdit.sign">
+                                </div>
+                              </div>
+                            </div>
+                                       
+                            <div class="form-group row m-b-0">
+                                <div class="offset-sm-3 col-sm-9">
+                                    <button type="submit" class="btn btn-info m-r-5 waves-effect waves-light">Actualizar</button>
+                                    <button (click)="cancel()"
+                                      type="button" class="btn btn-danger m-r-5 waves-effect waves-light">Cancelar</button>
+                                </div>
+                            </div>
+                          </form>
+                          <form class="form-horizontal p-t-20" (ngSubmit)="updateLocal( f4 ) " #f4="ngForm" *ngIf="showEditLoca">
+                            <div class="form-group row">
+                              <label for="email4" class="col-sm-3 control-label">Descripción*</label>
+                              <div class="col-sm-9">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="ti-direction-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" 
+                                        class="form-control" 
+                                        placeholder="Descripción"
+                                        name = "descrption"
+                                        oninput="this.value = this.value.toUpperCase()"
+                                        [(ngModel)]="localTxTypeEdit.description">
+                                </div>
+                              </div>
+                            </div>
+                            <div class="form-group row">
+                              <label for="email4" class="col-sm-3 control-label">Ttipo de Transaccción*</label>
+                              <div class="col-sm-9">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="ti-direction-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" 
+                                        class="form-control" 
+                                        placeholder="Descripción"
+                                        oninput="this.value = this.value.toUpperCase()"
+                                        name = "tx"
+                                        [(ngModel)]="localTxTypeEdit.tx">
+                                </div>
+                              </div>
+                            </div>
+                            <div class="form-group row">
+                              <label for="email4" class="col-sm-3 control-label">Referencia*</label>
+                              <div class="col-sm-9">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="ti-direction-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" 
+                                        class="form-control" 
+                                        placeholder="Descripción"
+                                        oninput="this.value = this.value.toUpperCase()"
+                                        name = "reference"
+                                        [(ngModel)]="localTxTypeEdit.reference">
+                                </div>
+                              </div>
+                            </div>
+                            <div class="form-group row">
+                              <label for="email4" class="col-sm-3 control-label">Signo*</label>
+                              <div class="col-sm-9">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="ti-direction-alt"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" 
+                                        class="form-control" 
+                                        oninput="this.value = this.value.toUpperCase()"
+                                        placeholder="Signo"
+                                        name = "sign"
+                                        [(ngModel)]="localTxTypeEdit.sign">
+                                </div>
+                              </div>
+                            </div>
+                                       
+                            <div class="form-group row m-b-0">
+                                <div class="offset-sm-3 col-sm-9">
+                                    <button type="submit" class="btn btn-info m-r-5 waves-effect waves-light">Actualizar</button>
+                                    <button (click)="cancel()"
+                                      type="button" class="btn btn-danger m-r-5 waves-effect waves-light">Cancelar</button>
+                                </div>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+    
+                  </div>
+                </ng-template>
+          </ngb-tab>
+            </ngb-tabset>
+      </div>
+    </div>
+  </div>
+</div>
