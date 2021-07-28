@@ -85,6 +85,7 @@ COPY . /var/www/html/
 
 WORKDIR /var/www/html/
 
+RUN chmod -R 777 /var/www/html/storage/logs
 # Instalar proyecto y dependencias
 #RUN composer update
 #RUN composer install
