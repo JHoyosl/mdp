@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use App\MapFile;
-use App\ExternalTxType;
+use App\Models\Account;
+use App\Models\Company;
+use App\Models\ExternalTxType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 

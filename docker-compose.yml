@@ -36,17 +36,17 @@ services:
             && php artisan migrate:fresh --seed
             && apache2-foreground"
   mdp-ng: 
-    container_name: mdp-ng
-    build: ./front-end
-    volumes: 
-      - './front-end:/usr/src/app'
-    expose:
-      - 4002
-    ports: 
-      - '4204:4002'
-    depends_on:
-      - mdp-laravel
-    command:
-      bash -c "npm install --save-dev && npm rebuild node-sass && ng serve --host 0.0.0.0 --port 4002"
-    links:
-      - mdp-laravel
+     container_name: mdp-ng
+     build: ./front-end
+     volumes: 
+       - './front-end:/usr/src/app'
+     expose:
+       - 4204
+     ports: 
+       - '4204:4204'
+     depends_on:
+       - mdp-laravel
+     command:
+       bash -c "npm install --save-dev && npm rebuild node-sass && ng serve --host 0.0.0.0 --port 4204"
+     links:
+       - mdp-laravel

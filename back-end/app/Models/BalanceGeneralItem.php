@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\BalanceGeneralHeader;
+use App\Models\BalanceGeneralHeader;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
