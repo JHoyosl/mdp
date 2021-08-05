@@ -4,11 +4,11 @@
 
 export const environment = {
   production: false,
-  url: 'http://localhost:9004/',
+  url: 'http://127.0.0.1:9004/',
   // url: 'http://api.balanceacc.co/',
   // url: 'http://mdp.local/',
-  appKey: '2sooWEEn6JLlye4RW2FgbQYk1RwX0hW01laOBV9t',
-  clientId: '1'
+  appKey: '4W4UDtYprj8DV9f5PbdozEtKnig53ebZRTHVIqhg',
+  clientId: '9129b2e3-a874-46f0-950e-6d1602a38cac'
 };
 
 /*

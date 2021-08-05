@@ -31,22 +31,25 @@ services:
       - mdp-mysql
     command: >
             bash -c "cd /var/www/html/ 
-            && composer update 
-            && composer install
-            && php artisan migrate:fresh --seed
             && apache2-foreground"
-  # mdp-ng: 
-  #   container_name: mdp-ng
-  #   build: ./front-end
-  #   volumes: 
-  #     - './front-end:/usr/src/app'
-  #   expose:
-  #     - 4002
-  #   ports: 
-  #     - '4204:4002'
-  #   depends_on:
-  #     - mdp-laravel
-  #   command:
-  #     bash -c "npm install --save-dev && npm rebuild node-sass && ng serve --host 0.0.0.0 --port 4002"
-  #   links:
-  #     - mdp-laravel
+  mdp-ng: 
+    container_name: mdp-ng
+    build: ./front-end
+    volumes: 
+      - './front-end:/usr/src/app'
+    expose:
+      - 4002
+    ports: 
+      - '4204:4002'
+    depends_on:
+      - mdp-laravel
+    command:
+      bash -c "ng serve --host 0.0.0.0 --port 4002"
+    links:
+      - mdp-laravel
+
+            # && composer update 
+            # && composer install
+            # && php artisan migrate:fresh --seed
+
+            # npm install --save-dev && npm rebuild node-sass && 

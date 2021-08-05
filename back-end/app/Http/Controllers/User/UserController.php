@@ -14,7 +14,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str as Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Laravel\Passport\HasApiTokens;
 use App\Http\Controllers\ApiController;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UserController extends ApiController
 {
