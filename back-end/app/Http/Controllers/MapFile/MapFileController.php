@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\MapFile;
 
-use Excel;
+//use \Excel;
 use App\Models\MapFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -234,7 +234,7 @@ class MapFileController extends ApiController
             return $this->showArray($content);
         }
      
-        $excel = Excel::toArray(null, $request->file);
+        $excel = \Excel::toArray(null, $request->file);
 
         $tmpArray = [$excel[0][0],$excel[0][1]];
 
