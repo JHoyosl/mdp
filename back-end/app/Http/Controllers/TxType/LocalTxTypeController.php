@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\TxType;
 
-use App\LocalTxType;
+use App\Models\LocalTxType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
