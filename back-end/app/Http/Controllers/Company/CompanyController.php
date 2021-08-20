@@ -182,13 +182,14 @@ class CompanyController extends ApiController
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param  int  $id
+     * Eliminación de la existencia de una relación entre una companía y un usuario en específico.
+     * @param  \App\Models\User  $user
+     * @param  \App\Models\Company  $company
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy( Company $company )
     {
-        //
+        
     }
 
     public function setMap(Request $request){
