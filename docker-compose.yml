@@ -30,7 +30,7 @@ services:
     links:
       - mdp-mysql
     command: >
-            bash -c "cd /var/www/html/ 
+            bash -c "cd /var/www/html/
             && apache2-foreground"
   mdp-ng: 
     container_name: mdp-ng
@@ -48,8 +48,11 @@ services:
     links:
       - mdp-laravel
 
-            # && composer update 
-            # && composer install
-            # && php artisan migrate:fresh --seed
+    
+            
 
             # npm install --save-dev && npm rebuild node-sass && 
+
+            # && composer update 
+            # && composer install
+            # && php artisan migrate:fresh --seed 
