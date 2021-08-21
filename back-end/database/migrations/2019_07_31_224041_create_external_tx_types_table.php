@@ -19,7 +19,9 @@ class CreateExternalTxTypesTable extends Migration
             $table->string('tx');
             $table->integer('bank_id')->unsigned()->nullable();
             $table->string('reference');
+            $table->string('type')->default('SIMPLE');
             $table->string('sign');
+                
             $table->softDeletes();
             $table->timestamps();
 

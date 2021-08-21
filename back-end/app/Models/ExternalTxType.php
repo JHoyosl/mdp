@@ -27,7 +27,6 @@ class ExternalTxType extends Model
         'reference',
         'type',
         'sign',
-        
     ];
 
     function banks(){

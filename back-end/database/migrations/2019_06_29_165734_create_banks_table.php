@@ -15,7 +15,7 @@ class CreateBanksTable extends Migration
     {
         Schema::create('banks', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('cod_comp');
+            $table->string('cod_comp')->nullable();
             $table->string('name');
             $table->string('nit');
             $table->string('currency');
