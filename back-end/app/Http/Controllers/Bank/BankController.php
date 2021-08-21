@@ -34,7 +34,7 @@ class BankController extends ApiController
      */
     public function destroy(Bank $bank)
     {
-        $bank->destroy();
+        $bank->delete();
 
         return $this->showOne($bank);
     }

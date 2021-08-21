@@ -70,8 +70,14 @@ class CompanyUserController extends ApiController
      * @param  \App\Company  $company
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Company $company)
+    public function destroy( Company $company, User $user )
     {
-        //
+        if(!$company->users()->find($user->id)){//si en la lista de compañías de este usuario no se logra encontrar una compañía con el id especificado, companies() me permite entrar a la relación más no a la propiedad como tal 
+            return $this->errorResponse('La compañía especificada no es una compañía de este usuario', 404);
+        }
+
+        $company->users()->detach([$user->id]);
+
+        return $this->showAll($company->users);
     }
 }

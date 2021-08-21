@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use App\User;
-use App\Company;
-use App\ConciliarItem;
+use App\Models\User;
+use App\Models\Company;
+use App\Models\ConciliarItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 

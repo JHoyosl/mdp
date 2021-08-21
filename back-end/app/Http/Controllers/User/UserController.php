@@ -60,63 +60,45 @@ class UserController extends ApiController
      */
     public function store(Request $request)
     {
-
-        //return 'hola';
         $rules = [
-            'email'=>'required|string',
+            'email'=>'required|string|unique:users',
             'names'=>'required|string',
             'last_names'=>'required|string',
-            'current_company'=>'required|string|exists:App\Models\Company,id',//valide que la compañia exista en bd
+            'current_company'=>'required|string|exists:companies,id',
             'type'=>'required|string',
             
         ];
 
         $request->validate($rules);
 
-        /*$user = DB::table('users')->where('name', 'John')->first();
 
-            return $user->email;*/
 
-            $company = DB::table('users')->where('email', $Fields['email'])->first();
+        $Fields = $request->all();
 
-            //return $company = DB::table('users')->where('email', $Fields['email'])->value('current_company ')->get();
-            
-            if($request->has('current_company')){
-            $user->current_company == $company->current_company; 
-            return $this->errorResponse('El ususario ya existe y está asociado a este cco', 409);
-            }
-            
-        $Fields = $request->all();//all me garantiza que solo traiga los datos que el usuario digitó
+        $user = User::where('email',$Fields['email'])->first();
 
-        $user = User::where('email',$Fields['email'])->first();//Orm laravel. Busca si el email de la petición ya existe en la base de datos, abstraer la bd y se vuelve un objeto. Objeto de usuario
-        
-        //eturn $user->companies()->find($Fields['current_company']);
-        /*if($user) 
-            return $user;
-        else
-            return 'No se encontró usuario';*/
-
-        if(!$user){//si el objeto no viene vacio, null retorna falso evaluado. fue seteado y entro
+        if($user === null){
 
             $Fields['verification_token'] = User::genVerificationToken();
             $Fields['verified'] = User::NO_VERIFIED;
-            $Fields['password'] = bcrypt(Str::random(6));//bcrypt, por medio de una llave se encripta la información que viene en la petición. 
+            $Fields['current_company'] = $Fields['current_company'];
+            $Fields['type'] = $Fields['type'];
+            $Fields['password'] = bcrypt(Str::random(6));
             
             $user = User::create($Fields);
 
-            $company = Company::findOrFail((int)$Fields['current_company'])->first();//findOrFail, encuentre este registro si no está retorne un error 500. 
+            $company = Company::findOrFail((int)$Fields['current_company'])->first();
 
-            $company->users()->syncWithoutDetaching([$user->id]);//existe la compañia, la trae y la relaciona con el id del usuario
+            $company->users()->syncWithoutDetaching([$user->id]);
 
             Mail::to($user)->send(new newUser($user));    
 
             
 
-        }else {
+        }else{
 
             
-
-            $company = Company::findOrFail((int)$Fields['current_company']);
+            $company = Company::findOrFail((int)$Fields['current_company'])->first();
 
             $company->users()->syncWithoutDetaching([$user->id]);
 
@@ -124,6 +106,7 @@ class UserController extends ApiController
         }
         
         return $this->showOne($user,'',true);
+
     }
 
     /**

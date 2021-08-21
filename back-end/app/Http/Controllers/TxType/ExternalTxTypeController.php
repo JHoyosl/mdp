@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\TxType;
 
-use App\Bank;
-use App\ExternalTxType;
+use App\Models\Bank;
+use App\Models\ExternalTxType;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
 
