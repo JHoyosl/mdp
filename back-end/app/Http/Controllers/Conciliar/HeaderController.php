@@ -1,6 +1,6 @@
 <?php
 
-namespace App\MHttp\Controllers\Conciliar;
+namespace App\Http\Controllers\Conciliar;
 
 use App\Models\ConciliarHeader;
 use Illuminate\Http\Request;

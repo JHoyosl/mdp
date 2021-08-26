@@ -183,8 +183,7 @@ class ConciliarController extends ApiController
 
         $conciliarModel = new ConciliarHeader($this->conciliar_headers_table);
 
-        $conciliarTable = $conciliarModel->where('id','=',1)
-                ->where('status','=',ConciliarHeader::OPEN_STATUS)
+        $conciliarTable = $conciliarModel->where('status','=',ConciliarHeader::OPEN_STATUS)
                 ->first();
 
         return $conciliarTable;
@@ -225,7 +224,7 @@ class ConciliarController extends ApiController
 
 
         $header = $this->getLastConciliarHeader();
-
+        // return $header;
         if($header->status != ConciliarHeader::OPEN_STATUS){
 
             $error = \Illuminate\Validation\ValidationException::withMessages(

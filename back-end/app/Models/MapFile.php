@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use App\Bank;
-use App\User;
-use App\Account;
+use App\Models\Bank;
+use App\Models\User;
+use App\Models\Account;
 use Illuminate\Database\Eloquent\Model;
 
 class MapFile extends Model
