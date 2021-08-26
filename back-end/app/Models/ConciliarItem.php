@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Account;
-use App\ConciliarHeader;
+use App\Models\Account;
+use App\Models\ConciliarHeader;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 

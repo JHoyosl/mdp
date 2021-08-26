@@ -31,6 +31,7 @@ RUN a2enmod rewrite headers
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
 RUN docker-php-ext-install \
+    fileinfo \
     bcmath \
     bz2 \
     calendar \

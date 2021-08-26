@@ -48,11 +48,11 @@ services:
     links:
       - mdp-laravel
 
-    
-            
-
+            # && composer install
+            # && composer update 
+            # && php artisan migrate:fresh --seed 
             # npm install --save-dev && npm rebuild node-sass && 
 
-            # && composer update 
-            # && composer install
-            # && php artisan migrate:fresh --seed 
+            
+
+            
