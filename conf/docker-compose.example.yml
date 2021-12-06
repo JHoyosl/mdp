@@ -1,0 +1,78 @@
+version: "3"
+services:
+    brocker-mqtt:
+        image: eclipse-mosquitto:2.0.12
+        container_name: brocker-mqtt
+        ports:
+          - "1899:1883"
+        volumes:
+          - ./conf/mosquitto.conf:/mosquitto/config/mosquitto.conf
+          - ./conf/passwd:/mosquitto/config/passwd
+        restart: unless-stopped
+        networks: 
+            - network_iot
+    iot-mysql:
+        image: mysql:8.0
+        container_name: iot-mysql
+        cap_add:
+          - SYS_NICE  # CAP_SYS_NICE
+        ports:
+          - "3099:3306"
+        networks: 
+            - network_iot
+        volumes:
+          - ./run/var:/var/lib/mysql
+        environment:
+          # Usar random por defecto para prd
+          - MYSQL_ROOT_PASSWORD=securerootpassword 
+          - MYSQL_DATABASE=${DB_DATABASE}
+          - MYSQL_USER=${DB_USERNAME}
+          - MYSQL_PASSWORD=${DB_PASSWORD}
+    iot-laravel:
+        build: ./back-end
+        container_name: iot-laravel
+        ports:
+          - "9099:80"
+        volumes:
+          - ./back-end:/var/www/html/
+          - ./conf/vhost.conf:/etc/apache2/sites-available/000-default.conf
+        depends_on:
+          - iot-mysql
+          - brocker-mqtt
+        links:
+          - iot-mysql
+          - brocker-mqtt
+        networks: 
+          - network_iot
+        command: >
+                bash -c "cd /var/www/html/          
+                && composer update 
+                && composer install
+                && php artisan migrate:fresh --seed --force
+                && apache2-foreground"
+
+    # iot-ng:
+        # container_name: iot-ng
+        # #restart: always
+        # build: 
+        #     context: ./front-end
+        #     dockerfile: Dockerfile
+        # ports:
+        #     - "4205:4200"
+        # #entrypoint: node
+        # networks: 
+        #     - network_iot
+        # volumes:
+        #     - ./front-end:/usr/src/app/
+        #     # bloquea el nombre de la carpeta que no es necesario intercambiar dentro del volumen
+        #     # - /usr/src/app//node_modules
+        #     - /usr/src/app/node_modules´
+        # command: bash -c "npm install --save-dev && ng serve --host 0.0.0.0 --port 4200" #cd node_modules && ls #vue ui --host 0.0.0.0 --port 8000
+
+networks: 
+  network_iot:
+    driver: bridge
+
+                # && composer update 
+                # && composer install
+                # && php artisan migrate:fresh --seed
