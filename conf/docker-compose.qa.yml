@@ -37,11 +37,11 @@ services:
                 bash -c "cd /var/www/html/ 
                 && composer update 
                 && composer install
+                && php artisan storage:link   
+                && composer update 
+                && composer install
+                && php artisan migrate:fresh --seed
                 && apache2-foreground"
-        # && php artisan storage:link   
-        # && composer update 
-        # && composer install
-        # && php artisan migrate:fresh --seed
         
     agrosavia-ng:
         container_name: agrosavia-ng
