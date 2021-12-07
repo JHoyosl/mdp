@@ -6,7 +6,7 @@ services:
         cap_add:
           - SYS_NICE  # CAP_SYS_NICE
         ports:
-          - "3005:3306"
+          - "3002:3306"
         networks: 
             - network_agrosavia
         volumes:
@@ -52,7 +52,7 @@ services:
         depends_on:
           - agrosavia-laravel
         ports:
-            - "4005:80"
+            - "4002:80"
         #entrypoint: node
         networks: 
             - network_agrosavia
