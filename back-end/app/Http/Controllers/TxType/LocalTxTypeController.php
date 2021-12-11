@@ -11,7 +11,7 @@ class LocalTxTypeController extends ApiController
 {
     
 
-    protected $concilicar_local_tx_type = 'local_tx_types';
+    protected $conciliar_local_tx_type = 'local_tx_types';
 
     public function __construct(){
 
@@ -19,7 +19,7 @@ class LocalTxTypeController extends ApiController
 
             $user = Auth::user();
 
-            $this->concilicar_local_tx_type = 'local_tx_types';
+            $this->conciliar_local_tx_type = 'local_tx_types';
             
 
             return $next($request);
