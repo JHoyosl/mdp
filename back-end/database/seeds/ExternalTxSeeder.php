@@ -171,7 +171,7 @@ class ExternalTxSeeder extends Seeder
             array('description' =>'CARGO POR OTROS CONCEPTOS SIN GMF','tx' =>'COM','bank_id' =>8, 'reference' =>'8203', 'sign' =>'D', 'type' =>'COMPUESTA'),
             array('description' =>'SIN MOVIMIENTO DEBITO','tx' =>'SMVD','bank_id' =>8, 'reference' =>'', 'sign' =>'D', 'type' =>'SIMPLE'),
             array('description' =>'SIN MOVIMIENTO CREDITO','tx' =>'SMVC','bank_id' =>8, 'reference' =>'', 'sign' =>'C', 'type' =>'SIMPLE'),
-
+            array('description' =>'SIN MOVIMIENTO','tx' =>'SMVC','bank_id' =>8, 'reference' =>'', 'sign' =>'C', 'type' =>'SIMPLE'),
 
             
         );
