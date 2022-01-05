@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class LocalTxSeeder extends Seeder
 {
@@ -15,7 +16,7 @@ class LocalTxSeeder extends Seeder
 
         $local_tx = array(
 
-           array('description' =>'Ab ajuste grav mov financieors', 'tx' =>'DGMF', 'company_id'=>1, 'reference' =>'Ab ajuste gr', 'sign' =>'D'),
+        array('description' =>'Ab ajuste grav mov financieors', 'tx' =>'DGMF', 'company_id'=>1, 'reference' =>'Ab ajuste gr', 'sign' =>'D'),
         array('description' =>'ABONO A CREDITO ORD 353217645', 'tx' =>'EGRES', 'company_id'=>1, 'reference' =>'ABONO A CRED', 'sign' =>'C'),
         array('description' =>'Ajuste Devolución de cheque', 'tx' =>'DEVC', 'company_id'=>1, 'reference' =>'Ajuste Devol', 'sign' =>'C'),
         array('description' =>'Aprovisionamiento AV VILLAS', 'tx' =>'NCC', 'company_id'=>1, 'reference' =>'Aprovisionam', 'sign' =>'C'),

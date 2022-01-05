@@ -14,7 +14,8 @@ class ExternalTxSeeder extends Seeder
         DB::table('external_tx_types')->delete();
 
         $external_tx = array(
-
+            array('description' =>'PAGO COMUNIC','tx' =>'PAGO_COMUNIC','bank_id' =>4, 'reference' =>'', 'sign' =>'D', 'type' =>'COMPUESTA'),
+            array('description' =>'PAGO COMUNIC','tx' =>'PAGO_COMUNIC','bank_id' =>8, 'reference' =>'', 'sign' =>'D', 'type' =>'COMPUESTA'),
             array('description' =>'CARGO PAGO M','tx' =>'PAGO','bank_id' =>7, 'reference' =>'042D', 'sign' =>'D', 'type' =>'COMPUESTA'),
             array('description' =>'CARGO COM MA','tx' =>'COM','bank_id' =>7, 'reference' =>'043D', 'sign' =>'D', 'type' =>'COMPUESTA'),
             array('description' =>'CARGO POR APERTURA C','tx' =>'PAGO','bank_id' =>7, 'reference' =>'620D', 'sign' =>'D', 'type' =>'COMPUESTA'),
