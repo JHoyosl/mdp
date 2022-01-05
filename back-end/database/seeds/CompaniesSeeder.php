@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CompaniesSeeder extends Seeder
 {
@@ -32,6 +34,15 @@ class CompaniesSeeder extends Seeder
     			'address' => 'CRA 23 NO 13-52',
     			'location_id' => '2',
     			'phone' => '33333333',
+
+    		),
+
+			array('nit' => '830142376-7',
+    			'name' => 'GLOBALSYS',
+    			'sector' => '6721',
+    			'address' => 'CRA 24 NO 13-52',
+    			'location_id' => '4',
+    			'phone' => '33356333',
 
     		),
     	);
