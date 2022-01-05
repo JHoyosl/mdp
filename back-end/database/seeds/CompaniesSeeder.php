@@ -41,7 +41,7 @@ class CompaniesSeeder extends Seeder
     			'name' => 'GLOBALSYS',
     			'sector' => '6721',
     			'address' => 'CRA 24 NO 13-52',
-    			'location_id' => '4',
+    			'location_id' => '2',
     			'phone' => '33356333',
 
     		),
