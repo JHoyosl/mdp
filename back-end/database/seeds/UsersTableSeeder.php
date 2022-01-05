@@ -47,7 +47,7 @@ class UsersTableSeeder extends Seeder
                 'email' => 'gerencia@mejoradeprocesos.com.co',
                 'names' => 'Rodrigo',
                 'last_names' => '',
-                'type' => 'user',
+                'type' => 'sadmin',
                 'current_company' => '1',
                 'verified' => 'false',
                 'verification_token' => 'Cej7xslRPO5THzmdsgy4R5II5ftoBcPO',
