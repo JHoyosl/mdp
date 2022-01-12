@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  url: 'http://127.0.0.1:9004/',
+  url: 'http://localhost:9004/',
   // url: 'http://api.balanceacc.co/',
   // url: 'http://mdp.local/',
   appKey: '4W4UDtYprj8DV9f5PbdozEtKnig53ebZRTHVIqhg',
