@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Conciliar;
 
+set_time_limit(300);
+
 use App\Models\Account;
 use App\Models\Company;
 use App\Models\ConciliarExternalValues;
@@ -25,7 +27,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Schema;
 
 
-define("CONTABLE_COLS", 11);
+define("CONTABLE_COLS", 25);
 define("RECAUDO_COLS", 13);
 
 class ConciliarController extends ApiController
@@ -78,7 +80,7 @@ class ConciliarController extends ApiController
         $this->conciliar_local_values_table = 'conciliar_local_values_'.$user->current_company;
         $this->conciliar_tmp_local_values_table = 'conciliar_tmp_local_values_table_'.$user->current_company;
         $this->conciliar_local_tx_type = 'conciliar_local_tx_type_'.$user->current_company;
-        $this->conciliar_external_tx_type = 'external_tx_types';
+        $this->conciliar_external_tx_type = 'external_tx_types_'.$user->current_company;
     }
 
     /**
@@ -1302,15 +1304,15 @@ class ConciliarController extends ApiController
     private function getInserConciliarLocal($file, $map_id){
 
         $fileArray = $this->fileToArray($file);
-
+        
         $mapModel = MapFile::find($map_id);
 
         $map = json_decode($mapModel->map, true);
-
+        // dd($map);
         // return $map;
         $tmpArray = array();
         $tmpArray[] = null;
-        for($i = 1; $i <= 29; $i++){
+        for($i = 1; $i <= 29; $i++){ //TODO: Volver el número de campos dinámico
             $found = false;
             for($j = 0; $j < count($map); $j++){
 
@@ -1318,6 +1320,7 @@ class ConciliarController extends ApiController
 
                     $found = true;
                     $tmpArray[] = (string)$map[$j]['fileColumn'];
+                    break;
                     // return $map[$j]['mapIndex'];
                 }
 
@@ -1329,7 +1332,7 @@ class ConciliarController extends ApiController
             } 
             
         }
-
+        // dd($tmpArray);
         for($i = 0; $i < count($fileArray); $i++){
 
             $mapped[] =  [

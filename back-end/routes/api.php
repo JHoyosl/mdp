@@ -64,8 +64,7 @@ Route::name('setExternalMap')->post('accounts/setMap', 'Account\AccountControlle
 Route::name('setLocalMap')->post('companies/setMap', 'Company\CompanyController@setMap');
 Route::name('getCompanyInfo')->post('companies/getCompanyInfo', 'Company\CompanyController@getCompanyInfo');
 Route::name('uploadIniConciliar')->post('conciliar/uploadIniFile', 'Conciliar\ConciliarController@uploadIniFile');
-Route::name('uploadConciliarContable')
-		->post('conciliar/uploadConciliarContable','Conciliar\ConciliarController@uploadConciliarContable');
+Route::name('uploadConciliarContable')->post('conciliar/uploadConciliarContable','Conciliar\ConciliarController@uploadConciliarContable');
 Route::name('isAdmin')->post('users/isAdmin', 'User\UserController@isAdmin');
 Route::name('getAccountsByCenter')->post('accounts/getAccountsByCenter/', 'Account\AccountController@getAccountsByCenter');
 Route::name('getUserByToken')->post('users/getUserByToken', 'User\UserController@getUserByToken');
