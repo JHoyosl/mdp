@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Conciliar;
 
-set_time_limit(300);
+set_time_limit(2046);
 
 use App\Models\Account;
 use App\Models\Company;
@@ -27,7 +27,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Schema;
 
 
-define("CONTABLE_COLS", 25);
+define("CONTABLE_COLS", 40);
 define("RECAUDO_COLS", 13);
 
 class ConciliarController extends ApiController
@@ -727,7 +727,7 @@ class ConciliarController extends ApiController
 
         
         $mapped = $this->getInserConciliarLocal($request->file, $company->map_id);
-
+        // return $mapped;
         $this->createTmpTableConciliarLocalValues();
 
         DB::table($this->conciliar_tmp_local_values_table)->insert($mapped);
@@ -1304,7 +1304,7 @@ class ConciliarController extends ApiController
     private function getInserConciliarLocal($file, $map_id){
 
         $fileArray = $this->fileToArray($file);
-        
+
         $mapModel = MapFile::find($map_id);
 
         $map = json_decode($mapModel->map, true);
@@ -1312,7 +1312,7 @@ class ConciliarController extends ApiController
         // return $map;
         $tmpArray = array();
         $tmpArray[] = null;
-        for($i = 1; $i <= 29; $i++){ //TODO: Volver el número de campos dinámico
+        for($i = 1; $i <= CONTABLE_COLS; $i++){ //TODO: Volver el número de campos dinámico
             $found = false;
             for($j = 0; $j < count($map); $j++){
 
@@ -1346,30 +1346,32 @@ class ConciliarController extends ApiController
                 'referencia_1' => $tmpArray[3]==null?null:$fileArray[$i][$tmpArray[3]],
                 'saldo_actual' => $tmpArray[4]==null?null:$fileArray[$i][$tmpArray[4]],
                 'oficina_destino' => $tmpArray[5]==null?null:$fileArray[$i][$tmpArray[5]],
-                'nombre_agencia' => $tmpArray[6]==null?null:$fileArray[$i][$tmpArray[6]],
-                'nombre_centro_costos' => $tmpArray[7]==null?null:$fileArray[$i][$tmpArray[7]],
-                'codigo_centro_costo' => $tmpArray[8]==null?null:$fileArray[$i][$tmpArray[8]],
-                'numero_comprobante' => $tmpArray[9]==null?null:$fileArray[$i][$tmpArray[9]],
-                'nombre_usuario' => $tmpArray[10]==null?null:$fileArray[$i][$tmpArray[10]],
-                'valor_debito_credito' => $tmpArray[11]==null?null:$fileArray[$i][$tmpArray[11]],
-                'saldo_anterior' => $tmpArray[12]==null?null:$fileArray[$i][$tmpArray[12]],
-                'nombre_cuenta_contable' => $tmpArray[13]==null?null:$fileArray[$i][$tmpArray[13]],
-                'referencia_2' => $tmpArray[14]==null?null:$fileArray[$i][$tmpArray[14]],
-                'referencia_3' => $tmpArray[15]==null?null:$fileArray[$i][$tmpArray[15]],
-                'nombre_tercero' => $tmpArray[16]==null?null:$fileArray[$i][$tmpArray[16]],
-                'identificacion_tercero' => $tmpArray[17]==null?null:$fileArray[$i][$tmpArray[17]],
-                'valor_credito' => $tmpArray[18]==null?null:$fileArray[$i][$tmpArray[18]],
-                'valor_debito' => $tmpArray[19]==null?null:$fileArray[$i][$tmpArray[19]],
-                'codigo_usuario' => $tmpArray[20]==null?null:$fileArray[$i][$tmpArray[20]],
-                'fecha_ingreso' => $tmpArray[21]==null?null:$fileArray[$i][$tmpArray[21]],
-                'fecha_origen' => $tmpArray[22]==null?null:$fileArray[$i][$tmpArray[22]],
-                'local_account' => $tmpArray[23]==null?null:$fileArray[$i][$tmpArray[23]],
-                'numero_lote' => $tmpArray[24]==null?null:$fileArray[$i][$tmpArray[24]],
-                'consecutivo_lote' => $tmpArray[25]==null?null:$fileArray[$i][$tmpArray[25]],
-                'tipo_registro' => $tmpArray[26]==null?null:$fileArray[$i][$tmpArray[26]],
-                'ambiente_origen' => $tmpArray[27]==null?null:$fileArray[$i][$tmpArray[27]],
-                'otra_referencia' => $tmpArray[28]==null?null:$fileArray[$i][$tmpArray[28]],
-                'beneficiario' => $tmpArray[29]==null?null:$fileArray[$i][$tmpArray[29]],
+                'oficina_origen' => $tmpArray[6]==null?null:$fileArray[$i][$tmpArray[6]],
+                'nombre_agencia' => $tmpArray[7]==null?null:$fileArray[$i][$tmpArray[7]],
+                'nombre_centro_costos' => $tmpArray[8]==null?null:$fileArray[$i][$tmpArray[8]],
+                'codigo_centro_costo' => $tmpArray[9]==null?null:$fileArray[$i][$tmpArray[9]],
+                'numero_comprobante' => $tmpArray[10]==null?null:$fileArray[$i][$tmpArray[10]],
+                'nombre_usuario' => $tmpArray[11]==null?null:$fileArray[$i][$tmpArray[11]],
+                'valor_debito_credito' => $tmpArray[12]==null?null:$fileArray[$i][$tmpArray[12]],
+                'saldo_anterior' => $tmpArray[13]==null?null:$fileArray[$i][$tmpArray[13]],
+                'nombre_cuenta_contable' => $tmpArray[14]==null?null:$fileArray[$i][$tmpArray[14]],
+                'numero_cuenta_contable' => $tmpArray[15]==null?null:$fileArray[$i][$tmpArray[15]],
+                'referencia_2' => $tmpArray[16]==null?null:$fileArray[$i][$tmpArray[16]],
+                'referencia_3' => $tmpArray[17]==null?null:$fileArray[$i][$tmpArray[17]],
+                'nombre_tercero' => $tmpArray[18]==null?null:$fileArray[$i][$tmpArray[18]],
+                'identificacion_tercero' => $tmpArray[19]==null?null:$fileArray[$i][$tmpArray[19]],
+                'valor_credito' => $tmpArray[20]==null?null:$fileArray[$i][$tmpArray[20]],
+                'valor_debito' => $tmpArray[21]==null?null:$fileArray[$i][$tmpArray[21]],
+                'codigo_usuario' => $tmpArray[22]==null?null:$fileArray[$i][$tmpArray[22]],
+                'fecha_ingreso' => $tmpArray[23]==null?null:$fileArray[$i][$tmpArray[23]],
+                'fecha_origen' => $tmpArray[24]==null?null:$fileArray[$i][$tmpArray[24]],
+                'local_account' => $tmpArray[25]==null?null:$fileArray[$i][$tmpArray[25]],
+                'numero_lote' => $tmpArray[26]==null?null:$fileArray[$i][$tmpArray[26]],
+                'consecutivo_lote' => $tmpArray[27]==null?null:$fileArray[$i][$tmpArray[27]],
+                'tipo_registro' => $tmpArray[28]==null?null:$fileArray[$i][$tmpArray[28]],
+                'ambiente_origen' => $tmpArray[29]==null?null:$fileArray[$i][$tmpArray[29]],
+                'otra_referencia' => $tmpArray[30]==null?null:$fileArray[$i][$tmpArray[30]],
+                'beneficiario' => $tmpArray[31]==null?null:$fileArray[$i][$tmpArray[31]],
             ];
 
 
