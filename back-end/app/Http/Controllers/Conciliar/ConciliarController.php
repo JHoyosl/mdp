@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Conciliar;
 
-set_time_limit(2046);
+set_time_limit(5000);
 
 use App\Models\Account;
 use App\Models\Company;
@@ -27,7 +27,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Schema;
 
 
-define("CONTABLE_COLS", 40);
+define("CONTABLE_COLS", 36);
 define("RECAUDO_COLS", 13);
 
 class ConciliarController extends ApiController
@@ -38,7 +38,7 @@ class ConciliarController extends ApiController
     protected $conciliar_external_values_table = '';
     protected $conciliar_tmp_external_values_table = '';
     protected $conciliar_local_values_table = '';
-    protected $conciliar_tmp_local_values_table = '';
+    protected $c = '';
     protected $conciliar_local_tx_type = '';
     protected $conciliar_external_tx_type = 'external_tx_types';
     
@@ -724,10 +724,9 @@ class ConciliarController extends ApiController
 
         $openHeader = $headers->where('status',ConciliarHeader::OPEN_STATUS)
                                 ->orderBy('id','desc')->first();
-
         
         $mapped = $this->getInserConciliarLocal($request->file, $company->map_id);
-        // return $mapped;
+        
         $this->createTmpTableConciliarLocalValues();
 
         DB::table($this->conciliar_tmp_local_values_table)->insert($mapped);
@@ -1118,10 +1117,9 @@ class ConciliarController extends ApiController
             $table->integer('item_id')->unsigned();
             $table->integer('tx_type_id')->unsigned()->nullable();
             $table->string('tx_type_name')->nullable();
+            $table->string('cuenta_externa');
             $table->dateTime('fecha_movimiento');
             $table->string('descripcion')->comment = 'transaccion/descripcion';
-            $table->string('local_account');
-            $table->string('cuenta_externa');
             $table->string('referencia_1')->nullable();
             $table->string('referencia_2')->nullable();
             $table->string('referencia_3')->nullable();
@@ -1130,9 +1128,9 @@ class ConciliarController extends ApiController
             $table->decimal('valor_debito',24,2)->nullable();
             $table->decimal('saldo_anterior',24,2)->nullable();
             $table->decimal('valor_credito',24,2)->nullable();
+            $table->decimal('valor_debito_credito',24,2)->nullable();
             $table->string('codigo_usuario')->nullable();
             $table->string('nombre_agencia')->nullable();
-            $table->decimal('valor_debito_credito',24,2)->nullable();
             $table->string('nombre_centro_costos')->nullable();
             $table->string('codigo_centro_costo')->nullable();
             $table->string('numero_comprobante')->nullable();            
@@ -1145,6 +1143,7 @@ class ConciliarController extends ApiController
             $table->dateTime('fecha_origen')->nullable();
             $table->string('oficina_origen')->nullable();
             $table->string('oficina_destino')->nullable();
+            $table->string('local_account');
             $table->string('numero_lote')->nullable();
             $table->string('consecutivo_lote')->nullable();
             $table->string('tipo_registro')->nullable();
@@ -1170,10 +1169,9 @@ class ConciliarController extends ApiController
             $table->integer('item_id')->unsigned()->nullable();
             $table->integer('tx_type_id')->unsigned()->nullable();
             $table->string('tx_type_name')->nullable();
+            $table->string('cuenta_externa');
             $table->dateTime('fecha_movimiento');
             $table->string('descripcion')->comment = 'transaccion/descripcion';
-            $table->string('local_account');
-            $table->string('cuenta_externa');
             $table->string('referencia_1')->nullable();
             $table->string('referencia_2')->nullable();
             $table->string('referencia_3')->nullable();
@@ -1182,9 +1180,9 @@ class ConciliarController extends ApiController
             $table->decimal('valor_debito',24,2)->nullable();
             $table->decimal('saldo_anterior',24,2)->nullable();
             $table->decimal('valor_credito',24,2)->nullable();
+            $table->decimal('valor_debito_credito',24,2)->nullable();
             $table->string('codigo_usuario')->nullable();
             $table->string('nombre_agencia')->nullable();
-            $table->decimal('valor_debito_credito',24,2)->nullable();
             $table->string('nombre_centro_costos')->nullable();
             $table->string('codigo_centro_costo')->nullable();
             $table->string('numero_comprobante')->nullable();            
@@ -1197,6 +1195,7 @@ class ConciliarController extends ApiController
             $table->dateTime('fecha_origen')->nullable();
             $table->string('oficina_origen')->nullable();
             $table->string('oficina_destino')->nullable();
+            $table->string('local_account');
             $table->string('numero_lote')->nullable();
             $table->string('consecutivo_lote')->nullable();
             $table->string('tipo_registro')->nullable();
@@ -1303,8 +1302,9 @@ class ConciliarController extends ApiController
 
     private function getInserConciliarLocal($file, $map_id){
 
+        
         $fileArray = $this->fileToArray($file);
-
+        // dd($fileArray[2]);
         $mapModel = MapFile::find($map_id);
 
         $map = json_decode($mapModel->map, true);
@@ -1314,7 +1314,7 @@ class ConciliarController extends ApiController
         $tmpArray[] = null;
         for($i = 1; $i <= CONTABLE_COLS; $i++){ //TODO: Volver el número de campos dinámico
             $found = false;
-            for($j = 0; $j < count($map); $j++){
+            for($j = 0; $j < count($map); $j++){ //para en j=18
 
                 if($i == $map[$j]['mapIndex']){
 
@@ -1330,9 +1330,9 @@ class ConciliarController extends ApiController
 
                 $tmpArray[] = null;
             } 
-            
+           
         }
-        // dd($tmpArray);
+        // dd($tmpArray[1]);
         for($i = 0; $i < count($fileArray); $i++){
 
             $mapped[] =  [
@@ -1344,37 +1344,37 @@ class ConciliarController extends ApiController
                 'fecha_movimiento' => $tmpArray[1]==null?null:$fileArray[$i][$tmpArray[1]],
                 'descripcion' => $tmpArray[2]==null?null:$fileArray[$i][$tmpArray[2]],
                 'referencia_1' => $tmpArray[3]==null?null:$fileArray[$i][$tmpArray[3]],
-                'saldo_actual' => $tmpArray[4]==null?null:$fileArray[$i][$tmpArray[4]],
-                'oficina_destino' => $tmpArray[5]==null?null:$fileArray[$i][$tmpArray[5]],
-                'oficina_origen' => $tmpArray[6]==null?null:$fileArray[$i][$tmpArray[6]],
-                'nombre_agencia' => $tmpArray[7]==null?null:$fileArray[$i][$tmpArray[7]],
-                'nombre_centro_costos' => $tmpArray[8]==null?null:$fileArray[$i][$tmpArray[8]],
-                'codigo_centro_costo' => $tmpArray[9]==null?null:$fileArray[$i][$tmpArray[9]],
-                'numero_comprobante' => $tmpArray[10]==null?null:$fileArray[$i][$tmpArray[10]],
-                'nombre_usuario' => $tmpArray[11]==null?null:$fileArray[$i][$tmpArray[11]],
-                'valor_debito_credito' => $tmpArray[12]==null?null:$fileArray[$i][$tmpArray[12]],
-                'saldo_anterior' => $tmpArray[13]==null?null:$fileArray[$i][$tmpArray[13]],
-                'nombre_cuenta_contable' => $tmpArray[14]==null?null:$fileArray[$i][$tmpArray[14]],
-                'numero_cuenta_contable' => $tmpArray[15]==null?null:$fileArray[$i][$tmpArray[15]],
-                'referencia_2' => $tmpArray[16]==null?null:$fileArray[$i][$tmpArray[16]],
-                'referencia_3' => $tmpArray[17]==null?null:$fileArray[$i][$tmpArray[17]],
-                'nombre_tercero' => $tmpArray[18]==null?null:$fileArray[$i][$tmpArray[18]],
-                'identificacion_tercero' => $tmpArray[19]==null?null:$fileArray[$i][$tmpArray[19]],
-                'valor_credito' => $tmpArray[20]==null?null:$fileArray[$i][$tmpArray[20]],
-                'valor_debito' => $tmpArray[21]==null?null:$fileArray[$i][$tmpArray[21]],
-                'codigo_usuario' => $tmpArray[22]==null?null:$fileArray[$i][$tmpArray[22]],
-                'fecha_ingreso' => $tmpArray[23]==null?null:$fileArray[$i][$tmpArray[23]],
-                'fecha_origen' => $tmpArray[24]==null?null:$fileArray[$i][$tmpArray[24]],
-                'local_account' => $tmpArray[25]==null?null:$fileArray[$i][$tmpArray[25]],
-                'numero_lote' => $tmpArray[26]==null?null:$fileArray[$i][$tmpArray[26]],
-                'consecutivo_lote' => $tmpArray[27]==null?null:$fileArray[$i][$tmpArray[27]],
-                'tipo_registro' => $tmpArray[28]==null?null:$fileArray[$i][$tmpArray[28]],
-                'ambiente_origen' => $tmpArray[29]==null?null:$fileArray[$i][$tmpArray[29]],
-                'otra_referencia' => $tmpArray[30]==null?null:$fileArray[$i][$tmpArray[30]],
+                'referencia_2' => $tmpArray[4]==null?null:$fileArray[$i][$tmpArray[4]],
+                'referencia_3' => $tmpArray[5]==null?null:$fileArray[$i][$tmpArray[5]],
+                'otra_referencia' => $tmpArray[6]==null?null:$fileArray[$i][$tmpArray[6]],
+                'saldo_actual' => $tmpArray[7]==null?null:$fileArray[$i][$tmpArray[7]],
+                'valor_debito' => $tmpArray[8]==null?null:$fileArray[$i][$tmpArray[8]],
+                'saldo_anterior' => $tmpArray[9]==null?null:$fileArray[$i][$tmpArray[9]],
+                'valor_credito' => $tmpArray[10]==null?null:$fileArray[$i][$tmpArray[10]],
+                'valor_debito_credito' => $tmpArray[11]==null?null:$fileArray[$i][$tmpArray[11]],
+                'codigo_usuario' => $tmpArray[12]==null?null:$fileArray[$i][$tmpArray[12]],
+                'nombre_agencia' => $tmpArray[13]==null?null:$fileArray[$i][$tmpArray[13]],
+                'nombre_centro_costos' => $tmpArray[14]==null?null:$fileArray[$i][$tmpArray[14]],
+                'codigo_centro_costo' => $tmpArray[15]==null?null:$fileArray[$i][$tmpArray[15]],
+                'numero_comprobante' => $tmpArray[16]==null?null:$fileArray[$i][$tmpArray[16]],
+                'nombre_usuario' => $tmpArray[17]==null?null:$fileArray[$i][$tmpArray[17]],
+                'nombre_cuenta_contable' => $tmpArray[18]==null?null:$fileArray[$i][$tmpArray[18]],
+                'numero_cuenta_contable' => $tmpArray[19]==null?null:$fileArray[$i][$tmpArray[19]],
+                'nombre_tercero' => $tmpArray[20]==null?null:$fileArray[$i][$tmpArray[20]],
+                'identificacion_tercero' => $tmpArray[21]==null?null:$fileArray[$i][$tmpArray[21]],
+                'fecha_ingreso' => $tmpArray[22]==null?null:$fileArray[$i][$tmpArray[22]],
+                'fecha_origen' => $tmpArray[23]==null?null:$fileArray[$i][$tmpArray[23]],
+                'oficina_origen' => $tmpArray[24]==null?null:$fileArray[$i][$tmpArray[24]],
+                'oficina_destino' => $tmpArray[25]==null?null:$fileArray[$i][$tmpArray[25]],
+                'local_account' => $tmpArray[26]==null?null:$fileArray[$i][$tmpArray[26]],
+                'numero_lote' => $tmpArray[27]==null?null:$fileArray[$i][$tmpArray[27]],
+                'consecutivo_lote' => $tmpArray[28]==null?null:$fileArray[$i][$tmpArray[28]],
+                'tipo_registro' => $tmpArray[29]==null?null:$fileArray[$i][$tmpArray[29]],
+                'ambiente_origen' => $tmpArray[30]==null?null:$fileArray[$i][$tmpArray[30]],
                 'beneficiario' => $tmpArray[31]==null?null:$fileArray[$i][$tmpArray[31]],
             ];
 
-
+            // dd($mapped);
         }
 
 
