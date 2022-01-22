@@ -193,7 +193,7 @@ class MapFileController extends ApiController
         if($fields['type'] == MapFile::TYPE_CONCILIAR_EXTERNO && !$fields['bank_id']){
 
             $error = \Illuminate\Validation\ValidationException::withMessages([
-               'bank_id' => ['El campo bank_id es obligatorio para archivos exgternos'],
+               'bank_id' => ['El campo bank_id es obligatorio para archivos externos'],
             ]);
             throw $error;
 
