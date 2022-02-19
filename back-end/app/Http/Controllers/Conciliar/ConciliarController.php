@@ -5,27 +5,29 @@ namespace App\Http\Controllers\Conciliar;
 ini_set('memory_limit', '-1'); //TODO: Valor para producción
 ini_set('max_execution_time', '300');
 
+use Excel;
+use Schema;
+use App\Constant;
+use App\Models\User;
 use App\Models\Account;
 use App\Models\Company;
-use App\Models\ConciliarExternalValues;
-use App\Models\ConciliarHeader;
-use App\Models\ConciliarItem;
-use App\Models\ConciliarLocalValues;
-use App\Models\ExternalTxType;
-use App\Http\Controllers\ApiController;
-use App\Models\LocalTxType;
 use App\Models\MapFile;
-use App\Models\User;
-use Excel;
 use Illuminate\Http\File;
+use App\Models\LocalTxType;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\ConciliarItem;
+use App\Models\ExternalTxType;
+use App\Models\ConciliarHeader;
 use Illuminate\Support\Facades\DB;
+use App\Models\ConciliarLocalValues;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\ApiController;
+use App\Models\ConciliarExternalValues;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Schema;
+use Carbon\Carbon;
 
 
 define("CONTABLE_COLS", 36);
@@ -39,7 +41,7 @@ class ConciliarController extends ApiController
     protected $conciliar_external_values_table = '';
     protected $conciliar_tmp_external_values_table = '';
     protected $conciliar_local_values_table = '';
-    protected $c = '';
+    protected $conciliar_tmp_local_values_table = '';
     protected $conciliar_local_tx_type = '';
     protected $conciliar_external_tx_type = 'external_tx_types';
     
@@ -64,7 +66,8 @@ class ConciliarController extends ApiController
                  'closeIniConciliar',
                  'uploadAccountFile',
                  'getCuentasToConciliar',
-                 'uploadConciliarContable'
+                 'uploadConciliarContable',
+                 'crossoverCriterion1'
                 ]);
 
 
@@ -72,12 +75,11 @@ class ConciliarController extends ApiController
     }
 
     function init($user){
-
         $this->conciliar_headers_table = 'conciliar_headers_'.$user->current_company;
         $this->conciliar_items_table = 'conciliar_items_'.$user->current_company;
         $this->conciliar_items_tmp_table = 'conciliar_tmp_items_'.$user->current_company;
         $this->conciliar_external_values_table = 'conciliar_external_values_'.$user->current_company;
-        $this->conciliar_tmp_external_values_table = 'conciliar_tmp_external_values_'.$user->current_company;
+        $this->conciliar_tmp_external_values_table = 'conciliar_tmp_external_values_table'.$user->current_company;
         $this->conciliar_local_values_table = 'conciliar_local_values_'.$user->current_company;
         $this->conciliar_tmp_local_values_table = 'conciliar_tmp_local_values_table_'.$user->current_company;
         $this->conciliar_local_tx_type = 'conciliar_local_tx_type_'.$user->current_company;
@@ -208,16 +210,14 @@ class ConciliarController extends ApiController
 
          
         $user = Auth::user();
-
+        
         if(!is_dir(storage_path('app/conciliaciones/'.$user->current_company.'/'))) {
 
             mkdir(storage_path('app/conciliaciones/'.$user->current_company.'/'), 0775);
         
         }
 
-        
-
-        $info = $request->all();
+        $info = $request->all(); //4 cuadres de las 4 cuentas
 
 
         $infoArray = json_decode($info['info'],true);
@@ -239,13 +239,21 @@ class ConciliarController extends ApiController
         $file = storage_path($header->path);
 
         $itemsArray = [];
+        // $old_header = new ConciliarHeader($this->conciliar_headers_table); //inicializa o instancia la tabla de conciliar items
+        // $old_header->where( function( $sub_query ) use($user) {
+        //     $sub_query->whereHas('created_by', function( $created_by ) use($user) {
+        //         return $created_by->where('current_company', $user->current_company);
+        //     });
+        // })->where('status','=',ConciliarHeader::CLOSE_STATUS)
+        //     ->get()
+        //     ->last(); //TODO: como un usuario puede estar asociado a varias compañías en esta tabla hay que cambiar la ofrma de validar;         
+                                    
 
-        for($i = 0; $i < count($infoArray); $i++){
-
+        for($i = 0; $i < count($infoArray); $i++)
+        {            
             $account = Account::where('local_account',"=",$infoArray[$i]['local_account'])
                             ->where('company_id',"=",$user->current_company)
                             ->first();
-
 
             $item = [
                 'header_id'=>$header->id, 
@@ -263,6 +271,9 @@ class ConciliarController extends ApiController
 
             $itemsArray[] = $item;
             $item = [];
+
+            // if($user->current_company == $previos_header->usersCreate->current_company &&  $created_user->status == ConciliarHeader::CLOSE_STATUS)
+            // {}
         }
 
 
@@ -411,8 +422,8 @@ class ConciliarController extends ApiController
         }
 
         $account = Account::with('map')->find($data['account_id']); // Devuelve el objeto de la cuenta con el mapeo(contable) relacionado con la cuenta
-        return $this->mapUploadFileAccount($request->file, $account, $currentItem);
-        $mapInfo = $this->mapUploadFileAccount($request->file, $account, $currentItem); //salto a la línea 431
+
+        $mapInfo = $this->mapUploadFileAccount($request->file, $account, $currentItem); //salto a la línea 439
         // dd($mapInfo);
         $currentItem->credit_externo = $mapInfo->credit_externo;
         $currentItem->debit_externo = $mapInfo->debit_externo;
@@ -495,17 +506,26 @@ class ConciliarController extends ApiController
 
         $startRow = 1;
         
-        switch ($account->id) {
-            case 8:
-                    $startRow= 2;
+        switch ($account->local_account) {
+            case Constant::BANCOLOMBIA_ACCOUNT_1:
+                    $startRow= 0;
                 break;
+            case Constant::BANCOLOMBIA_ACCOUNT_2:
+                $startRow= 0;
+            break;
+            case Constant::BANCO_OCCIDENTE_ACCOUNT_1:
+                $startRow= 7;
+            break;
+            case Constant::BANCO_OCCIDENTE_ACCOUNT_2:
+                $startRow= 7;
+            break;
             default:
                 # code...
                 break;
         }
 
         // return $highestRow;
-        for($row = 2; $row <= $highestRow; $row++){//recorre la hoja por filas hasta el índice de fila más alto
+        for($row = $startRow; $row <= $highestRow; $row++){//recorre la hoja por filas hasta el índice de fila más alto
             
             $cell = array();
             $insertCell = array();
@@ -567,7 +587,7 @@ class ConciliarController extends ApiController
 
             }
 
-            if($insertCell['FECHA DEL MOVIMIENTO'] == null){
+            if($insertCell['FECHA DEL MOVIMIENTO'] == null ){
 
                 continue;
             }
@@ -699,9 +719,6 @@ class ConciliarController extends ApiController
             'item_id' => '',  
             'descripcion' => $insertCell["TIPO DE TRANSACCION/DESCRIPCION"]==null?'':$insertCell["TIPO DE TRANSACCION/DESCRIPCION"],
             'operador' => $insertCell["OPERADOR"],
-            'valor_credito' => $insertCell["VALOR CRÉDITO"],
-            'valor_debito' => $insertCell["VALOR DEBITO"],  
-            'valor_debito_credito' => $insertCell["VALOR (DEBITO/CREDITO)"],
             'fecha_movimiento' => $insertCell["FECHA DEL MOVIMIENTO"],  
             'fecha_archivo' => $insertCell["FECHA DEL ARCHIVO"],
             'codigo_tx' => $insertCell["CODIGO DE TRANSACCION"],
@@ -723,9 +740,22 @@ class ConciliarController extends ApiController
             'motivo_rechazo' => $insertCell["MOTIVO DE RECHAZO"], 
             'ciudad' => $insertCell["CIUDAD"], 
             'tipo_cuenta' => $insertCell["TIPO DE CUENTA"], 
-            'numero_documento' => $insertCell["NÚMERO DE DOCUMENTO"], 
+            //'numero_documento' => $insertCell["NÚMERO DE DOCUMENTO"], 
             
         ];
+
+        if( !$insertCell["VALOR (DEBITO/CREDITO)"] == null  )
+        {
+            $insert = array_merge( $insert, [  
+                'valor_debito_credito' => $insertCell["VALOR (DEBITO/CREDITO)"],
+            ]);
+        }else{
+            $insert = array_merge( $insert, [  
+                'valor_credito' => $insertCell["VALOR CREDITO"],
+                'valor_debito' => $insertCell["VALOR DEBITO"],
+            ]);
+        }
+        
 
         return $insert;
     }
@@ -733,8 +763,8 @@ class ConciliarController extends ApiController
 
     public function uploadConciliarContable(Request $request){
 
-
         $user = Auth::user();
+    
         $company =  Company::find($user->current_company);
 
         if($company->map_id == null){
@@ -766,9 +796,8 @@ class ConciliarController extends ApiController
                 ->groupBy('local_account','accounts.id')
                 ->get();
 
-        
 
-        Schema::dropIfExists($this->conciliar_tmp_local_values_table);
+        //Schema::dropIfExists($this->conciliar_tmp_local_values_table);
 
         $itemTable = new ConciliarItem($this->conciliar_items_table);
 
@@ -1356,6 +1385,11 @@ class ConciliarController extends ApiController
         }
         // dd($tmpArray);
         for($i = 0; $i < count($fileArray); $i++){
+        
+            if($fileArray[$i][Constant::FECHA_MOVIMIENTO] == null || $fileArray[$i][Constant::FECHA_MOVIMIENTO] == 0){
+                
+                continue;
+            }       
 
             $mapped[] =  [
                 'matched' => 0,     //1
@@ -1396,12 +1430,9 @@ class ConciliarController extends ApiController
                 'beneficiario' => $tmpArray[32]==null?null:$fileArray[$i][$tmpArray[32]],
             ];
 
-            // dd($mapped);
+            // dd($mapped);      
         }
-
-
         return $mapped;
-
     }
 
 
@@ -1706,7 +1737,227 @@ class ConciliarController extends ApiController
         return $query;
     }
 
-}
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function crossoverCriterion1()
+    {
+        $user = Auth::user();
+
+        $tmpLocalTables = json_encode(DB::table( 'conciliar_tmp_local_values_table_'.$user->current_company)->get());
+        $tmpLocalValues = json_decode($tmpLocalTables,true);
+        $tmpExternalTables = json_encode(DB::table( 'conciliar_tmp_external_values_'.$user->current_company)->get());
+        $tmpExternalValues = json_decode($tmpExternalTables,true);
+        // $dateLocal = Carbon::parse($tmpLocalValues[0]['fecha_movimiento'])->toDateString();
+        // $dateExternal = Carbon::parse($tmpExternalValues[0]['fecha_movimiento'])->toDateString();
+        // return [$dateLocal, $dateExternal];
+        // return $tmpExternalValues[230]['matched'] = $tmpLocalValues[1]['id'];
+        for( $i=0; $i<count($tmpLocalValues); $i++ ){
+            
+            for( $row = 0; $row<count($tmpExternalValues); $row++ ){
+                // return [$i, $row];
+                $dateLocal = Carbon::parse($tmpLocalValues[$i]['fecha_movimiento'])->toDateString();
+                $dateExternal = Carbon::parse($tmpExternalValues[$row]['fecha_movimiento'])->toDateString();
+
+                if( $tmpExternalValues[$row]['valor_credito'] == null ){
+                    
+                    if($dateLocal == $dateExternal && $tmpLocalValues[$i]['valor_debito'] == (($tmpExternalValues[$row]['valor_debito_credito'])*-1) || $tmpLocalValues[$i]['valor_credito'] == (($tmpExternalValues[$row]['valor_debito_credito'])*-1)){
+                      
+                        if( $tmpLocalValues[$i]['referencia_1'] == $tmpExternalValues[$row]['referencia_1'] || $tmpLocalValues[$i]['referencia_1'] == $tmpExternalValues[$row]['referencia_2']  || $tmpLocalValues[$i]['referencia_1'] == $tmpExternalValues[$row]['referencia_3'] ){
+                            
+                            $tmpExternalValues[$row]['matched'] = $tmpLocalValues[$i]['id'];
+                            $tmpLocalValues[$i]['matched'] = $tmpExternalValues[$row]['id'];
+
+                        }elseif($tmpLocalValues[$i]['referencia_2'] == $tmpExternalValues[$row]['referencia_1'] || $tmpLocalValues[$i]['referencia_2'] == $tmpExternalValues[$row]['referencia_2']  || $tmpLocalValues[$i]['referencia_2'] == $tmpExternalValues[$row]['referencia_3'] ){
+                            
+                            $tmpExternalValues[$row]['matched'] = $tmpLocalValues[$i]['id'];
+                            $tmpLocalValues[$i]['matched'] = $tmpExternalValues[$row]['id'];
+                        
+                        }elseif($tmpLocalValues[$i]['referencia_3'] == $tmpExternalValues[$row]['referencia_1'] || $tmpLocalValues[$i]['referencia_3'] == $tmpExternalValues[$row]['referencia_2']  || $tmpLocalValues[$i]['referencia_3'] == $tmpExternalValues[$row]['referencia_3'] ){
+                           
+                            $tmpExternalValues[$row]['matched'] = $tmpLocalValues[$i]['id'];
+                            $tmpLocalValues[$i]['matched'] = $tmpExternalValues[$row]['id'];
+                        }
+
+                        $tmpExternalValues[$row]['matched'] = $tmpLocalValues[$i]['id'];
+                        $tmpLocalValues[$i]['matched'] = $tmpExternalValues[$row]['id'];
+
+                    }else{
+                    
+                        continue;
+                    }
+                }else{
+                    if($dateLocal == $dateExternal && $tmpLocalValues[$i]['valor_debito'] == $tmpExternalValues[$row]['valor_credito']){
+                    
+                        if( $tmpLocalValues[$i]['referencia_1'] == $tmpExternalValues[$row]['referencia_1'] || $tmpLocalValues[$i]['referencia_1'] == $tmpExternalValues[$row]['referencia_2']  || $tmpLocalValues[$i]['referencia_1'] == $tmpExternalValues[$row]['referencia_3'] ){
+                            
+                            $tmpExternalValues[$row]['matched'] = $tmpLocalValues[$i]['id'];
+                            $tmpLocalValues[$i]['matched'] = $tmpExternalValues[$row]['id'];
+                        
+                        }elseif($tmpLocalValues[$i]['referencia_2'] == $tmpExternalValues[$row]['referencia_1'] || $tmpLocalValues[$i]['referencia_2'] == $tmpExternalValues[$row]['referencia_2']  || $tmpLocalValues[$i]['referencia_2'] == $tmpExternalValues[$row]['referencia_3'] ){
+                            
+                            $tmpExternalValues[$row]['matched'] = $tmpLocalValues[$i]['id'];
+                            $tmpLocalValues[$i]['matched'] = $tmpExternalValues[$row]['id'];
+                        
+                        }elseif($tmpLocalValues[$i]['referencia_3'] == $tmpExternalValues[$row]['referencia_1'] || $tmpLocalValues[$i]['referencia_3'] == $tmpExternalValues[$row]['referencia_2']  || $tmpLocalValues[$i]['referencia_3'] == $tmpExternalValues[$row]['referencia_3'] ){
+                            
+                            $tmpExternalValues[$row]['matched'] = $tmpLocalValues[$i]['id'];
+                            $tmpLocalValues[$i]['matched'] = $tmpExternalValues[$row]['id'];                        
+                        }
+                        
+                        $tmpExternalValues[$row]['matched'] = $tmpLocalValues[$i]['id'];
+                        $tmpLocalValues[$i]['matched'] = $tmpExternalValues[$row]['id'];
+
+                    }else{
+                        continue;
+                    }
+                }
+                
+            }
+        }
+        $tmpExternalTables = DB::table( 'conciliar_tmp_external_values_'.$user->current_company)->select(DB::raw("SUM(matched) as matched"))->get();
+        if($tmpExternalTables == '0');
+            return $this->showMessage('No se encontraron coincidencias', false);
+        return $this->showMessage(true);
+
+        // $tmpLocalTables = DB::table( 'conciliar_tmp_local_values_table_'.$user->current_company)->get();
+        // $tmpExternalTables = DB::table( 'conciliar_tmp_external_values_'.$user->current_company)->get();
+        
+        // foreach( $tmpLocalTables as $localValue ){
+        //     foreach( $tmpExternalTables as $externalValue){
+        //         if($localValue->fecha_movimiento == $externalValue->fecha_movimiento && $localValue->valor_debito == $externalValue->valor_credito){
+        //             if( $localValue->referencia_1 == $externalValue->referencia_1 || $localValue->referencia_1 == $externalValue->referencia_2 || $localValue->referencia_1 == $externalValue->referencia_3){
+        //                 $externalValue->matched = $localValue->id;
+        //                 $externalValue->save();
+        //                 $localValue->matched = $externalValue->id;
+        //                 $localValue->save();
+        //             }
+        //         }else{
+        //             return $this->showMessage('No se encontró ninguna coincidencia', false);
+        //         } 
+        //     }
+        // }
+        // return $this->showMessage(true);
+        // return response()->json( [$tmpLocalTable, $tmpExternalTable] );
+        // FORMA 1
+        // $tmpLocalTable = json_encode(DB::table( 'conciliar_tmp_local_values_table_'.$user->current_company)->get());
+        // $tmpLocalValues = json_decode($tmpLocalTable,true);
+        // // return gettype($     );
+        // $tmpExternalTable = DB::table( 'conciliar_tmp_external_values_'.$user->current_company)->get();
+        // // return gettype($tmpExternalTable);
+        // for($column = 1; $column < CONTABLE_COLS; $column++){ 
+           
+        //     for($row = 0; $row < count($tmpLocalValues); $row++){ //para en j=18
+
+        //         return $externalValue = $tmpExternalTable->where('fecha_movimiento', $tmpLocalValues[$row]['fecha_movimiento'])
+        //                                         ->where('valor_debito', $tmpLocalValues[$row]['valor_credito'])
+        //                                         ->where('referencia_1', $tmpLocalValues[$row]['referencia_1'])
+        //                                         ->Where('referencia_2', $tmpLocalValues[$row]['referencia_1'])
+        //                                         ->Where('referencia_3', $tmpLocalValues[$row]['referencia_1'])
+        //                                         ->first();
+        //         if($externalValue){
+        //             $externalValue->matched = $row;
+        //             $externalValue->save();
+        //             $tmpLocalValues[$row][Constant::MATCHED] = $externalValue->id;
+        //         }else{
+        //             continue;
+        //         }
+        //     }
+        // }
+        // return true;
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function crossoverCriterion2()
+    {
+        $user = Auth::user();
+        $tmpLocalTables = DB::table( 'conciliar_tmp_local_values_table_'.$user->current_company)->get();
+        $tmpExternalTables = DB::table( 'conciliar_tmp_external_values_'.$user->current_company)->get();
+        
+        foreach( $tmpLocalTables as $localValue ){
+            foreach( $tmpExternalTables as $externalValue){
+                if($localValue->fecha_movimiento == $externalValue->fecha_movimiento && $localValue->valor_debito == $externalValue->valor_credito){
+                    if( $localValue->referencia_2 == $externalValue->referencia_1 || $localValue->referencia_2 == $externalValue->referencia_2 || $localValue->referencia_2 == $externalValue->referencia_3){
+                        $externalValue->matched = $localValue->id;
+                        $externalValue->save();
+                        $localValue->matched = $externalValue->id;
+                        $localValue->save();
+                    }
+                }else{
+                    return $this->showMessage('No se encontró ninguna coincidencia', false);
+                } 
+            }
+        }
+        return $this->showMessage(true);
+        // return 'hola';
+        // return $user=Auth::user();
+        // return $tmpLocalTable = DB::table( 'conciliar_tmp_local_values_table_1')->array();
+        
+        // $tmpExternalTable = DB::table( 'conciliar_tmp_external_values_table_1')->array();
+        // for($row = 1; $row < CONTABLE_COLS; $row++){ 
+        //     if(!$tmpLocalTable[$row][Constant::MATCHED] == 0)
+        //     {
+        //         continue;
+        //     }
+        //     for($column = 0; $column < count($tmpLocalTable); $column++){ //para en j=18
+                
+        //         $externalValue = $tmpExternalTable->where('fecha_movimiento', $tmpLocalTable[$row][Constant::FECHA_MOVIMIENTO])
+        //                                         ->where('valor_debito', $tmpLocalTable[$row][Constant::VALOR_CREDITO])
+        //                                         ->first();
+        //         if($tmpExternalTable){
+        //             $externalValue->matched = $row+1;
+        //             $externalValue->save();
+        //             $localValue = $tmpLocalTable->where('id', $row+1)->first();
+        //             $localValue->matched = $externalValue->id;
+        //             $localValue->save();
+        //         }else{
+        //             continue;
+        //         }
+        //     }
+        // }
+        // return true;
+        // return response()->json( [$tmpLocalTable, $tmpExternalTable] );
+    }
+}        //         if($row == $tmpLocalTable[$column]['mapIndex']){
+        //             $found = true;
+        //             $tmpArray[] = (string)$map[$j]['fileColumn']; //devuelve un string del valor de filecolum
+        //             break;
+        //             // return $map[$j]['mapIndex'];
+        //         }
+
+
+        //     }
+        //     if(!$found){
+
+        //         $tmpArray[] = null;
+        //     } 
+           
+        // }
+        // for($i = 0; $i < count($conciliarCuadre); $i++){
+
+        //     $openItemTable = $itemTable->where('header_id','=',$openHeader->id)
+        //                 ->where('account_id','=',$conciliarCuadre[$i]->id)
+        //                 ->first();   
+
+    // $conciliarCuadre = DB::table($this->conciliar_tmp_local_values_table)
+    //             ->select(
+    //                     DB::raw("SUM(valor_credito) as credit,SUM(valor_debito) as debit, 
+    //                         ".$this->conciliar_tmp_local_values_table.".local_account, accounts.id")
+    //                     )
+    //             ->join('accounts', $this->conciliar_tmp_local_values_table.'.local_account','=','accounts.local_account')
+    //             ->join('banks', 'accounts.bank_id','=','banks.id')
+    //             ->where('accounts.company_id','=',$user->current_company)
+    //             ->groupBy('local_account','accounts.id')
+    //             ->get();
+    
+
+
 
 
 // set FOREIGN_key_checks = 0;
