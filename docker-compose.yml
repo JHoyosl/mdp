@@ -1,22 +1,22 @@
-version: '3'
+version: "3"
 
 services:
   mdp-mysql:
     image: mysql:8.0
     container_name: mdp-mysql
     cap_add:
-      - SYS_NICE  # CAP_SYS_NICE
+      - SYS_NICE # CAP_SYS_NICE
     ports:
       - "3004:3306"
     volumes:
       - ./run/var:/var/lib/mysql
     environment:
       # Usar random por defecto para prd
-      - MYSQL_ROOT_PASSWORD=securerootpassword 
+      - MYSQL_ROOT_PASSWORD=securerootpassword
       - MYSQL_DATABASE=${DB_DATABASE}
       - MYSQL_USER=${DB_USERNAME}
       - MYSQL_PASSWORD=${DB_PASSWORD}
-      
+
   mdp-laravel:
     build: ./back-end
     container_name: mdp-laravel
@@ -30,32 +30,25 @@ services:
     links:
       - mdp-mysql
     command: >
-            bash -c "cd /var/www/html/
-            && composer install
-            && composer update 
-            && php artisan migrate:fresh --seed
-            && apache2-foreground"
-  mdp-ng: 
-    container_name: mdp-ng
-    build: ./front-end
-    volumes: 
-      - './front-end:/usr/src/app'
-    expose:
-      - 4002
-    ports: 
-      - '4204:4002'
-    depends_on:
-      - mdp-laravel
-    command:
-      bash -c "ng serve --host 0.0.0.0 --port 4002"
-    links:
-      - mdp-laravel
+      bash -c "cd /var/www/html/
+      && apache2-foreground"
+  # mdp-ng:
+  #   container_name: mdp-ng
+  #   build: ./front-end
+  #   volumes:
+  #     - './front-end:/usr/src/app'
+  #   expose:
+  #     - 4002
+  #   ports:
+  #     - '4204:4002'
+  #   depends_on:
+  #     - mdp-laravel
+  #   command:
+  #     bash -c "ng serve --host 0.0.0.0 --port 4002"
+  #   links:
+  #     - mdp-laravel
 
-            # && composer install
-            # && composer update 
-            # && php artisan migrate:fresh --seed 
-            # npm install --save-dev && npm rebuild node-sass && 
-
-            
-
-            
+  # && composer install
+  # && composer update
+  # && php artisan migrate:fresh --seed
+  # npm install --save-dev && npm rebuild node-sass &&
