@@ -35,6 +35,10 @@ services:
       - mdp-mysql
     command: >
       bash -c "cd /var/www/html/
+      && composer install
+      && php artisan cache:clear
+      && php artisan route:clear
+      && php artisan migrate:fresh --seed
       && apache2-foreground"
   mdp-ng:
     container_name: mdp-ng
