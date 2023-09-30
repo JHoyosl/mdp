@@ -42,7 +42,7 @@ services:
     expose:
       - 4002
     ports:
-      - "4204:4002"
+      - "4204:80"
     depends_on:
       - mdp-laravel
     networks:

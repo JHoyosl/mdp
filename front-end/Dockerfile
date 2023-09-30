@@ -1,10 +1,23 @@
-# Dockerfile
-FROM node:12.14.0
-LABEL org.opencontainers.image.authors="Globalsys.co"
+# Multi-stage
+# 1) Node image for building frontend assets
+# 2) nginx stage to serve frontend assets
 
-RUN mkdir /usr/src/app 
- 
-WORKDIR /usr/src/app
+# Name the node stage "builder"
+FROM node:10.24.1 AS builder
+# Set working directory
+WORKDIR /app
+# Copy all files from current directory to working dir in image
+COPY . .
+# install node modules and build assets
+RUN npm i && npm run build -- --output-hashing=all
 
-# Instalamos angular cli en nuestra imágen
-RUN npm install -g @angular/cli 
+# nginx state for serving content
+FROM nginx:alpine
+# Set working directory to nginx asset directoryx
+WORKDIR /usr/share/nginx/html
+# Remove default nginx static assets
+RUN rm -rf ./*
+# Copy static assets from builder stage
+COPY --from=builder /app/dist .
+# Containers run nginx with global directives and daemon off
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
