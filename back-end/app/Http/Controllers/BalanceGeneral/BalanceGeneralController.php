@@ -192,6 +192,7 @@ class BalanceGeneralController extends ApiController
 
         $balanceHeader = $balanceHeaderTable->where('fecha', $fechaRequest)->first(); //se hace uso del objeto para buscar en la bd
 
+
         if (!$balanceHeader == null) {
 
             $convenioHeaderTable = new OperativoConvenioHeader($this->convenios_headers);
@@ -504,7 +505,7 @@ class BalanceGeneralController extends ApiController
             $header->save();
         }
 
-        return $header;
+        // return [$header, storage_path('app/cuadres/' . $header->file_path)];
 
         $deleteConvenios = new OperativoConvenioItem($this->convenios_items);
         $deleteConvenios->where('header_id', $header->id)->delete();
@@ -515,7 +516,6 @@ class BalanceGeneralController extends ApiController
             new OperativoConvenioImport,
             storage_path('app/cuadres/' . $header->file_path)
         );
-
 
         $insertArray = [];
         $rawInsert = array();
@@ -560,7 +560,7 @@ class BalanceGeneralController extends ApiController
         // return  $rawString;
         $tableBalanceItems = new OperativoConvenioItem($this->convenios_items);
         // $tableBalanceItems->insert($insertArray);
-
+        return $tableBalanceItems;
         return  $this->showOne($tableBalanceItems->first());
     }
 
