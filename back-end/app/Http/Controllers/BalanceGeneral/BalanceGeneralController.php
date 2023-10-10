@@ -654,7 +654,6 @@ class BalanceGeneralController extends ApiController
 
     public function uploadBalance(Request $request)
     {
-        return storage_path('app/cuadres/');
         $user = Auth::user();
         $header_id = null;
 
