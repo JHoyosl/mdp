@@ -648,7 +648,7 @@ class BalanceGeneralController extends ApiController
 
         $naturalezaCuentas = new NaturalezaCuentas($tableName);
 
-        // $naturalezaCuentas->insert($insert);
+        $naturalezaCuentas->insert($insert);
         return $naturalezaCuentas;
     }
 
