@@ -32,7 +32,6 @@ export class BalanceGeneralComponent implements OnInit {
 
   vieBalanceDetalle(item) {
 
-    console.log(item.fecha);
     this.balanceDate = item.fecha.split(' ')[0];
     this.dateChange();
     this.tabSet.activeId = 'Proceso';
@@ -44,22 +43,17 @@ export class BalanceGeneralComponent implements OnInit {
 
     this.apiRequest.getCollection(`balanceOperativo`)
       .subscribe((response)=>{
-
         this.balanceList = response;
         if(this.balanceList.length > 0) {
 
-
           let tmpFecha = this.balanceList[0].fecha;
 
-          console.log(tmpFecha.split(' ')[0]);
-          console.log('entra');
           this.balanceDate = tmpFecha.split(' ')[0];
           this.dateChange();
         }
-        console.log(this.balanceList);
       }, (err)=>{
 
-        console.log(err);
+        console.error(err);
       })
 
     
@@ -73,7 +67,6 @@ export class BalanceGeneralComponent implements OnInit {
 
     this.apiRequest.downloadFile(formData, 'balanceGeneral/downloadConvenioResultado')
       .subscribe((response) => {
-        console.log(this.convenios.balanceHeader.file_name);
         const myBlob = new Blob([response], {type: 'application/vnd.oasis.opendocument.spreadsheet'});
         const downloadUrl = URL.createObjectURL(myBlob);
         const a = document.createElement('a');
@@ -81,13 +74,9 @@ export class BalanceGeneralComponent implements OnInit {
         a.href = downloadUrl;
         a.download = `Cuadre_Balance_${this.balanceDate}.xlsx`;
         a.click();
-        return;
-
-
-        console.log(response);
       }, (err) => {
 
-        console.log(err);
+        console.error(err);
       });
   }
 
@@ -105,7 +94,7 @@ export class BalanceGeneralComponent implements OnInit {
 
     this.apiRequest.downloadFile(formData, 'balanceGeneral/downloadConvenio')
       .subscribe((response) => {
-        console.log(this.convenios.balanceHeader.file_name);
+
         const myBlob = new Blob([response], {type: 'application/vnd.oasis.opendocument.spreadsheet'});
         const downloadUrl = URL.createObjectURL(myBlob);
         const a = document.createElement('a');
@@ -113,13 +102,10 @@ export class BalanceGeneralComponent implements OnInit {
         a.href = downloadUrl;
         a.download = this.convenios.convenioHeader.file_name;
         a.click();
-        return;
 
-
-        console.log(response);
       }, (err) => {
 
-        console.log(err);
+        console.error(err);
       });
   }
 
@@ -136,20 +122,17 @@ export class BalanceGeneralComponent implements OnInit {
 
     this.apiRequest.downloadFile(formData,'balanceGeneral/downloadBalance')
       .subscribe((response)=>{
-        console.log(this.convenios.balanceHeader.file_name);
         let myBlob = new Blob([response], {type: 'application/vnd.oasis.opendocument.spreadsheet'});
         let downloadUrl = URL.createObjectURL(myBlob);
-    
         let a = document.createElement('a');
+        
         a.href = downloadUrl;
         a.download = this.convenios.balanceHeader.file_name;
         a.click();
-        return;
-
-        console.log(response);
+        
       }, (err)=>{
 
-        console.log(err);
+        console.error(err);
       })
   }
 
@@ -164,30 +147,23 @@ export class BalanceGeneralComponent implements OnInit {
     this.apiRequest.postForm(formData,'balanceGeneral/getBalance')
       .subscribe((response)=>{
 
-
         if(response['status']) {
 
-          console.log(response['data']);
           this.showUpload = false;
           this.showConvenios = true;
-
           this.convenios.setValues(response['data']);
-
-          console.log(this.convenios);
 
         } else {
 
           this.showUpload = true;
           this.showConvenios = false;
           this.toastr.info('No existe un balance para esta fecha','Información');
-          console.log('no hay');
+
         }
-        console.log(response);
       }, (err)=>{
 
-        console.log(err);
+        console.error(err);
       })
-    console.log(this.balanceDate);
     
   }
   
@@ -210,21 +186,18 @@ export class BalanceGeneralComponent implements OnInit {
         this.apiRequest.uploadFile(formData, 'balanceGeneral/uploadConvenios')
           .subscribe( (response) => {
             
-            console.log(response);
             this.dateChange();
             Swal.close();
             
             
           }, (err) => {
-            console.log(err);
+            console.error(err);
             Swal.close();
             Swal.fire(
               'Error',
               err.error.errors.join(),
               'warning'
             )
-            console.log(err);
-      
           })
         
     }
@@ -255,7 +228,6 @@ export class BalanceGeneralComponent implements OnInit {
     this.apiRequest.uploadFile(formData,'balanceGeneral/uploadBalance')
       .subscribe( (response)=>{
         
-        console.log(response);
         Swal.close();
         this.showUpload = false;
         this.showConvenios = true;
@@ -270,7 +242,7 @@ export class BalanceGeneralComponent implements OnInit {
           err.error.errors.join(),
           'warning'
         )
-        console.log(err);
+        console.error(err);
   
       })
   }

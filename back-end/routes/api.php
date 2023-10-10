@@ -17,23 +17,24 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });*/
-Route::resource('users','User\UserController');
-Route::resource('companies','Company\CompanyController',['except'=>'create','edit']);
-Route::resource('locations','Location\LocationController',['except'=>'create','edit']);
-Route::resource('banks','Bank\BankController',['except'=>'create','edit']);
-Route::resource('accounts','Account\AccountController',['except'=>'create','edit']);
-Route::resource('mapFiles','MapFile\MapFileController',['except'=>'create','edit']);
-Route::resource('usersCompanies','User\UserCompanyController');
-Route::resource('conciliar','Conciliar\ConciliarController');
-Route::resource('externalTxType','TxType\ExternalTxTypeController',['except'=>'create','edit']);
-Route::resource('localTxType','TxType\LocalTxTypeController',['except'=>'create','edit']);
-Route::resource('headers','Conciliar\HeaderController',['except'=>'create','edit']);
-Route::resource('balanceOperativo','BalanceGeneral\BalanceGeneralController',['except'=>'create','edit']);
+
+Route::resource('users', 'User\UserController');
+Route::resource('companies', 'Company\CompanyController', ['except' => 'create', 'edit']);
+Route::resource('locations', 'Location\LocationController', ['except' => 'create', 'edit']);
+Route::resource('banks', 'Bank\BankController', ['except' => 'create', 'edit']);
+Route::resource('accounts', 'Account\AccountController', ['except' => 'create', 'edit']);
+Route::resource('mapFiles', 'MapFile\MapFileController', ['except' => 'create', 'edit']);
+Route::resource('usersCompanies', 'User\UserCompanyController');
+Route::resource('conciliar', 'Conciliar\ConciliarController');
+Route::resource('externalTxType', 'TxType\ExternalTxTypeController', ['except' => 'create', 'edit']);
+Route::resource('localTxType', 'TxType\LocalTxTypeController', ['except' => 'create', 'edit']);
+Route::resource('headers', 'Conciliar\HeaderController', ['except' => 'create', 'edit']);
+Route::resource('balanceOperativo', 'BalanceGeneral\BalanceGeneralController', ['except' => []]);
 
 //RUTAS MIXTAS
-Route::resource('companies.locations','Company\CompanyLocationController',['only'=>'index']);
-Route::resource('companies.users','Company\CompanyUserController',['only'=>['index','update','destroy']]);
-Route::resource('users.companies','User\UserCompanyController',['only'=>['index']]);
+Route::resource('companies.locations', 'Company\CompanyLocationController', ['only' => 'index']);
+Route::resource('companies.users', 'Company\CompanyUserController', ['only' => ['index', 'update', 'destroy']]);
+Route::resource('users.companies', 'User\UserCompanyController', ['only' => ['index']]);
 
 
 //EXTRA FUNCTIONS
@@ -47,7 +48,7 @@ Route::name('countries')->get('locations/cities/{state_id}', 'Location\LocationC
 Route::name('mapFileUpload')->get('mapFiles/getMapIndex/{type}', 'MapFile\MapFileController@getMapIndex');
 Route::name('userCompanies')->get('users/userCompanies', 'User\UserController@userCompanies');
 Route::name('getCompaniesByEmail')
-		->get('users/getCompaniesByEmail/{id}', 'User\UserCompanyController@getCompaniesByEmail');
+	->get('users/getCompaniesByEmail/{id}', 'User\UserCompanyController@getCompaniesByEmail');
 Route::name('formatsExterno')->get('mapFiles/formatsExterno/{id}', 'MapFile\MapFileController@formatsExterno');
 Route::name('formatsLocal')->get('mapFiles/formatsLocal/{id}', 'MapFile\MapFileController@formatsLocal');
 Route::name('recoveryPssw')->get('users/recoveryPssw/{email}', 'User\UserController@recoveryPssw');
@@ -65,7 +66,7 @@ Route::name('setLocalMap')->post('companies/setMap', 'Company\CompanyController@
 Route::name('getCompanyInfo')->post('companies/getCompanyInfo', 'Company\CompanyController@getCompanyInfo');
 Route::name('uploadIniConciliar')->post('conciliar/uploadIniFile', 'Conciliar\ConciliarController@uploadIniFile');
 Route::name('uploadConciliarContable')
-		->post('conciliar/uploadConciliarContable','Conciliar\ConciliarController@uploadConciliarContable');
+	->post('conciliar/uploadConciliarContable', 'Conciliar\ConciliarController@uploadConciliarContable');
 Route::name('isAdmin')->post('users/isAdmin', 'User\UserController@isAdmin');
 Route::name('getAccountsByCenter')->post('accounts/getAccountsByCenter/', 'Account\AccountController@getAccountsByCenter');
 Route::name('getUserByToken')->post('users/getUserByToken', 'User\UserController@getUserByToken');
@@ -87,12 +88,15 @@ Route::name('balanceGeneralUploadConvenios')
 Route::name('balanceGeneralGetBalance')
 	->post('balanceGeneral/getBalance', 'BalanceGeneral\BalanceGeneralController@getBalance');
 Route::name('balanceGeneraldownloadConvenio')
-	->post('balanceGeneral/downloadConvenio', 'BalanceGeneral\BalanceGeneralController@downloadConvenio');Route::name('balanceGeneraldownloadConvenioResultado')
+	->post('balanceGeneral/downloadConvenio', 'BalanceGeneral\BalanceGeneralController@downloadConvenio');
+Route::name('balanceGeneraldownloadConvenioResultado')
 	->post('balanceGeneral/downloadConvenioResultado', 'BalanceGeneral\BalanceGeneralController@downloadConvenioResultado');
 Route::name('balanceGeneraldownloadBalance')
 	->post('balanceGeneral/downloadBalance', 'BalanceGeneral\BalanceGeneralController@downloadBalance');
-
-
+Route::name('balanceGeneraluploadOperativoMaster')
+	->post('balanceGeneral/uploadOperativoMaster', 'BalanceGeneral\BalanceGeneralController@uploadOperativoMaster');
+Route::name('balanceGeneraluploadConvenioCuentasMaster')
+	->post('balanceGeneral/uploadConvenioCuentasMaster', 'BalanceGeneral\BalanceGeneralController@uploadConvenioCuentasMaster');
 //CARTERA GET
 
 Route::name('carteraCreateTables')
@@ -147,4 +151,4 @@ Route::name('getUserRoles')
 // Route::name('verify')->get('users/verify/{token}','User\UserController@verify');
 //Oauth
 
-Route::post('oauth/token','\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
+Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
