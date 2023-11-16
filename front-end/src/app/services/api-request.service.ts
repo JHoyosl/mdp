@@ -50,12 +50,11 @@ export class ApiRequestService {
 
       this.checkKeys();
 
-      const formData = new FormData();
       const headers = new HttpHeaders({
         'Authorization': `Bearer ${localStorage.getItem('access_token')}`
       });
 
-      return this.http.post(`${this.url}${endPoint}`, formData, {headers} )
+      return this.http.get(`${this.url}${endPoint}`, {headers} )
         .pipe( map( response => {
           return response;
 

@@ -57,12 +57,10 @@ export class SidebarComponent implements OnInit {
       .subscribe((response)=>{
         
         this.company.setValues(response['data']);
-        this.logoPath = `http://mdp.globalsys.co/images/${this.company.id}/logo.jpg`;
-        console.log(this.company);
-        console.log(response);
+        this.logoPath = `/assets/images/logos/logogsys.jpg`;
       },(err)=>{
 
-        console.log(err);
+        console.error(err);
       })
   }
 }

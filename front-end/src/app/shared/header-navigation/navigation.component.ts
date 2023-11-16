@@ -54,13 +54,12 @@ export class NavigationComponent implements AfterViewInit {
             // this.user.setValues(response['data']);
             const user = new UserModel();
             user.setValues(response['data']);
-            console.log(user);
             this.store.dispatch( UserActions.getUserInfoAction( { user } ) );
           }
 
         }, (err) => {
 
-          console.log(err);
+          console.error(err);
         });
   }
 
@@ -69,7 +68,6 @@ export class NavigationComponent implements AfterViewInit {
     this.store.select('user').subscribe( (user) => {
 
       this.user.setValues(user);
-      console.log(user);
 
     });
   }
@@ -171,10 +169,8 @@ export class NavigationComponent implements AfterViewInit {
 
             this.toastr.error('Contraseñ Incorrecta', 'Error');
           }
-          
-          // console.log(response);
         },(err)=>{
-          console.log(err);
+          console.error(err);
           // this.toastr.error('Contraseñ Incorrecta', 'Error');
 
         })
@@ -193,7 +189,7 @@ export class NavigationComponent implements AfterViewInit {
         
       }, (err)=>{
 
-        console.log(err);
+        console.error(err);
       })
 
 

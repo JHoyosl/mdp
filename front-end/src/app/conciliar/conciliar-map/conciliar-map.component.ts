@@ -47,13 +47,11 @@ export class ConciliarMapComponent implements OnInit {
       
     this.auth.isAdmin()
       .subscribe( (response)=>{
-
-        console.log(response);
         this.isAdmin = response;
       }, (err)=>{
         
         this.isAdmin = false;
-        console.log(err);
+        console.error(err);
 
       });
   }
@@ -98,8 +96,6 @@ export class ConciliarMapComponent implements OnInit {
 
     this.apiRequest.getCollection(`mapFiles`)
       .subscribe( (response)=>{
-        
-        console.log(response);
         this.mapFilesList = response;
       })
   }
@@ -112,10 +108,10 @@ export class ConciliarMapComponent implements OnInit {
     }
     this.apiRequest.getCollection(`mapFiles/getMapIndex/${type}`)
       .subscribe( (response)=>{
-        
+        console.log(response);
         this.newMapFile.masterFields = response;
         this.updateMapFile.masterFields = response;
-        
+        console.log(response);
         for(let i = 0; i < this.updateMapFile.mappedFields.length; i++){
           
           this.updateMapFile.mappedFields[i]['mapIndex'] = 0;
@@ -307,8 +303,13 @@ export class ConciliarMapComponent implements OnInit {
   editMapFunction(){
       
     this.updateMapFile.mapStruct = [];
-    
-    
+    this.updateMapFile.mappedFields.forEach( element => {
+      const found = this.updateMapFile.masterFields
+        .find( master => master.id == element.mapIndex);
+      element.value = found ? found.description : '';
+        
+    });
+    console.log(this.updateMapFile);
     for(let i = 0; i < this.updateMapFile.masterFields.length; i++){
       if(this.updateMapFile.masterFields[i].type == '1'){
         let exist = false;
@@ -383,7 +384,6 @@ export class ConciliarMapComponent implements OnInit {
         }
         tmpChkArray.push(this.updateMapFile.mappedFields[i]['mapIndex']);
       }
-      console.log(this.updateMapFile.masterFields[i]);
       this.updateMapFile.mapStruct.push(
         {
           'fileColumn':i, 
@@ -399,7 +399,7 @@ export class ConciliarMapComponent implements OnInit {
     .set('description', this.updateMapFile.description)
     .set('bank_id', this.updateMapFile.bank_id)
     .set('type', this.updateMapFile.type)
-    .set('map', JSON.stringify(this.updateMapFile.mapStruct))
+    .set('map', JSON.stringify(this.updateMapFile.mappedFields))
     .set('base', JSON.stringify(this.updateMapFile.fileRows))
     
     this.apiRequest.put(body,`mapFiles/${this.updateMapFile.id}`)

@@ -237,7 +237,7 @@
                                                       required>
                                                       <option selected></option>
                                                       <option value="conciliar_interno">Interno</option>
-                                                      <option value="conciliar_externo" *ngIf="isAdmin">Exrerno</option>
+                                                      <option value="conciliar_externo" *ngIf="isAdmin">Externo</option>
                                                   </select>
                                                       
                                               </div>
@@ -309,9 +309,14 @@
                                                       name="i"
                                                       [(ngModel)]="updateMapFile.mappedFields[i]['mapIndex']"
                                                       required>
-                                                      <option selected></option>
-                                                      <option 
-                                                      [value]="field.id" *ngFor="let field of updateMapFile.masterFields">{{field.type=='1'?'*'+field.description:field.description}}</option>
+                                                    <option selected></option>
+                                                    <option 
+                                                      [value]="field.id" 
+                                                      *ngFor="let field of updateMapFile.masterFields"
+                                                    >
+                                                    <!-- {{ field.id+' '+field.description }} -->
+                                                      {{field.id+ ' ' +field.type=='1'?'*'+field.description:field.description}}
+                                                    </option>
                                                     </select>
                                                 </div>
     

@@ -142,11 +142,9 @@ export class ConciliarProcessComponent implements OnInit {
 
     this.apiRequest.getCollection('headers')
       .subscribe( (response) => {
-        console.log(response);
         this.procesList = response;
       }, (err) => {
-
-        console.log(err);
+        console.error(err);
       })
   }
 
@@ -183,60 +181,24 @@ export class ConciliarProcessComponent implements OnInit {
 
   groupBankAccount( toOrder: AccountModel[]) {
 
-    let orderAccounts = [];
+    if(toOrder.length === 0){
+      return;
+    }
     const orderBanks = [];
-    let currentBank = toOrder[0].banks.name;
-
-    orderAccounts.push(toOrder[0]);
-
-    if (toOrder.length === 1) {
-
-      const tmpArray = [];
-      tmpArray['name'] = currentBank;
-      tmpArray['data'] = orderAccounts;
-      orderBanks.push(tmpArray);
-
-      return orderBanks;
-
-    }
-    for (let i = 1; i < toOrder.length; i++) {
-
-      if (toOrder[i].banks.name === currentBank) {
-
-        orderAccounts.push(toOrder[i]);
-        if (toOrder.length === (i + 1)) {
-
-          const tmpArray = [];
-          tmpArray['name'] = currentBank;
-          tmpArray['data'] = orderAccounts;
-
-          orderBanks.push(tmpArray);
+    toOrder
+      .map((account) => account.bank_id)
+      .reduce((acc, curr) => {
+        if(!acc.includes(curr)){
+          acc.push(curr);
         }
-      } else {
-
-        const tmpArray = [];
-        tmpArray['name'] = currentBank;
-        tmpArray['data'] = orderAccounts;
-
-        orderBanks.push(tmpArray);
-        currentBank = toOrder[i].banks.name;
-        orderAccounts = [];
-        orderAccounts.push(toOrder[i]);
-
-        if (toOrder.length === (i + 1)) {
-          console.log(currentBank);
-          const tmpArray = [];
-          tmpArray['name'] = currentBank;
-          tmpArray['data'] = orderAccounts;
-
-          orderBanks.push(tmpArray);
-        }
-      }
-
-    }
+          return acc;
+        }, [])
+      .forEach((value) => {
+          orderBanks.push(toOrder
+            .filter((account)=> account.bank_id == value)
+        )});
 
     return orderBanks;
-
   }
 
   getAccounts() {
@@ -264,7 +226,7 @@ export class ConciliarProcessComponent implements OnInit {
         }
 
         this.conciliarBanks = this.groupBankAccount(this.conciliarAccounts);
-        console.log(this.conciliarBanks);
+
       }, (err) => {
 
         console.log(err);
