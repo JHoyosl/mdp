@@ -37,24 +37,24 @@ services:
       bash -c "cd /var/www/html/
       && php artisan storage:link
       && apache2-foreground"
-  mdp-ng:
-    container_name: mdp-ng
-    build: ./front-end
-    expose:
-      - 4002
-    ports:
-      - "4204:80"
-    depends_on:
-      - mdp-laravel
-    networks:
-      - network_mdp
-    volumes:
-      - ./front-end:/usr/src/app/
-      - ./front-end/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - ./front-end/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./front-end/nginx/blockips.conf:/etc/nginx/blockips.conf
-    links:
-      - mdp-laravel
+  # mdp-ng:
+  #   container_name: mdp-ng
+  #   build: ./front-end
+  #   expose:
+  #     - 4002
+  #   ports:
+  #     - "4204:80"
+  #   depends_on:
+  #     - mdp-laravel
+  #   networks:
+  #     - network_mdp
+  #   volumes:
+  #     - ./front-end:/usr/src/app/
+  #     - ./front-end/nginx/default.conf:/etc/nginx/conf.d/default.conf
+  #     - ./front-end/nginx/nginx.conf:/etc/nginx/nginx.conf
+  #     - ./front-end/nginx/blockips.conf:/etc/nginx/blockips.conf
+  #   links:
+  #     - mdp-laravel
 
 networks:
   network_mdp:

@@ -25,7 +25,18 @@ Route::resource('banks', 'Bank\BankController', ['except' => 'create', 'edit']);
 Route::resource('accounts', 'Account\AccountController', ['except' => 'create', 'edit']);
 Route::resource('mapFiles', 'MapFile\MapFileController', ['except' => 'create', 'edit']);
 Route::resource('usersCompanies', 'User\UserCompanyController');
-Route::resource('conciliar', 'Conciliar\ConciliarController');
+Route::resource('conciliar', 'Conciliar\ConciliarController')->only(
+	[
+		'index',
+		'uploadIniFile',
+		'setIniProcess',
+		'isIniConciliar',
+		'closeIniConciliar',
+		'uploadAccountFile',
+		'getCuentasToConciliar',
+		'uploadConciliarContable'
+	]
+);
 Route::resource('externalTxType', 'TxType\ExternalTxTypeController', ['except' => 'create', 'edit']);
 Route::resource('localTxType', 'TxType\LocalTxTypeController', ['except' => 'create', 'edit']);
 Route::resource('headers', 'Conciliar\HeaderController', ['except' => 'create', 'edit']);
@@ -54,6 +65,7 @@ Route::name('formatsLocal')->get('mapFiles/formatsLocal/{id}', 'MapFile\MapFileC
 Route::name('recoveryPssw')->get('users/recoveryPssw/{email}', 'User\UserController@recoveryPssw');
 Route::name('setCurrentCompany')->get('users/setCurrentCompany/{company_id}', 'User\UserController@setCurrentCompany');
 Route::name('getHeaderItems')->get('headers/getHeaderItems/{headerId}', 'Conciliar\ItemController@getHeaderItems');
+Route::name('getCuentasToConciliar')->get('conciliar/getCuentasToConciliar', 'Conciliar\ConciliarController@getCuentasToConciliar');
 
 //POST
 Route::name('verify')->post('users/verify', 'User\UserController@verify');
@@ -74,7 +86,7 @@ Route::name('setIniProcess')->post('conciliar/setIniProcess', 'Conciliar\Concili
 Route::name('isIniConciliar')->post('conciliar/isIniConciliar', 'Conciliar\ConciliarController@isIniConciliar');
 Route::name('closeIniConciliar')->post('conciliar/closeIniConciliar', 'Conciliar\ConciliarController@closeIniConciliar');
 Route::name('uploadAccountFile')->post('conciliar/uploadAccountFile', 'Conciliar\ConciliarController@uploadAccountFile');
-Route::name('getCuentasToConciliar')->post('conciliar/getCuentasToConciliar', 'Conciliar\ConciliarController@getCuentasToConciliar');
+
 Route::name('setUserCurrentCompany')
 	->post('users/userCompanies', 'User\UserCompanyController@setUserCurrentCompany');
 

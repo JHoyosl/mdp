@@ -14,6 +14,7 @@ use App\Models\LocalTxType;
 use App\Models\MapFile;
 use App\Models\User;
 use Excel;
+use Exception;
 use Illuminate\Http\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,9 +24,14 @@ use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Schema;
+use App\Services\Conciliar\UploadConciliarContableService;
+
+ini_set('memory_limit', '1000M');
 
 
-define("CONTABLE_COLS", 11);
+set_time_limit(-1);
+
+define("CONTABLE_COLS", 17);
 define("RECAUDO_COLS", 13);
 
 class ConciliarController extends ApiController
@@ -39,45 +45,34 @@ class ConciliarController extends ApiController
     protected $conciliar_tmp_local_values_table = '';
     protected $conciliar_local_tx_type = '';
     protected $conciliar_external_tx_type = 'external_tx_types';
-    
 
-    public function __construct(){
+    protected UploadConciliarContableService $uploadConciliarContableService;
 
+    public function __construct(UploadConciliarContableService $uploadConciliarContableService)
+    {
+        $this->middleware('auth:api');
         $this->middleware(function ($request, $next) {
 
             $user = Auth::user();
-
             $this->init($user);
 
             return $next($request);
         });
 
-        
-        $this->middleware('auth:api')->only(
-                ['index',
-                 'uploadIniFile',
-                 'setIniProcess',
-                 'isIniConciliar',
-                 'closeIniConciliar',
-                 'uploadAccountFile',
-                 'getCuentasToConciliar',
-                 'uploadConciliarContable'
-                ]);
-
-
-
+        $this->uploadConciliarContableService = $uploadConciliarContableService;
     }
 
-    function init($user){
+    function init($user)
+    {
 
-        $this->conciliar_headers_table = 'conciliar_headers_'.$user->current_company;
-        $this->conciliar_items_table = 'conciliar_items_'.$user->current_company;
-        $this->conciliar_items_tmp_table = 'conciliar_tmp_items_'.$user->current_company;
-        $this->conciliar_external_values_table = 'conciliar_external_values_'.$user->current_company;
-        $this->conciliar_tmp_external_values_table = 'conciliar_tmp_external_values_'.$user->current_company;
-        $this->conciliar_local_values_table = 'conciliar_local_values_'.$user->current_company;
-        $this->conciliar_tmp_local_values_table = 'conciliar_tmp_local_values_table_'.$user->current_company;
-        $this->conciliar_local_tx_type = 'conciliar_local_tx_type_'.$user->current_company;
+        $this->conciliar_headers_table = 'conciliar_headers_' . $user->current_company;
+        $this->conciliar_items_table = 'conciliar_items_' . $user->current_company;
+        $this->conciliar_items_tmp_table = 'conciliar_tmp_items_' . $user->current_company;
+        $this->conciliar_external_values_table = 'conciliar_external_values_' . $user->current_company;
+        $this->conciliar_tmp_external_values_table = 'conciliar_tmp_external_values_' . $user->current_company;
+        $this->conciliar_local_values_table = 'conciliar_local_values_' . $user->current_company;
+        $this->conciliar_tmp_local_values_table = 'conciliar_tmp_local_values_table_' . $user->current_company;
+        $this->conciliar_local_tx_type = 'conciliar_local_tx_type_' . $user->current_company;
         $this->conciliar_external_tx_type = 'external_tx_types';
     }
 
@@ -87,13 +82,13 @@ class ConciliarController extends ApiController
      * @return \Illuminate\Http\Response
      */
     public function index()
-    {   
-        
+    {
+
 
         $user = Auth::user();
 
         $headers = new ConciliarHeader($this->conciliar_headers_table);
-        
+
         return $headers->get();
     }
 
@@ -160,10 +155,10 @@ class ConciliarController extends ApiController
      */
     public function destroy($id)
     {
-
     }
 
-    public function createTablesInit(){
+    public function createTablesInit()
+    {
         // DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         // Schema::dropIfExists($this->conciliar_headers_table);
         // $this->createTableConciliarHeaders();
@@ -178,46 +173,45 @@ class ConciliarController extends ApiController
         return true;
     }
 
-    private function getLastConciliarHeader(){
+    private function getLastConciliarHeader()
+    {
 
 
         $conciliarModel = new ConciliarHeader($this->conciliar_headers_table);
 
-        $conciliarTable = $conciliarModel->where('status','=',ConciliarHeader::OPEN_STATUS)
-                ->first();
+        $conciliarTable = $conciliarModel->where('status', '=', ConciliarHeader::OPEN_STATUS)
+            ->first();
 
         return $conciliarTable;
-
-
     }
 
-    private function truncateTmpTables(){
+    private function truncateTmpTables()
+    {
 
         $tmpExternalValues = new ConciliarExternalValues();
         $tmpExternalValues->truncate();
 
         $tmpLocalValues = new ConciliarLocalValues();
         $tmpLocalValues->truncate();
-
     }
 
-    public function closeIniConciliar(Request $request){
+    public function closeIniConciliar(Request $request)
+    {
 
-         
+
         $user = Auth::user();
 
-        if(!is_dir(storage_path('app/conciliaciones/'.$user->current_company.'/'))) {
+        if (!is_dir(storage_path('app/conciliaciones/' . $user->current_company . '/'))) {
 
-            mkdir(storage_path('app/conciliaciones/'.$user->current_company.'/'), 0775);
-        
+            mkdir(storage_path('app/conciliaciones/' . $user->current_company . '/'), 0775);
         }
 
-        
+
 
         $info = $request->all();
 
 
-        $infoArray = json_decode($info['info'],true);
+        $infoArray = json_decode($info['info'], true);
         $fechaCierre = $info['fecha_cierre'];
 
         $insertArray = [];
@@ -225,11 +219,13 @@ class ConciliarController extends ApiController
 
         $header = $this->getLastConciliarHeader();
         // return $header;
-        if($header->status != ConciliarHeader::OPEN_STATUS){
+        if ($header->status != ConciliarHeader::OPEN_STATUS) {
 
             $error = \Illuminate\Validation\ValidationException::withMessages(
-                        ['No existe una conciliación abierta, comuniquese con el administrador',
-            ]);
+                [
+                    'No existe una conciliación abierta, comuniquese con el administrador',
+                ]
+            );
             throw $error;
         }
 
@@ -237,24 +233,24 @@ class ConciliarController extends ApiController
 
         $itemsArray = [];
 
-        for($i = 0; $i < count($infoArray); $i++){
+        for ($i = 0; $i < count($infoArray); $i++) {
 
-            $account = Account::where('local_account',"=",$infoArray[$i]['local_account'])
-                            ->where('company_id',"=",$user->current_company)
-                            ->first();
+            $account = Account::where('local_account', "=", $infoArray[$i]['local_account'])
+                ->where('company_id', "=", $user->current_company)
+                ->first();
 
 
             $item = [
-                'header_id'=>$header->id, 
-                'account_id'=>$account->id,
-                'debit_externo'=>$infoArray[$i]['debitExternal'], 
-                'debit_local'=>$infoArray[$i]['debitLocal'],
-                'credit_externo'=>$infoArray[$i]['creditExternal'], 
-                'credit_local'=>$infoArray[$i]['creditLocal'],
-                'balance_externo'=>$infoArray[$i]['saldoExtracto'],
-                'balance_local'=>$infoArray[$i]['saldoContable'],
-                'total'=>$infoArray[$i]['total'],
-                'status'=>ConciliarItem::CLOSE_STATUS,
+                'header_id' => $header->id,
+                'account_id' => $account->id,
+                'debit_externo' => $infoArray[$i]['debitExternal'],
+                'debit_local' => $infoArray[$i]['debitLocal'],
+                'credit_externo' => $infoArray[$i]['creditExternal'],
+                'credit_local' => $infoArray[$i]['creditLocal'],
+                'balance_externo' => $infoArray[$i]['saldoExtracto'],
+                'balance_local' => $infoArray[$i]['saldoContable'],
+                'total' => $infoArray[$i]['total'],
+                'status' => ConciliarItem::CLOSE_STATUS,
 
             ];
 
@@ -271,9 +267,9 @@ class ConciliarController extends ApiController
         $header->fecha_cierre = $fechaCierre;
 
         $fromPath = storage_path($header->file_path);
-        $toPath = storage_path('app/conciliaciones/'.$user->current_company.'/'.$header->file_name);
-        
-        $header->file_path = 'app/conciliaciones/'.$user->current_company.'/'.$header->file_name;
+        $toPath = storage_path('app/conciliaciones/' . $user->current_company . '/' . $header->file_name);
+
+        $header->file_path = 'app/conciliaciones/' . $user->current_company . '/' . $header->file_name;
         $header->save();
         rename($fromPath, $toPath);
         $itemTable = new ConciliarItem($this->conciliar_items_table);
@@ -283,37 +279,34 @@ class ConciliarController extends ApiController
         $localInfo = $this->getIniInsertLocalArray(storage_path($header->file_path));
         $externalInfo = $this->getIniInsertExternalArray(storage_path($header->file_path));
 
-        $items = $itemTable->where('header_id','=',$header->id)
-                ->with('account')
-                ->get();
+        $items = $itemTable->where('header_id', '=', $header->id)
+            ->with('account')
+            ->get();
 
-        
-        for($i = 0; $i < count($items); $i++){
 
-            for($j = 0; $j < count($externalInfo); $j++){
+        for ($i = 0; $i < count($items); $i++) {
 
-                if($items[$i]->account->bank_account == $externalInfo[$j]['numero_cuenta']){
+            for ($j = 0; $j < count($externalInfo); $j++) {
+
+                if ($items[$i]->account->bank_account == $externalInfo[$j]['numero_cuenta']) {
 
                     $externalInfo[$j]['item_id'] = $items[$i]->id;
                 }
-
             }
 
-            for($k = 0; $k < count($localInfo); $k++){
+            for ($k = 0; $k < count($localInfo); $k++) {
 
-                if($items[$i]->account->local_account == $localInfo[$k]['local_account']){
+                if ($items[$i]->account->local_account == $localInfo[$k]['local_account']) {
 
                     $localInfo[$k]['item_id'] = $items[$i]->id;
-
                 }
             }
-
         }
-        
+
         $localTable = new ConciliarLocalValues($this->conciliar_local_values_table);
         $localTable->insert($localInfo);
 
-        
+
         $externalTable = new ConciliarExternalValues($this->conciliar_external_values_table);
         $externalTable->insert($externalInfo);
         return $header;
@@ -321,37 +314,36 @@ class ConciliarController extends ApiController
 
 
 
-    private function getCurrentConciliacion(){
+    private function getCurrentConciliacion()
+    {
 
         $user = Auth::user();
 
         $conciliarHeaderTable = new ConciliarHeader($this->conciliar_headers_table);
-        $header = $conciliarHeaderTable->where('status',ConciliarHeader::OPEN_STATUS)
-                            ->orderBy('id', 'desc')
-                            ->first();
+        $header = $conciliarHeaderTable->where('status', ConciliarHeader::OPEN_STATUS)
+            ->orderBy('id', 'desc')
+            ->first();
 
-        if($header == null){
+        if ($header == null) {
 
             $header = new ConciliarHeader($this->conciliar_headers_table);
 
 
             $header->insert(
-                    [
-                        'fecha_ini' => date('Y-m-d H:i:s'),  
-                        'created_by' => $user->id,
-                        'status' => ConciliarHeader::OPEN_STATUS,
-                        
-                    ]
-                );
+                [
+                    'fecha_ini' => date('Y-m-d H:i:s'),
+                    'created_by' => $user->id,
+                    'status' => ConciliarHeader::OPEN_STATUS,
 
-            
+                ]
+            );
         }
 
         return $header;
-
     }
 
-    public function uploadAccountFile(Request $request){
+    public function uploadAccountFile(Request $request)
+    {
 
 
         $user = Auth::user();
@@ -364,49 +356,47 @@ class ConciliarController extends ApiController
 
 
 
-        $currentItem = $itemTable->where('header_id','=',$actualHeader->id)
-                        ->where('account_id','=',$data['account_id'])
-                        ->first();
+        $currentItem = $itemTable->where('header_id', '=', $actualHeader->id)
+            ->where('account_id', '=', $data['account_id'])
+            ->first();
 
-        
+
         // if($currentItem === NULL){
-            
+
         // }
 
-        $ext = $request->file->extension()=='txt'?'csv':$request->file->extension();
-        
-        $fileName = $user->current_company.'_'.$actualHeader->id.'_'.$data['account_id'].'_accountFile.'.$ext;
+        $ext = $request->file->extension() == 'txt' ? 'csv' : $request->file->extension();
 
-        $request->file->storeAs('tmpUpload',$fileName,'local');
+        $fileName = $user->current_company . '_' . $actualHeader->id . '_' . $data['account_id'] . '_accountFile.' . $ext;
+
+        $request->file->storeAs('tmpUpload', $fileName, 'local');
 
 
-        $filePath = 'app/tmpUpload/'.$fileName;
+        $filePath = 'app/tmpUpload/' . $fileName;
 
-        if($currentItem == null){
+        if ($currentItem == null) {
 
             $item = new ConciliarItem($this->conciliar_items_table);
 
             $itemInfo = [
-                    'header_id'=> $actualHeader->id, 
-                    'account_id'=> $data['account_id'],
-                    'debit_externo'=>0, 
-                    'debit_local'=>0,
-                    'credit_externo'=>0, 
-                    'credit_local'=>0,
-                    'balance_externo'=>0,
-                    'balance_local'=>0,
-                    'file_path'=>$filePath,
-                    'file_name'=> $request->file->getClientOriginalName(),
-                    'total'=>0,
-                    'status'=>ConciliarHeader::OPEN_STATUS,
-                ];
+                'header_id' => $actualHeader->id,
+                'account_id' => $data['account_id'],
+                'debit_externo' => 0,
+                'debit_local' => 0,
+                'credit_externo' => 0,
+                'credit_local' => 0,
+                'balance_externo' => 0,
+                'balance_local' => 0,
+                'file_path' => $filePath,
+                'file_name' => $request->file->getClientOriginalName(),
+                'total' => 0,
+                'status' => ConciliarHeader::OPEN_STATUS,
+            ];
             $item->insert($itemInfo);
 
-            $currentItem = $itemTable->where('header_id','=',$actualHeader->id)
-                        ->where('account_id','=',$data['account_id'])
-                        ->first();
-            
-
+            $currentItem = $itemTable->where('header_id', '=', $actualHeader->id)
+                ->where('account_id', '=', $data['account_id'])
+                ->first();
         }
 
         $account = Account::with('map')->find($data['account_id']);
@@ -417,65 +407,63 @@ class ConciliarController extends ApiController
         $currentItem->debit_externo = $mapInfo->debit_externo;
 
         $currentItem->save();
-        
+
         return $this->showArray($mapInfo);
     }
 
-    private function getInfoMaped(){
-
-
+    private function getInfoMaped()
+    {
     }
 
-    private function mapUploadFileAccount($file, $account, $item){
+    private function mapUploadFileAccount($file, $account, $item)
+    {
         $user = Auth::user();
 
-        if(!Schema::hasTable($this->conciliar_items_tmp_table)){
+        if (!Schema::hasTable($this->conciliar_items_tmp_table)) {
 
             $this->createTmpTableConciliarItems();
-
         }
-        if(!Schema::hasTable($this->conciliar_tmp_external_values_table)){
+        if (!Schema::hasTable($this->conciliar_tmp_external_values_table)) {
 
             $this->createTmpTableConciliarExternalValues();
+        } else {
 
-        }else{
 
-            
             $header = $this->getCurrentConciliacion();
 
             $tmpItemsTable = new ConciliarItem($this->conciliar_items_tmp_table);
 
             $tmpItems = $tmpItemsTable->where('header_id', $header->id)
-                            ->where('account_id',$account->id)
-                            ->first();
+                ->where('account_id', $account->id)
+                ->first();
 
-            if($tmpItems){
+
+            if (!$tmpItems) {
 
                 $item = [
-                    'header_id'=>$header->id, 
-                    'account_id'=>$account->id,
-                    'debit_externo'=>0, 
-                    'debit_local'=>0,
-                    'credit_externo'=>0, 
-                    'credit_local'=>0,
-                    'balance_externo'=>0,
-                    'balance_local'=>0,
-                    'total'=>0,
-                    'status'=>ConciliarItem::OPEN_STATUS,
+                    'header_id' => $header->id,
+                    'account_id' => $account->id,
+                    'debit_externo' => 0,
+                    'debit_local' => 0,
+                    'credit_externo' => 0,
+                    'credit_local' => 0,
+                    'balance_externo' => 0,
+                    'balance_local' => 0,
+                    'total' => 0,
+                    'status' => ConciliarItem::OPEN_STATUS,
 
                 ];
                 $tmpItemsTable = new ConciliarItem($this->conciliar_items_tmp_table);
 
                 $tmpItemsTable->insert($item);
-            }   
+            }
 
             $tmpItems = $tmpItemsTable->where('header_id', $header->id)
-                            ->where('account_id',$account->id)
-                            ->first();          
-            
+                ->where('account_id', $account->id)
+                ->first();
         }
 
-        $externalTxTable = ExternalTxType::where('bank_id',$account->bank_id)->get();
+        $externalTxTable = ExternalTxType::where('bank_id', $account->bank_id)->get();
         $mapFile = MapFile::find($account->map_id);
 
 
@@ -490,123 +478,124 @@ class ConciliarController extends ApiController
         $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
         $externalInsert = [];
 
-        $startRow = 1;
-        
+        $startRow = 2;
+
         switch ($account->id) {
             case 8:
-                    $startRow= 2;
+                $startRow = 2;
                 break;
             default:
                 # code...
                 break;
         }
 
-        // return $highestRow;
-        for($row = $startRow; $row <= $highestRow; $row++){
-            
+
+        for ($row = $startRow; $row <= $highestRow; $row++) {
+
             $cell = array();
             $insertCell = array();
 
             $accountMap = DB::Table('map_bank_index')
-                    ->orderBy('id')
-                    ->get();
+                ->orderBy('id')
+                ->get();
 
-            // return array($map,$localMap);
-            for($j = 0; $j < count($accountMap); $j++){
+            // return array($map, $accountMap);
+            for ($j = 0; $j < count($accountMap); $j++) {
 
                 $find = false;
-                for($i = 0; $i < count($map); $i++){
-                    
-                    $mapIndex = $map[$i]['mapIndex'];
-                    $fileColumn = $map[$i]['fileColumn']+1;
+                for ($i = 0; $i < count($map); $i++) {
 
-                    if($map[$i]['mapIndex'] == $accountMap[$j]->id && $map[$i]['mapIndex'] != 0){
+                    $mapIndex = $map[$i]['mapIndex'];
+                    $fileColumn = $map[$i]['fileColumn'] + 1;
+
+                    if ($mapIndex == $accountMap[$j]->id && $mapIndex != 0) {
                         $typeCell = $worksheet->getCellByColumnAndRow($fileColumn, $row)->getDataType();
 
-                        switch($typeCell){
-                            
+                        switch ($typeCell) {
+
                             case "null":
                                 $valueCell = null;
-                            break;
+                                break;
                             case "s":
                                 $valueCell = trim($worksheet->getCellByColumnAndRow($fileColumn, $row)->getValue());
-                            break;
+                                break;
                             case "f":
                                 $valueCell = $worksheet->getCellByColumnAndRow($fileColumn, $row)->getCalculatedValue();
-                            break;
-                            
+                                break;
+
                             case "n":
-                                
+
                                 $tmpValueCell = $valueCell = $worksheet->getCellByColumnAndRow($fileColumn, $row)->getValue();
                                 //validar si es de tipo fecha
-                                if( \PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($valueCell = $worksheet->getCellByColumnAndRow($fileColumn, $row))){
-                                    
-                                    $tmpValueCell = date("Y-m-d H:i:s",\PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($tmpValueCell));
-                                    
+                                if (\PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($valueCell = $worksheet->getCellByColumnAndRow($fileColumn, $row))) {
+
+                                    $tmpValueCell = date("Y-m-d H:i:s", \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($tmpValueCell));
                                 }
-                                
+
                                 $valueCell = $tmpValueCell;
-                                
-                            break;
-                            
+
+                                break;
+
                             default:
                                 $valueCell = $worksheet->getCellByColumnAndRow($fileColumn, $row)->getValue();
-                            break;
+                                break;
+                        }
+                        // TODO: Crear funcion para normalizar todos los currency values a decimal (decimal con punto(.) )
+                        if (in_array($accountMap[$j]->description, ["VALOR CRÉDITO", "VALOR DEBITO", "VALOR (DEBITO/CREDITO)"])) {
+                            $valueCell = str_replace("$", "", $valueCell);
+                            $valueCell = str_replace(".", "", $valueCell);
+                            $valueCell = str_replace(",", ".", $valueCell);
                         }
                         $insertCell[$accountMap[$j]->description] = $valueCell;
                         $find = true;
                     }
                 }
 
-                if(!$find){
+                if (!$find) {
 
                     $insertCell[$accountMap[$j]->description] = null;
                 }
-
             }
 
-            if($insertCell['FECHA DEL MOVIMIENTO'] == null){
 
-                continue;
-            }
-            
-
+            // 'valor_credito' => $insertCell["VALOR CRÉDITO"],
+            // 'valor_debito' => $insertCell["VALOR DEBITO"],
+            // 'valor_debito_credito' => $insertCell["VALOR (DEBITO/CREDITO)"],
             $tmpInsertCell = $this->cellToInsertExterno($insertCell);
-            
+
             $tmpInsertCell['item_id'] = $tmpItems['id'];
 
             $txInfo = $this->getTxInfo($tmpInsertCell, $account->bank_id);
 
-            if($txInfo[0]){
+            if ($txInfo[0]) {
 
                 $tmpInsertCell['tx_type_id'] = $txInfo[1]['id'];
                 $tmpInsertCell['tx_type_name'] = $txInfo[1]['tx'];
-                
-            }else{
+            } else {
 
                 $error = \Illuminate\Validation\ValidationException::withMessages(
-                ['No existe una transacción con descripción: '.$tmpInsertCell['descripcion'],$tmpInsertCell,$txInfo]
+                    ['No existe una transacción con descripción: ' . $tmpInsertCell['descripcion'], $tmpInsertCell, $txInfo]
                 );
                 throw $error;
             }
-            
+
 
 
             $insertArray[] = $tmpInsertCell;
         }
-        
+
         $externalValuesTmp = new ConciliarItem($this->conciliar_tmp_external_values_table);
 
 
-        $externalValuesTmp->where('item_id',$tmpItems->id)->delete();
-        $externalValuesTmp->insert($insertArray) ;
-        
-    
+        $externalValuesTmp->where('item_id', $tmpItems->id)->delete();
+        $externalValuesTmp->insert($insertArray);
+
+
         $query = DB::table($this->conciliar_tmp_external_values_table)
-                ->select(DB::raw("SUM(valor_credito) as credit,SUM(valor_debito) as debit,item_id"))
-                ->where('item_id',$tmpItems->id)
-                ->groupBy('item_id')
-                ->get();
+            ->select(DB::raw("SUM(valor_credito) as credit,SUM(valor_debito) as debit,item_id"))
+            ->where('item_id', $tmpItems->id)
+            ->groupBy('item_id')
+            ->get();
 
 
         $tmpItems->credit_externo = $query[0]->credit;
@@ -614,71 +603,70 @@ class ConciliarController extends ApiController
 
         $tmpItems->save();
         return $tmpItems;
-        
-
     }
 
-    public function getTxInfo($values, $bank_id){
+    public function getTxInfo($values, $bank_id)
+    {
 
-        $externalTxTable = ExternalTxType::where('bank_id',$bank_id)
-                            ->where('reference','like', '%'.$values['codigo_tx'].'%')
-                            ->get();
-        
-        if(is_numeric($values['codigo_tx'])){
-            
-            for($j = 0; $j < count($externalTxTable); $j++){
+        $externalTxTable = ExternalTxType::where('bank_id', $bank_id)
+            ->where('reference', 'like', '%' . $values['codigo_tx'] . '%')
+            ->get();
 
-                if(intval($externalTxTable[$j]['reference']) == intval($values['codigo_tx'])){
+        if (is_numeric($values['codigo_tx'])) {
 
-                    return [true,$externalTxTable[0]];
-                }else{
+            for ($j = 0; $j < count($externalTxTable); $j++) {
 
-                    if($externalTxTable[$j]['reference'] == $values['codigo_tx']){
+                if (intval($externalTxTable[$j]['reference']) == intval($values['codigo_tx'])) {
 
-                        return [true,$externalTxTable[0]];
+                    return [true, $externalTxTable[0]];
+                } else {
+
+                    if ($externalTxTable[$j]['reference'] == $values['codigo_tx']) {
+
+                        return [true, $externalTxTable[0]];
                     }
                 }
             }
-            
         }
 
-        $externalTxTable = ExternalTxType::where('bank_id',$bank_id)
-                            ->where('reference','like', '%'.$values['codigo_tx'].'%')
-                            ->get();
-        
+        $externalTxTable = ExternalTxType::where('bank_id', $bank_id)
+            ->where('reference', 'like', '%' . $values['codigo_tx'] . '%')
+            ->get();
 
-        if(count($externalTxTable) > 0){
 
-            return [true,$externalTxTable[0]];
+        if (count($externalTxTable) > 0) {
+
+            return [true, $externalTxTable[0]];
         }
 
-        $externalTxTable = ExternalTxType::where('bank_id',$bank_id)
-                            ->where('description','like', '%'.$values['descripcion'].'%')
-                            ->get();
+        $externalTxTable = ExternalTxType::where('bank_id', $bank_id)
+            ->where('description', 'like', '%' . $values['descripcion'] . '%')
+            ->get();
 
 
 
-        if(count($externalTxTable) > 0){
+        if (count($externalTxTable) > 0) {
 
-            return [true,$externalTxTable[0]];
-        }else{
+            return [true, $externalTxTable[0]];
+        } else {
 
-            return [false,$externalTxTable];
+            return [false, $externalTxTable];
         }
     }
 
-    public function cellToInsertExterno($insertCell){
+    public function cellToInsertExterno($insertCell)
+    {
 
         $insert =   [
-            'tx_type_id' => '',  
-            'tx_type_name' => '',  
-            'item_id' => '',  
-            'descripcion' => $insertCell["TIPO DE TRANSACCION/DESCRIPCION"]==null?'':$insertCell["TIPO DE TRANSACCION/DESCRIPCION"],
-            'operador' => $insertCell["OPERADOR"],
+            'tx_type_id' => '',
+            'tx_type_name' => '',
+            'item_id' => '',
+            'descripcion' => $insertCell["TIPO DE TRANSACCION/DESCRIPCION"] == null ? '' : $insertCell["TIPO DE TRANSACCION/DESCRIPCION"],
+            'operador' => '', // $insertCell["OPERADOR"],
             'valor_credito' => $insertCell["VALOR CRÉDITO"],
-            'valor_debito' => $insertCell["VALOR DEBITO"],  
+            'valor_debito' => $insertCell["VALOR DEBITO"],
             'valor_debito_credito' => $insertCell["VALOR (DEBITO/CREDITO)"],
-            'fecha_movimiento' => $insertCell["FECHA DEL MOVIMIENTO"],  
+            'fecha_movimiento' => $insertCell["FECHA DEL MOVIMIENTO"],
             'fecha_archivo' => $insertCell["FECHA DEL ARCHIVO"],
             'codigo_tx' => $insertCell["CODIGO DE TRANSACCION"],
             'referencia_1' => $insertCell["REFERENCIA 1"],
@@ -695,187 +683,204 @@ class ConciliarController extends ApiController
             'nombre_proveedor' => $insertCell["NOMBRE PROVEEDOR"],
             'id_proveedor' => $insertCell["IDENTIFICACION DE PROVEEDOR"],
             'banco_destino' => $insertCell["BANCO DESTINO"],
-            'fecha_rechazo' => $insertCell["FECHA DE RECHAZO"], 
-            'motivo_rechazo' => $insertCell["MOTIVO DE RECHAZO"], 
-            'ciudad' => $insertCell["CIUDAD"], 
-            'tipo_cuenta' => $insertCell["TIPO DE CUENTA"], 
-            'numero_documento' => $insertCell["NUMERO DE DOCUMENTO"], 
-            
+            'fecha_rechazo' => $insertCell["FECHA DE RECHAZO"],
+            'motivo_rechazo' => $insertCell["MOTIVO DE RECHAZO"],
+            'ciudad' => $insertCell["CIUDAD"],
+            'tipo_cuenta' => $insertCell["TIPO DE CUENTA"],
+            'numero_documento' => $insertCell["NUMERO DE DOCUMENTO"],
+
         ];
 
         return $insert;
     }
 
 
-    public function uploadConciliarContable(Request $request){
+    public function uploadConciliarContable(Request $request)
+    {
 
 
         $user = Auth::user();
         $company =  Company::find($user->current_company);
 
-        if($company->map_id == null){
+        if ($company->map_id == null) {
 
-            return $this->errorResponse("No hay un formato asociado",400);
+            return $this->errorResponse("No hay un formato asociado", 400);
         }
-        
+
         $headers = new ConciliarHeader($this->conciliar_headers_table);
 
-        $openHeader = $headers->where('status',ConciliarHeader::OPEN_STATUS)
-                                ->orderBy('id','desc')->first();
-
-        
-        $mapped = $this->getInserConciliarLocal($request->file, $company->map_id);
-
-        $this->createTmpTableConciliarLocalValues();
-
-        DB::table($this->conciliar_tmp_local_values_table)->insert($mapped);
-        
-        $conciliarCuadre = DB::table($this->conciliar_tmp_local_values_table)
-                ->select(
-                        DB::raw("SUM(valor_credito) as credit,SUM(valor_debito) as debit, 
-                            ".$this->conciliar_tmp_local_values_table.".local_account, accounts.id")
-                        )
-                ->join('accounts', $this->conciliar_tmp_local_values_table.'.local_account','=','accounts.local_account')
-                ->join('banks', 'accounts.bank_id','=','banks.id')
-                ->where('accounts.company_id','=',$user->current_company)
-                ->groupBy('local_account','accounts.id')
-                ->get();
-
-        
-
-        Schema::dropIfExists($this->conciliar_tmp_local_values_table);
-
-        $itemTable = new ConciliarItem($this->conciliar_items_table);
+        $openHeader = $headers->where('status', ConciliarHeader::OPEN_STATUS)
+            ->orderBy('id', 'desc')->first();
 
 
-        for($i = 0; $i < count($conciliarCuadre); $i++){
+        return $this->uploadConciliarContableService->startUploadProcess(
+            $request->file,
+            $company->map_id,
+            $this->conciliar_tmp_local_values_table,
+            $this->conciliar_items_table,
+            $user,
+            $openHeader
+        );
 
-            $openItemTable = $itemTable->where('header_id','=',$openHeader->id)
-                        ->where('account_id','=',$conciliarCuadre[$i]->id)
-                        ->first();   
 
-            if($openItemTable){
+        // $mapped = $this->getInserConciliarLocal($request->file, $company->map_id);
+        // // return $mapped;
+        // $this->createTmpTableConciliarLocalValues();
 
-                $openItemTable->debit_local = (float)$conciliarCuadre[$i]->debit;
-                $openItemTable->credit_local = (float)$conciliarCuadre[$i]->credit;
+        // DB::beginTransaction();
+        // $index = 0;
+        // try {
 
-                $openItemTable->save();
-            }else{
+        //     foreach (array_chunk($mapped, 1000) as $t) {
+        //         DB::table($this->conciliar_tmp_local_values_table)->insert($t);
+        //     }
+        // } catch (Exception $e) {
+        //     DB::rollBack();
+        //     throw new Exception(json_encode($mapped[$index]));
+        // }
+        // DB::commit();
 
-                $itemInfo = [
-                    'header_id'=> $openHeader->id, 
-                    'account_id'=> $conciliarCuadre[$i]->id,
-                    'debit_externo'=>0, 
-                    'debit_local'=>$conciliarCuadre[$i]->debit,
-                    'credit_externo'=>0, 
-                    'credit_local'=>$conciliarCuadre[$i]->credit,
-                    'balance_externo'=>0,
-                    'balance_local'=>0,
-                    'file_path'=>'',
-                    'file_name'=> '',
-                    'total'=>0,
-                    'status'=>ConciliarHeader::OPEN_STATUS,
-                ];
+        // $conciliarCuadre = DB::table($this->conciliar_tmp_local_values_table)
+        //     ->select(
+        //         DB::raw("SUM(valor_credito) as credit,SUM(valor_debito) as debit, 
+        //                     " . $this->conciliar_tmp_local_values_table . ".local_account, accounts.id")
+        //     )
+        //     ->join('accounts', $this->conciliar_tmp_local_values_table . '.local_account', '=', 'accounts.local_account')
+        //     ->join('banks', 'accounts.bank_id', '=', 'banks.id')
+        //     ->where('accounts.company_id', '=', $user->current_company)
+        //     ->groupBy('local_account', 'accounts.id')
+        //     ->get();
 
-                $item->insert($itemInfo);
-            }
 
-        }
+
+        // Schema::dropIfExists($this->conciliar_tmp_local_values_table);
+
+        // $itemTable = new ConciliarItem($this->conciliar_items_table);
+
+
+        // for ($i = 0; $i < count($conciliarCuadre); $i++) {
+
+        //     $openItemTable = $itemTable->where('header_id', '=', $openHeader->id)
+        //         ->where('account_id', '=', $conciliarCuadre[$i]->id)
+        //         ->first();
+
+        //     if ($openItemTable) {
+
+        //         $openItemTable->debit_local = (float)$conciliarCuadre[$i]->debit;
+        //         $openItemTable->credit_local = (float)$conciliarCuadre[$i]->credit;
+
+        //         $openItemTable->save();
+        //     } else {
+
+        //         $itemInfo = [
+        //             'header_id' => $openHeader->id,
+        //             'account_id' => $conciliarCuadre[$i]->id,
+        //             'debit_externo' => 0,
+        //             'debit_local' => $conciliarCuadre[$i]->debit,
+        //             'credit_externo' => 0,
+        //             'credit_local' => $conciliarCuadre[$i]->credit,
+        //             'balance_externo' => 0,
+        //             'balance_local' => 0,
+        //             'file_path' => '',
+        //             'file_name' => '',
+        //             'total' => 0,
+        //             'status' => ConciliarHeader::OPEN_STATUS,
+        //         ];
+
+        //         $item->insert($itemInfo);
+        //     }
+        // }
 
         return $this->showMessage(true);
+    }
 
-    }   
-
-    public function uploadIniFile(Request $request){
+    public function uploadIniFile(Request $request)
+    {
 
         $user = Auth::user();
 
         $headers = new ConciliarHeader($this->conciliar_headers_table);
 
-        $lastHeader = $headers->orderBy('id','desc')->first();
+        $lastHeader = $headers->orderBy('id', 'desc')->first();
 
-        $ext = $request->file->extension()=='txt'?'csv':$request->file->extension();
+        $ext = $request->file->extension() == 'txt' ? 'csv' : $request->file->extension();
 
-        $request->file->storeAs('tmpUpload',$user->id.'iniFile.'.$ext,'local');
+        $request->file->storeAs('tmpUpload', $user->id . 'iniFile.' . $ext, 'local');
 
-        $file = storage_path('app/tmpUpload/'.$user->id.'iniFile.'.$ext);
+        $file = storage_path('app/tmpUpload/' . $user->id . 'iniFile.' . $ext);
 
-        if($lastHeader != null){
+        if ($lastHeader != null) {
 
             $lastHeader->file_name = $request->file->getClientOriginalName();
             $lastHeader->save();
-
-        }else{
+        } else {
 
             $header = new ConciliarHeader($this->conciliar_headers_table);
 
 
             $header->insert(
-                    [
-                        'fecha_ini' => date('Y-m-d H:i:s'),  
-                        'created_by' => $user->id,
-                        'status' => ConciliarHeader::OPEN_STATUS,
-                        'file_name' => $request->file->getClientOriginalName(),
-                        'file_path' => 'app/tmpUpload/'.$user->id.'iniFile.'.$ext,
-                    ]
+                [
+                    'fecha_ini' => date('Y-m-d H:i:s'),
+                    'created_by' => $user->id,
+                    'status' => ConciliarHeader::OPEN_STATUS,
+                    'file_name' => $request->file->getClientOriginalName(),
+                    'file_path' => 'app/tmpUpload/' . $user->id . 'iniFile.' . $ext,
+                ]
             );
-
         }
 
         $externalSaldos = $this->getExternalIniSaldos($request->file);
 
         $localSaldos = $this->getLocalIniSaldos($request->file);
 
-        return $this->showArray(array("external"=>$externalSaldos, "local"=>$localSaldos));
+        return $this->showArray(array("external" => $externalSaldos, "local" => $localSaldos));
     }
 
 
 
-    public function getCuentasToConciliar(){
+    public function getCuentasToConciliar()
+    {
 
         $conciliarHeaderTable = new ConciliarHeader($this->conciliar_headers_table);
-        $conciliarHeaderOpen = $conciliarHeaderTable->where('status','=',ConciliarHeader::OPEN_STATUS)
-                            ->orderBy('id', 'desc')
-                            ->first();
+        $conciliarHeaderOpen = $conciliarHeaderTable->where('status', '=', ConciliarHeader::OPEN_STATUS)
+            ->orderBy('id', 'desc')
+            ->first();
 
-        $conciliarHeaderClose = $conciliarHeaderTable->where('status','=',ConciliarHeader::CLOSE_STATUS)
-                            ->orderBy('id', 'desc')
-                            ->first();
+        $conciliarHeaderClose = $conciliarHeaderTable->where('status', '=', ConciliarHeader::CLOSE_STATUS)
+            ->orderBy('id', 'desc')
+            ->first();
 
-        
+
         $conciliarItemsTable = new ConciliarItem($this->conciliar_items_table);
 
-        $conciliarItemsClose = $conciliarItemsTable->where('header_id','=',$conciliarHeaderClose->id)
-                            ->with(['account','account.companies','account.banks' => function($q){
-                                             $q->orderBy('banks.name', 'desc');
-                                         }])
-                            ->get();
+        $conciliarItemsClose = $conciliarItemsTable->where('header_id', '=', $conciliarHeaderClose->id)
+            ->with(['account', 'account.companies', 'account.banks' => function ($q) {
+                $q->orderBy('banks.name', 'desc');
+            }])
+            ->get();
 
-        if($conciliarHeaderOpen == NULL){
+        if ($conciliarHeaderOpen == NULL) {
 
-            
-
-            for($j = 0; $j < $conciliarItemsClose->count(); $j++){
+            for ($j = 0; $j < $conciliarItemsClose->count(); $j++) {
 
                 $conciliarItemsClose[$j]->ant_externo = $conciliarItemsClose[$j]->balance_externo;
                 $conciliarItemsClose[$j]->ant_local = $conciliarItemsClose[$j]->balance_local;
             }
 
             return $this->showArray($conciliarItemsClose);
+        } else {
 
-        }else{
+            $conciliarItemsOpen = $conciliarItemsTable->where('header_id', '=', $conciliarHeaderOpen->id)
+                ->with(['account', 'account.companies', 'account.banks' => function ($q) {
+                    $q->orderBy('banks.name', 'desc');
+                }])
+                ->get();
+            // return $conciliarItemsOpen;
+            for ($i = 0; $i < $conciliarItemsOpen->count(); $i++) {
 
-            $conciliarItemsOpen = $conciliarItemsTable->where('header_id','=',$conciliarHeaderOpen->id)
-                            ->with(['account','account.companies','account.banks' => function($q){
-                                             $q->orderBy('banks.name', 'desc');
-                                         }])
-                            ->get();
+                for ($j = 0; $j < $conciliarItemsClose->count(); $j++) {
 
-            for($i = 0; $i < $conciliarItemsOpen->count(); $i++){
-
-                for($j = 0; $j < $conciliarItemsClose->count(); $j++){
-
-                    if($conciliarItemsOpen[$i]->account_id == $conciliarItemsClose[$j]->account_id){
+                    if ($conciliarItemsOpen[$i]->account_id == $conciliarItemsClose[$j]->account_id) {
 
                         $conciliarItemsOpen[$i]->ant_externo = $conciliarItemsClose[$j]->balance_externo;
                         $conciliarItemsOpen[$i]->ant_local = $conciliarItemsClose[$j]->balance_local;
@@ -884,70 +889,69 @@ class ConciliarController extends ApiController
             }
 
             return $this->showArray($conciliarItemsOpen);
-
         }
-                            
     }
 
-    public function setIniProcess(Request $request){
+    public function setIniProcess(Request $request)
+    {
 
 
         return Session::get('file');
     }
 
-    
 
 
-    public function isIniConciliar(){
 
-        if(!Schema::hasTable($this->conciliar_headers_table)){
+    public function isIniConciliar()
+    {
+
+        if (!Schema::hasTable($this->conciliar_headers_table)) {
 
             $this->createTablesInit();
         }
 
         $conciliarModel = new ConciliarHeader($this->conciliar_headers_table);
 
-        $conciliarTable = $conciliarModel->where('id','=',1)
-                ->where('status','=',ConciliarHeader::CLOSE_STATUS)
-                ->get();
+        $conciliarTable = $conciliarModel->where('id', '=', 1)
+            ->where('status', '=', ConciliarHeader::CLOSE_STATUS)
+            ->get();
 
 
-        if(count($conciliarTable) == 0){
+        if (count($conciliarTable) == 0) {
 
-            return $this->showMessage('',false);
-        }else{
+            return $this->showMessage('', false);
+        } else {
 
-            return $this->showMessage('',true);
+            return $this->showMessage('', true);
         }
-        
     }
 
-    private function fileExplode($file, $delimiter){
+    private function fileExplode($file, $delimiter)
+    {
 
-        $rows = explode("\n",$file);
-        
-        $colTitles = explode($delimiter,$rows[0]);
-        $colValues = explode($delimiter,$rows[1]);
-        
-        
-        if(!(count($colTitles) > 1)){
-            
+        $rows = explode("\n", $file);
+
+        $colTitles = explode($delimiter, $rows[0]);
+        $colValues = explode($delimiter, $rows[1]);
+
+
+        if (!(count($colTitles) > 1)) {
+
             return false;
         }
-        
-        for($i = 0; $i < count($colTitles); $i++){
-            
-            $cell[] = ["title"=>$colTitles[$i],"value"=>$colValues[$i],"type"=>"txt"];  
-            
+
+        for ($i = 0; $i < count($colTitles); $i++) {
+
+            $cell[] = ["title" => $colTitles[$i], "value" => $colValues[$i], "type" => "txt"];
         }
-        
+
         return $cell;
+    }
 
-    } 
+    public function createTableConciliarHeaders()
+    {
 
-    public function createTableConciliarHeaders(){
-
-        Schema::create($this->conciliar_headers_table, function($table) {
+        Schema::create($this->conciliar_headers_table, function ($table) {
             $table->increments('id');
             $table->integer('created_by')->unsigned();
             $table->integer('close_by')->unsigned()->nullable();
@@ -965,23 +969,23 @@ class ConciliarController extends ApiController
 
             $table->foreign('created_by')->references('id')->on('users');
             $table->foreign('close_by')->references('id')->on('users');
-            
         });
     }
 
-    public function createTmpTableConciliarItems(){
+    public function createTmpTableConciliarItems()
+    {
 
-        Schema::create($this->conciliar_items_tmp_table, function($table) {
+        Schema::create($this->conciliar_items_tmp_table, function ($table) {
             $table->increments('id');
             $table->integer('header_id')->unsigned();
             $table->integer('account_id')->unsigned();
-            $table->decimal('debit_externo',24,2);
-            $table->decimal('credit_externo',24,2);
-            $table->decimal('debit_local',24,2);
-            $table->decimal('credit_local',24,2);
-            $table->decimal('balance_externo',24,2);
-            $table->decimal('balance_local',24,2);
-            $table->decimal('total',24,2);
+            $table->decimal('debit_externo', 24, 2);
+            $table->decimal('credit_externo', 24, 2);
+            $table->decimal('debit_local', 24, 2);
+            $table->decimal('credit_local', 24, 2);
+            $table->decimal('balance_externo', 24, 2);
+            $table->decimal('balance_local', 24, 2);
+            $table->decimal('total', 24, 2);
             $table->string('file_path')->nullable();
             $table->string('file_name')->nullable();
             $table->string('status')->default('created');
@@ -989,23 +993,23 @@ class ConciliarController extends ApiController
             $table->timestamps();
 
             $table->foreign('account_id')->references('id')->on('accounts');
-            
         });
     }
 
-    public function createTableConciliarItems(){
+    public function createTableConciliarItems()
+    {
 
-        Schema::create($this->conciliar_items_table, function($table) {
+        Schema::create($this->conciliar_items_table, function ($table) {
             $table->increments('id');
             $table->integer('header_id')->unsigned();
             $table->integer('account_id')->unsigned();
-            $table->decimal('debit_externo',24,2);
-            $table->decimal('credit_externo',24,2);
-            $table->decimal('debit_local',24,2);
-            $table->decimal('credit_local',24,2);
-            $table->decimal('balance_externo',24,2);
-            $table->decimal('balance_local',24,2);
-            $table->decimal('total',24,2);
+            $table->decimal('debit_externo', 24, 2);
+            $table->decimal('credit_externo', 24, 2);
+            $table->decimal('debit_local', 24, 2);
+            $table->decimal('credit_local', 24, 2);
+            $table->decimal('balance_externo', 24, 2);
+            $table->decimal('balance_local', 24, 2);
+            $table->decimal('total', 24, 2);
             $table->string('file_path')->nullable();
             $table->string('file_name')->nullable();
             $table->string('status')->default('created');
@@ -1014,13 +1018,13 @@ class ConciliarController extends ApiController
 
             $table->foreign('header_id')->references('id')->on($this->conciliar_headers_table);
             $table->foreign('account_id')->references('id')->on('accounts');
-            
         });
     }
 
-    public function createTableConciliarExternalValues(){
+    public function createTableConciliarExternalValues()
+    {
 
-        Schema::create($this->conciliar_external_values_table, function($table)  {
+        Schema::create($this->conciliar_external_values_table, function ($table) {
             $table->bigIncrements('id');
             $table->boolean('matched')->default(false);
             $table->bigInteger('tx_type_id')->unsigned();
@@ -1028,15 +1032,15 @@ class ConciliarController extends ApiController
             $table->integer('item_id')->unsigned();
             $table->string('descripcion')->comment = 'transaccion/descripcion';
             $table->string('operador')->nullable();
-            $table->decimal('valor_credito',24,2)->nullable();
-            $table->decimal('valor_debito',24,2)->nullable();
-            $table->decimal('valor_debito_credito',24,2)->nullable();
+            $table->decimal('valor_credito', 24, 2)->nullable();
+            $table->decimal('valor_debito', 24, 2)->nullable();
+            $table->decimal('valor_debito_credito', 24, 2)->nullable();
             $table->dateTime('fecha_movimiento')->nullable();
             $table->dateTime('fecha_archivo')->nullable();
             $table->string('codigo_tx')->nullable();
             $table->string('referencia_1')->nullable();
             $table->string('referencia_2')->nullable();
-            $table->string('referencia_3')->nullable();            
+            $table->string('referencia_3')->nullable();
             $table->string('nombre_titular')->nullable();
             $table->string('identificacion_titular')->nullable();
             $table->string('numero_cuenta')->nullable();
@@ -1058,16 +1062,15 @@ class ConciliarController extends ApiController
 
             $table->foreign('tx_type_id')->references('id')->on('external_tx_types');
             $table->foreign('item_id')->references('id')->on($this->conciliar_items_table);
-
         });
-
     }
 
-    public function createTmpTableConciliarExternalValues(){
+    public function createTmpTableConciliarExternalValues()
+    {
 
         Schema::dropIfExists($this->conciliar_tmp_external_values_table);
 
-        Schema::create($this->conciliar_tmp_external_values_table, function($table)  {
+        Schema::create($this->conciliar_tmp_external_values_table, function ($table) {
             $table->bigIncrements('id');
             $table->boolean('matched')->default(false);
             $table->integer('tx_type_id')->unsigned();
@@ -1075,15 +1078,15 @@ class ConciliarController extends ApiController
             $table->integer('item_id')->unsigned()->nullable();
             $table->string('descripcion')->comment = 'transaccion/descripcion';
             $table->string('operador')->nullable();
-            $table->decimal('valor_credito',24,2)->nullable();
-            $table->decimal('valor_debito',24,2)->nullable();
-            $table->decimal('valor_debito_credito',24,2)->nullable();
+            $table->decimal('valor_credito', 24, 2)->nullable();
+            $table->decimal('valor_debito', 24, 2)->nullable();
+            $table->decimal('valor_debito_credito', 24, 2)->nullable();
             $table->dateTime('fecha_movimiento')->nullable();
             $table->dateTime('fecha_archivo')->nullable();
             $table->string('codigo_tx')->nullable();
             $table->string('referencia_1')->nullable();
             $table->string('referencia_2')->nullable();
-            $table->string('referencia_3')->nullable();            
+            $table->string('referencia_3')->nullable();
             $table->string('nombre_titular')->nullable();
             $table->string('identificacion_titular')->nullable();
             $table->string('numero_cuenta')->nullable();
@@ -1102,15 +1105,13 @@ class ConciliarController extends ApiController
             $table->string('numero_documento')->nullable();
             $table->softDeletes();
             $table->timestamps();
-
-
         });
-
     }
 
-    public function createTableConciliarLocalValues(){
+    public function createTableConciliarLocalValues()
+    {
 
-        Schema::create($this->conciliar_local_values_table, function($table)  {
+        Schema::create($this->conciliar_local_values_table, function ($table) {
             $table->bigIncrements('id');
             $table->boolean('matched')->default(false);
             $table->integer('item_id')->unsigned();
@@ -1124,21 +1125,21 @@ class ConciliarController extends ApiController
             $table->string('referencia_2')->nullable();
             $table->string('referencia_3')->nullable();
             $table->string('otra_referencia')->nullable();
-            $table->decimal('saldo_actual',24,2)->nullable();
-            $table->decimal('valor_debito',24,2)->nullable();
-            $table->decimal('saldo_anterior',24,2)->nullable();
-            $table->decimal('valor_credito',24,2)->nullable();
+            $table->decimal('saldo_actual', 24, 2)->nullable();
+            $table->decimal('valor_debito', 24, 2)->nullable();
+            $table->decimal('saldo_anterior', 24, 2)->nullable();
+            $table->decimal('valor_credito', 24, 2)->nullable();
             $table->string('codigo_usuario')->nullable();
             $table->string('nombre_agencia')->nullable();
-            $table->decimal('valor_debito_credito',24,2)->nullable();
+            $table->decimal('valor_debito_credito', 24, 2)->nullable();
             $table->string('nombre_centro_costos')->nullable();
             $table->string('codigo_centro_costo')->nullable();
-            $table->string('numero_comprobante')->nullable();            
+            $table->string('numero_comprobante')->nullable();
             $table->string('nombre_usuario')->nullable();
             $table->string('nombre_cuenta_contable')->nullable();
             $table->string('numero_cuenta_contable')->nullable();
             $table->string('nombre_tercero')->nullable();
-            $table->string('identificacion_tercero')->nullable();  
+            $table->string('identificacion_tercero')->nullable();
             $table->dateTime('fecha_ingreso')->nullable();
             $table->dateTime('fecha_origen')->nullable();
             $table->string('oficina_origen')->nullable();
@@ -1148,21 +1149,20 @@ class ConciliarController extends ApiController
             $table->string('tipo_registro')->nullable();
             $table->string('ambiente_origen')->nullable();
             $table->string('beneficiario')->nullable();
-          
+
             $table->softDeletes();
             $table->timestamps();
 
             $table->foreign('item_id')->references('id')->on($this->conciliar_items_table);
-
         });
-
     }
 
-    public function createTmpTableConciliarLocalValues(){
+    public function createTmpTableConciliarLocalValues()
+    {
 
         Schema::dropIfExists($this->conciliar_tmp_local_values_table);
 
-        Schema::create($this->conciliar_tmp_local_values_table, function($table)  {
+        Schema::create($this->conciliar_tmp_local_values_table, function ($table) {
             $table->bigIncrements('id');
             $table->boolean('matched')->default(false);
             $table->integer('item_id')->unsigned()->nullable();
@@ -1176,21 +1176,21 @@ class ConciliarController extends ApiController
             $table->string('referencia_2')->nullable();
             $table->string('referencia_3')->nullable();
             $table->string('otra_referencia')->nullable();
-            $table->decimal('saldo_actual',24,2)->nullable();
-            $table->decimal('valor_debito',24,2)->nullable();
-            $table->decimal('saldo_anterior',24,2)->nullable();
-            $table->decimal('valor_credito',24,2)->nullable();
+            $table->decimal('saldo_actual', 24, 2)->nullable();
+            $table->decimal('valor_debito', 24, 2)->nullable();
+            $table->decimal('saldo_anterior', 24, 2)->nullable();
+            $table->decimal('valor_credito', 24, 2)->nullable();
             $table->string('codigo_usuario')->nullable();
             $table->string('nombre_agencia')->nullable();
-            $table->decimal('valor_debito_credito',24,2)->nullable();
+            $table->decimal('valor_debito_credito', 24, 2)->nullable();
             $table->string('nombre_centro_costos')->nullable();
             $table->string('codigo_centro_costo')->nullable();
-            $table->string('numero_comprobante')->nullable();            
+            $table->string('numero_comprobante')->nullable();
             $table->string('nombre_usuario')->nullable();
             $table->string('nombre_cuenta_contable')->nullable();
             $table->string('numero_cuenta_contable')->nullable();
             $table->string('nombre_tercero')->nullable();
-            $table->string('identificacion_tercero')->nullable();  
+            $table->string('identificacion_tercero')->nullable();
             $table->dateTime('fecha_ingreso')->nullable();
             $table->dateTime('fecha_origen')->nullable();
             $table->string('oficina_origen')->nullable();
@@ -1200,22 +1200,20 @@ class ConciliarController extends ApiController
             $table->string('tipo_registro')->nullable();
             $table->string('ambiente_origen')->nullable();
             $table->string('beneficiario')->nullable();
-          
+
             $table->softDeletes();
             $table->timestamps();
-
-
         });
-
     }
 
-    public function createTableConciliarLocalTxType(){
+    public function createTableConciliarLocalTxType()
+    {
 
 
         Schema::dropIfExists($this->conciliar_local_tx_type);
 
 
-        Schema::create($this->conciliar_local_tx_type, function($table)  {
+        Schema::create($this->conciliar_local_tx_type, function ($table) {
             $table->bigIncrements('id');
             $table->string('description');
             $table->string('tx');
@@ -1226,80 +1224,79 @@ class ConciliarController extends ApiController
             $table->timestamps();
 
             $table->foreign('company_id')->references('id')->on('companies');
-
         });
-
-
     }
 
-    
 
-    private function fileToArray($file){
 
+    private function fileToArray($file)
+    {
+        //TODO: ACTUALIZAR LIBRERIA PHPSPREADSHEET
+        $alphabet = str_split(strtoupper("abcdefghijklmnopqrstuvwxyz"));
 
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
         $spreadsheet->setActiveSheetIndex(0);
         $worksheet = $spreadsheet->getActiveSheet();
         $highestRow = $worksheet->getHighestDataRow();
-        $highestColumn = $worksheet->getHighestColumn();
-        $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+        $highestColumn = array_search($worksheet->getHighestColumn(), $alphabet) + 1;
+        $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($worksheet->getHighestColumn());
         $externalInsert = [];
 
-        for($row = 2; $row <= $highestRow; $row++){
-            
+
+        for ($row = 2; $row <= $highestRow; $row++) {
+
             $cell = array();
             $insertCell = array();
 
 
-            for($col = 1; $col <= CONTABLE_COLS; $col++){
-                
+            for ($col = 1; $col <= $highestColumn; $col++) {
+
                 $typeCell = $worksheet->getCellByColumnAndRow($col, $row)->getDataType();
 
-                switch($typeCell){
-                    
+                switch ($typeCell) {
+
                     case "null":
                         $valueCell = null;
-                    break;
+                        break;
                     case "s":
                         $valueCell = trim($worksheet->getCellByColumnAndRow($col, $row)->getValue());
-                    break;
+                        break;
                     case "f":
                         $valueCell = $worksheet->getCellByColumnAndRow($col, $row)->getCalculatedValue();
-                    break;
-                    
+                        break;
+
                     case "n":
-                        
+
                         $tmpValueCell = $valueCell = $worksheet->getCellByColumnAndRow($col, $row)->getValue();
                         //validar si es de tipo fecha
-                        if( \PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($valueCell = $worksheet->getCellByColumnAndRow($col, $row))){
-                            
-                            $tmpValueCell = date("Y-m-d H:i:s",\PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($tmpValueCell));
-                            
+                        if (\PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($valueCell = $worksheet->getCellByColumnAndRow($col, $row))) {
+
+                            $tmpValueCell = date("Y-m-d H:i:s", \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($tmpValueCell));
                         }
-                        
+
                         $valueCell = $tmpValueCell;
-                        
-                    break;
-                    
+
+                        break;
+
                     default:
                         $tmpValueCell = $valueCell = $worksheet->getCellByColumnAndRow($col, $row)->getValue();
-                    break;
+                        break;
                 }
 
 
-                $cell[] = ["value"=>$valueCell,"type"=>$typeCell];
-                    
-                $insertCell[] = ($valueCell===null)?null:$valueCell;
-                
-            }
+                $cell[] = ["value" => $valueCell, "type" => $typeCell];
 
+
+                $insertCell[] = ($valueCell === null) ? null : $valueCell;
+            }
             $localInsert[] = $insertCell;
         }
 
         return $localInsert;
     }
 
-    private function getInserConciliarLocal($file, $map_id){
+    private function getInserConciliarLocal($file, $map_id)
+    {
 
         $fileArray = $this->fileToArray($file);
 
@@ -1307,103 +1304,100 @@ class ConciliarController extends ApiController
 
         $map = json_decode($mapModel->map, true);
 
-        // return $map;
         $tmpArray = array();
         $tmpArray[] = null;
-        for($i = 1; $i <= 29; $i++){
+        for ($i = 1; $i <= 29; $i++) {
             $found = false;
-            for($j = 0; $j < count($map); $j++){
+            for ($j = 0; $j < count($map); $j++) {
 
-                if($i == $map[$j]['mapIndex']){
+                if ($i == $map[$j]['mapIndex']) {
 
                     $found = true;
                     $tmpArray[] = (string)$map[$j]['fileColumn'];
-                    // return $map[$j]['mapIndex'];
                 }
-
-
             }
-            if(!$found){
+            if (!$found) {
 
                 $tmpArray[] = null;
-            } 
-            
+            }
         }
 
-        for($i = 0; $i < count($fileArray); $i++){
-
+        for ($i = 0; $i < count($fileArray); $i++) {
+            // return [$fileArray[$i][5], $tmpArray[1]];
+            if ($fileArray[$i][$tmpArray[1]] === 0) {
+                continue;
+            }
             $mapped[] =  [
                 'matched' => 0,     //1
                 'item_id' => 0,     //2
                 'tx_type_id' => null,       //3
                 'tx_type_name' => null,     //4
                 'cuenta_externa' => '',   //8
-                'fecha_movimiento' => $tmpArray[1]==null?null:$fileArray[$i][$tmpArray[1]],
-                'descripcion' => $tmpArray[2]==null?null:$fileArray[$i][$tmpArray[2]],
-                'referencia_1' => $tmpArray[3]==null?null:$fileArray[$i][$tmpArray[3]],
-                'saldo_actual' => $tmpArray[4]==null?null:$fileArray[$i][$tmpArray[4]],
-                'oficina_destino' => $tmpArray[5]==null?null:$fileArray[$i][$tmpArray[5]],
-                'nombre_agencia' => $tmpArray[6]==null?null:$fileArray[$i][$tmpArray[6]],
-                'nombre_centro_costos' => $tmpArray[7]==null?null:$fileArray[$i][$tmpArray[7]],
-                'codigo_centro_costo' => $tmpArray[8]==null?null:$fileArray[$i][$tmpArray[8]],
-                'numero_comprobante' => $tmpArray[9]==null?null:$fileArray[$i][$tmpArray[9]],
-                'nombre_usuario' => $tmpArray[10]==null?null:$fileArray[$i][$tmpArray[10]],
-                'valor_debito_credito' => $tmpArray[11]==null?null:$fileArray[$i][$tmpArray[11]],
-                'saldo_anterior' => $tmpArray[12]==null?null:$fileArray[$i][$tmpArray[12]],
-                'nombre_cuenta_contable' => $tmpArray[13]==null?null:$fileArray[$i][$tmpArray[13]],
-                'referencia_2' => $tmpArray[14]==null?null:$fileArray[$i][$tmpArray[14]],
-                'referencia_3' => $tmpArray[15]==null?null:$fileArray[$i][$tmpArray[15]],
-                'nombre_tercero' => $tmpArray[16]==null?null:$fileArray[$i][$tmpArray[16]],
-                'identificacion_tercero' => $tmpArray[17]==null?null:$fileArray[$i][$tmpArray[17]],
-                'valor_credito' => $tmpArray[18]==null?null:$fileArray[$i][$tmpArray[18]],
-                'valor_debito' => $tmpArray[19]==null?null:$fileArray[$i][$tmpArray[19]],
-                'codigo_usuario' => $tmpArray[20]==null?null:$fileArray[$i][$tmpArray[20]],
-                'fecha_ingreso' => $tmpArray[21]==null?null:$fileArray[$i][$tmpArray[21]],
-                'fecha_origen' => $tmpArray[22]==null?null:$fileArray[$i][$tmpArray[22]],
-                'local_account' => $tmpArray[23]==null?null:$fileArray[$i][$tmpArray[23]],
-                'numero_lote' => $tmpArray[24]==null?null:$fileArray[$i][$tmpArray[24]],
-                'consecutivo_lote' => $tmpArray[25]==null?null:$fileArray[$i][$tmpArray[25]],
-                'tipo_registro' => $tmpArray[26]==null?null:$fileArray[$i][$tmpArray[26]],
-                'ambiente_origen' => $tmpArray[27]==null?null:$fileArray[$i][$tmpArray[27]],
-                'otra_referencia' => $tmpArray[28]==null?null:$fileArray[$i][$tmpArray[28]],
-                'beneficiario' => $tmpArray[29]==null?null:$fileArray[$i][$tmpArray[29]],
+                'fecha_movimiento' => $tmpArray[1] == null ? null : $fileArray[$i][$tmpArray[1]],
+                'descripcion' => $tmpArray[7] == null ? null : $fileArray[$i][$tmpArray[7]],
+                'referencia_1' => $tmpArray[8] == null ? null : $fileArray[$i][$tmpArray[8]],
+                'saldo_actual' => $tmpArray[11] == null ? null : $fileArray[$i][$tmpArray[11]],
+                'oficina_destino' => $tmpArray[25] == null ? null : $fileArray[$i][$tmpArray[25]],
+                'nombre_agencia' => $tmpArray[2] == null ? null : $fileArray[$i][$tmpArray[2]],
+                'nombre_centro_costos' => $tmpArray[3] == null ? null : $fileArray[$i][$tmpArray[3]],
+                'codigo_centro_costo' => $tmpArray[8] == null ? null : $fileArray[$i][$tmpArray[8]],
+                'numero_comprobante' => $tmpArray[9] == null ? null : $fileArray[$i][$tmpArray[9]],
+                'nombre_usuario' => $tmpArray[10] == null ? null : $fileArray[$i][$tmpArray[10]],
+                'valor_debito_credito' => $tmpArray[11] == null ? null : $fileArray[$i][$tmpArray[11]],
+                'saldo_anterior' => $tmpArray[12] == null ? null : $fileArray[$i][$tmpArray[12]],
+                'nombre_cuenta_contable' => $tmpArray[13] == null ? null : $fileArray[$i][$tmpArray[13]],
+                'referencia_2' => $tmpArray[14] == null ? null : $fileArray[$i][$tmpArray[14]],
+                'referencia_3' => $tmpArray[15] == null ? null : $fileArray[$i][$tmpArray[15]],
+                'nombre_tercero' => $tmpArray[16] == null ? null : $fileArray[$i][$tmpArray[16]],
+                'identificacion_tercero' => $tmpArray[17] == null ? null : $fileArray[$i][$tmpArray[17]],
+                'valor_credito' => $tmpArray[18] == null ? null : $fileArray[$i][$tmpArray[18]],
+                'valor_debito' => $tmpArray[19] == null ? null : $fileArray[$i][$tmpArray[19]],
+                'codigo_usuario' => $tmpArray[20] == null ? null : $fileArray[$i][$tmpArray[20]],
+                'fecha_ingreso' => $tmpArray[21] == null ? null : $fileArray[$i][$tmpArray[21]],
+                'fecha_origen' => $tmpArray[22] == null ? null : $fileArray[$i][$tmpArray[22]],
+                'local_account' => $tmpArray[23] == null ? null : $fileArray[$i][$tmpArray[23]],
+                'numero_lote' => $tmpArray[24] == null ? null : $fileArray[$i][$tmpArray[24]],
+                'consecutivo_lote' => $tmpArray[25] == null ? null : $fileArray[$i][$tmpArray[25]],
+                'tipo_registro' => $tmpArray[26] == null ? null : $fileArray[$i][$tmpArray[26]],
+                'ambiente_origen' => $tmpArray[27] == null ? null : $fileArray[$i][$tmpArray[27]],
+                'otra_referencia' => $tmpArray[28] == null ? null : $fileArray[$i][$tmpArray[28]],
+                'beneficiario' => $tmpArray[29] == null ? null : $fileArray[$i][$tmpArray[29]],
             ];
-
-
+            if (strtotime($fileArray[$i][$tmpArray[1]]) === false) {
+                throw new Exception("Fecha de movimiento inválida en {$i} - {$fileArray[$i][$tmpArray[1]]}" . json_encode($mapped[$i]));
+            }
         }
-
-
         return $mapped;
-
     }
 
 
 
 
-    private function getLocalIniSaldos($file){
+    private function getLocalIniSaldos($file)
+    {
 
         $user = Auth::user();
 
         $localInsert = $this->getIniInsertLocalArray($file);
-        
+
         $this->createTmpTableConciliarLocalValues();
 
         DB::table($this->conciliar_tmp_local_values_table)->insert($localInsert);
-        
+
         $query = DB::table($this->conciliar_tmp_local_values_table)
-                ->select(DB::raw("SUM(valor_credito) as credit,SUM(valor_debito) as debit, ".$this->conciliar_tmp_local_values_table.".local_account"))
-                ->join('accounts', $this->conciliar_tmp_local_values_table.'.local_account','=','accounts.local_account')
-                ->join('banks', 'accounts.bank_id','=','banks.id')
-                ->where('accounts.company_id','=',$user->current_company)
-                ->groupBy('local_account')
-                ->get();
+            ->select(DB::raw("SUM(valor_credito) as credit,SUM(valor_debito) as debit, " . $this->conciliar_tmp_local_values_table . ".local_account"))
+            ->join('accounts', $this->conciliar_tmp_local_values_table . '.local_account', '=', 'accounts.local_account')
+            ->join('banks', 'accounts.bank_id', '=', 'banks.id')
+            ->where('accounts.company_id', '=', $user->current_company)
+            ->groupBy('local_account')
+            ->get();
 
         Schema::dropIfExists($this->conciliar_tmp_local_values_table);
         return $query;
-        
     }
 
-    private function getIniInsertLocalArray($file){
+    private function getIniInsertLocalArray($file)
+    {
 
         $user = Auth::user();
         $localInsert = null;
@@ -1417,103 +1411,98 @@ class ConciliarController extends ApiController
         $externalInsert = [];
 
 
-        for($row = 3; $row <= $highestRow; $row++){
-            
+        for ($row = 3; $row <= $highestRow; $row++) {
+
             $cell = array();
             $insertCell = array();
 
 
-            for($col = 1; $col <= CONTABLE_COLS; $col++){
-                
+            for ($col = 1; $col <= CONTABLE_COLS; $col++) {
+
                 $typeCell = $worksheet->getCellByColumnAndRow($col, $row)->getDataType();
 
-                switch($typeCell){
-                    
+                switch ($typeCell) {
+
                     case "null":
                         $valueCell = null;
-                    break;
+                        break;
                     case "s":
                         $valueCell = trim($worksheet->getCellByColumnAndRow($col, $row)->getValue());
-                    break;
+                        break;
                     case "f":
                         $valueCell = $worksheet->getCellByColumnAndRow($col, $row)->getCalculatedValue();
-                    break;
-                    
+                        break;
+
                     case "n":
-                        
+
                         $tmpValueCell = $valueCell = $worksheet->getCellByColumnAndRow($col, $row)->getValue();
                         //validar si es de tipo fecha
-                        if( \PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($valueCell = $worksheet->getCellByColumnAndRow($col, $row))){
-                            
-                            $tmpValueCell = date("Y-m-d H:i:s",\PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($tmpValueCell));
-                            
+                        if (\PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($valueCell = $worksheet->getCellByColumnAndRow($col, $row))) {
+
+                            $tmpValueCell = date("Y-m-d H:i:s", \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($tmpValueCell));
                         }
-                        
+
                         $valueCell = $tmpValueCell;
-                        
-                    break;
-                    
+
+                        break;
+
                     default:
                         $tmpValueCell = $valueCell = $worksheet->getCellByColumnAndRow($col, $row)->getValue();
-                    break;
+                        break;
                 }
 
 
-                $cell[] = ["value"=>$valueCell,"type"=>$typeCell];
-                    
-                $insertCell[] = ($valueCell===null)?null:$valueCell;
-                
+                $cell[] = ["value" => $valueCell, "type" => $typeCell];
+
+                $insertCell[] = ($valueCell === null) ? null : $valueCell;
             }
-            
-            
+
+
             $tx_type_id = null;
             $tx_type_name = null;
 
-            if($insertCell[2] ===null){
+            if ($insertCell[2] === null) {
 
                 continue;
             }
 
 
             $tx_type_talbe_obj = new LocalTxType($this->conciliar_local_tx_type);
-            $tx_type_table = $tx_type_talbe_obj->where('description','like', '%'.strtoupper($insertCell[8]).'%')
-                        ->get();
+            $tx_type_table = $tx_type_talbe_obj->where('description', 'like', '%' . strtoupper($insertCell[8]) . '%')
+                ->get();
 
 
-            if(count($tx_type_table) != 0){
+            if (count($tx_type_table) != 0) {
 
                 $tx_type_id = $tx_type_table[0]->id;
                 $tx_type_name = $tx_type_table[0]->tx;
-                
             }
 
-            
-            
-            if($insertCell[5] == null && $insertCell[6] == null && $insertCell[7] == null ){
 
 
+            if ($insertCell[5] == null && $insertCell[6] == null && $insertCell[7] == null) {
             }
 
-            
+
             $localInsert[] = [
-                     'tx_type_id'=>$tx_type_id,
-                     'tx_type_name'=>$tx_type_name,
-                     'local_account'=>$insertCell[0],
-                     'cuenta_externa'=>$insertCell[3],
-                     'fecha_movimiento'=> date('Y-m-d',strtotime($insertCell[4])),
-                     'numero_comprobante'=> $insertCell[5],
-                     'referencia_1'=>$insertCell[6],
-                     'identificacion_tercero'=>$insertCell[7],
-                     'descripcion'=>$insertCell[8],
-                     'valor_debito'=>$insertCell[9],
-                     'valor_credito'=>$insertCell[10],
-                    ];
-
+                'tx_type_id' => $tx_type_id,
+                'tx_type_name' => $tx_type_name,
+                'local_account' => $insertCell[0],
+                'cuenta_externa' => $insertCell[3],
+                'fecha_movimiento' => date('Y-m-d', strtotime($insertCell[4])),
+                'numero_comprobante' => $insertCell[5],
+                'referencia_1' => $insertCell[6],
+                'identificacion_tercero' => $insertCell[7],
+                'descripcion' => $insertCell[8],
+                'valor_debito' => $insertCell[9],
+                'valor_credito' => $insertCell[10],
+            ];
         }
 
         return $localInsert;
     }
-    private function getIniInsertExternalArray($file){
+    private function getIniInsertExternalArray($file)
+    {
 
         $user = Auth::user();
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
@@ -1524,137 +1513,135 @@ class ConciliarController extends ApiController
         $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
         $externalInsert = [];
 
-        for($row = 3; $row <= $highestRow; $row++){
-            
+        for ($row = 3; $row <= $highestRow; $row++) {
+
             $cell = array();
             $insertCell = array();
 
 
-            for($col = 1; $col < RECAUDO_COLS; $col++){
-                
+            for ($col = 1; $col < RECAUDO_COLS; $col++) {
+
                 $typeCell = $worksheet->getCellByColumnAndRow($col, $row)->getDataType();
 
-                switch($typeCell){
-                    
+                switch ($typeCell) {
+
                     case "null":
                         $valueCell = null;
-                    break;
+                        break;
                     case "s":
                         $valueCell = trim($worksheet->getCellByColumnAndRow($col, $row)->getValue());
-                    break;
+                        break;
                     case "f":
                         $valueCell = $worksheet->getCellByColumnAndRow($col, $row)->getCalculatedValue();
-                    break;
-                    
+                        break;
+
                     case "n":
-                        
+
                         $tmpValueCell = $valueCell = $worksheet->getCellByColumnAndRow($col, $row)->getValue();
                         //validar si es de tipo fecha
-                        if( \PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($valueCell = $worksheet->getCellByColumnAndRow($col, $row))){
-                            
-                            $tmpValueCell = date("Y-m-d H:i:s",\PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($tmpValueCell));
-                            
+                        if (\PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($valueCell = $worksheet->getCellByColumnAndRow($col, $row))) {
+
+                            $tmpValueCell = date("Y-m-d H:i:s", \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($tmpValueCell));
                         }
-                        
+
                         $valueCell = $tmpValueCell;
-                        
-                    break;
-                    
+
+                        break;
+
                     default:
                         $tmpValueCell = $valueCell = $worksheet->getCellByColumnAndRow($col, $row)->getValue();
-                    break;
+                        break;
                 }
 
 
-                $cell[] = ["value"=>$valueCell,"type"=>$typeCell];
-                    
-                $insertCell[] = ($valueCell===null)?null:$valueCell;
-                
+                $cell[] = ["value" => $valueCell, "type" => $typeCell];
 
+                $insertCell[] = ($valueCell === null) ? null : $valueCell;
             }
 
             $tx_type_id = null;
             $tx_type_name = null;
 
-            if($insertCell[3] ===null ||  $insertCell[3] == ""){
+            if ($insertCell[3] === null ||  $insertCell[3] == "") {
 
                 continue;
             }
-            
 
-            $account = Account::where('bank_account',$insertCell[2])
-                        ->with('banks')
-                        ->first();
 
-            if($account == null){
+            $account = Account::where('bank_account', $insertCell[2])
+                ->with('banks')
+                ->first();
+
+            if ($account == null) {
 
                 $error = \Illuminate\Validation\ValidationException::withMessages(
-                            ['No existe una cuenta externa con número: '.$insertCell[2],
-                ]);
+                    [
+                        'No existe una cuenta externa con número: ' . $insertCell[2],
+                    ]
+                );
                 throw $error;
             }
 
-            $tx_type_table = ExternalTxType::where('bank_id',$account->bank_id)
-                        ->where('description','=', trim($insertCell[7]))
-                        ->get();
+            $tx_type_table = ExternalTxType::where('bank_id', $account->bank_id)
+                ->where('description', '=', trim($insertCell[7]))
+                ->get();
 
-            $account = Account::where('bank_account',$insertCell[2])
-                        ->with('banks')
-                        ->first();
+            $account = Account::where('bank_account', $insertCell[2])
+                ->with('banks')
+                ->first();
 
-         
-            
-            if(count($tx_type_table) > 0){
+
+
+            if (count($tx_type_table) > 0) {
 
                 $tx_type_id = $tx_type_table[0]->id;
                 $tx_type_name = $tx_type_table[0]->tx;
-                
             }
 
-            $tx_type_table = ExternalTxType::where('type','COMPUESTO')->get();
+            $tx_type_table = ExternalTxType::where('type', 'COMPUESTO')->get();
 
-            for($i = 0; $i < count($tx_type_table); $i++){
+            for ($i = 0; $i < count($tx_type_table); $i++) {
 
                 if (strpos(strtoupper($insertCell[7]), $tx_type_table[$i]->description) !== false) {
-                    
+
                     $tx_type_id = $tx_type_table[$i]->id;
                     $tx_type_name = $tx_type_table[$i]->tx;
                     break;
                 }
-                
             }
 
-            if($tx_type_id === null){
+            if ($tx_type_id === null) {
 
 
                 $error = \Illuminate\Validation\ValidationException::withMessages(
-                   ['No existe una transacción con descripción: '.strtoupper($insertCell[7])
-                ]);
+                    [
+                        'No existe una transacción con descripción: ' . strtoupper($insertCell[7])
+                    ]
+                );
                 throw $error;
             }
-       
-            
-            $externalInsert[] = [
-                     'tx_type_id'=>$tx_type_id,
-                     'tx_type_name'=>$tx_type_name,
-                     'numero_cuenta'=>$insertCell[2],
-                     'fecha_movimiento'=> date('Y-m-d',strtotime($insertCell[3])),
-                     'referencia_1'=>$insertCell[4],
-                     'referencia_2'=>$insertCell[5],
-                     'referencia_3'=>$insertCell[6],
-                     'descripcion'=>$insertCell[7],
-                     'valor_credito'=>$insertCell[8],
-                     'valor_debito'=>$insertCell[9],
-                    ];
-            
 
+
+            $externalInsert[] = [
+                'tx_type_id' => $tx_type_id,
+                'tx_type_name' => $tx_type_name,
+                'numero_cuenta' => $insertCell[2],
+                'fecha_movimiento' => date('Y-m-d', strtotime($insertCell[3])),
+                'referencia_1' => $insertCell[4],
+                'referencia_2' => $insertCell[5],
+                'referencia_3' => $insertCell[6],
+                'descripcion' => $insertCell[7],
+                'valor_credito' => $insertCell[8],
+                'valor_debito' => $insertCell[9],
+            ];
         }
 
         return $externalInsert;
     }
 
 
-    private function getExternalIniSaldos($file){
+    private function getExternalIniSaldos($file)
+    {
 
         $user = Auth::user();
 
@@ -1663,22 +1650,21 @@ class ConciliarController extends ApiController
         $this->createTmpTableConciliarExternalValues();
 
         DB::table($this->conciliar_tmp_external_values_table)->insert($externalInsert);
-        
+
         $query = DB::table($this->conciliar_tmp_external_values_table)
-                ->select(DB::raw("SUM(valor_credito) as credit,SUM(valor_debito) as debit, numero_cuenta,
+            ->select(DB::raw("SUM(valor_credito) as credit,SUM(valor_debito) as debit, numero_cuenta,
                     banks.name, accounts.local_account, banks.name"))
-                ->join('accounts', $this->conciliar_tmp_external_values_table.'.numero_cuenta','=','accounts.bank_account')
-                ->join('banks', 'accounts.bank_id','=','banks.id')
-                ->where('accounts.company_id','=',$user->current_company)
-                ->groupBy('numero_cuenta','banks.name','accounts.local_account','bank_account')
-                ->orderBy('banks.name','DESC')
-                ->orderBy('numero_cuenta','ASC')
-                ->get();
+            ->join('accounts', $this->conciliar_tmp_external_values_table . '.numero_cuenta', '=', 'accounts.bank_account')
+            ->join('banks', 'accounts.bank_id', '=', 'banks.id')
+            ->where('accounts.company_id', '=', $user->current_company)
+            ->groupBy('numero_cuenta', 'banks.name', 'accounts.local_account', 'bank_account')
+            ->orderBy('banks.name', 'DESC')
+            ->orderBy('numero_cuenta', 'ASC')
+            ->get();
 
         Schema::dropIfExists($this->conciliar_tmp_external_values_table);
         return $query;
     }
-
 }
 
 
