@@ -180,7 +180,6 @@ export class ConciliarProcessComponent implements OnInit {
   }
 
   groupBankAccount( toOrder: AccountModel[]) {
-
     if(toOrder.length === 0){
       return;
     }

@@ -2,29 +2,29 @@
 
 namespace App\Http\Controllers\Conciliar;
 
+use Excel;
+use Schema;
+use Exception;
+use App\Models\User;
 use App\Models\Account;
 use App\Models\Company;
-use App\Models\ConciliarExternalValues;
-use App\Models\ConciliarHeader;
-use App\Models\ConciliarItem;
-use App\Models\ConciliarLocalValues;
-use App\Models\ExternalTxType;
-use App\Http\Controllers\ApiController;
-use App\Models\LocalTxType;
 use App\Models\MapFile;
-use App\Models\User;
-use Excel;
-use Exception;
 use Illuminate\Http\File;
+use App\Models\LocalTxType;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\ConciliarItem;
+use App\Models\ExternalTxType;
+use App\Models\ConciliarHeader;
 use Illuminate\Support\Facades\DB;
+use App\Models\ConciliarLocalValues;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\ApiController;
+use App\Models\ConciliarExternalValues;
+use App\Services\Reconciliation\ReconciliationService;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Schema;
-use App\Services\Conciliar\UploadConciliarContableService;
+use App\Services\Reconciliation\UploadConciliarContableService;
+use App\Services\Reconciliation\UploadReconciliationExternalService;
 
 ini_set('memory_limit', '1000M');
 
@@ -47,19 +47,28 @@ class ConciliarController extends ApiController
     protected $conciliar_external_tx_type = 'external_tx_types';
 
     protected UploadConciliarContableService $uploadConciliarContableService;
+    protected UploadReconciliationExternalService $uploadReconciliationExternalService;
+    protected ReconciliationService $reconciliationService;
 
-    public function __construct(UploadConciliarContableService $uploadConciliarContableService)
-    {
+    private $user;
+
+    public function __construct(
+        UploadConciliarContableService $uploadConciliarContableService,
+        UploadReconciliationExternalService $uploadReconciliationExternalService,
+        ReconciliationService $reconciliationService
+    ) {
         $this->middleware('auth:api');
         $this->middleware(function ($request, $next) {
 
             $user = Auth::user();
             $this->init($user);
+            $this->user = $user;
 
             return $next($request);
         });
 
         $this->uploadConciliarContableService = $uploadConciliarContableService;
+        $this->uploadReconciliationExternalService = $uploadReconciliationExternalService;
     }
 
     function init($user)
@@ -83,7 +92,6 @@ class ConciliarController extends ApiController
      */
     public function index()
     {
-
 
         $user = Auth::user();
 
@@ -312,8 +320,6 @@ class ConciliarController extends ApiController
         return $header;
     }
 
-
-
     private function getCurrentConciliacion()
     {
 
@@ -344,265 +350,21 @@ class ConciliarController extends ApiController
 
     public function uploadAccountFile(Request $request)
     {
-
-
-        $user = Auth::user();
-
-        $data = $request->all();
-
-        $actualHeader = $this->getCurrentConciliacion();
-
-        $itemTable = new ConciliarItem($this->conciliar_items_table);
-
-
-
-        $currentItem = $itemTable->where('header_id', '=', $actualHeader->id)
-            ->where('account_id', '=', $data['account_id'])
-            ->first();
-
-
-        // if($currentItem === NULL){
-
-        // }
-
-        $ext = $request->file->extension() == 'txt' ? 'csv' : $request->file->extension();
-
-        $fileName = $user->current_company . '_' . $actualHeader->id . '_' . $data['account_id'] . '_accountFile.' . $ext;
-
-        $request->file->storeAs('tmpUpload', $fileName, 'local');
-
-
-        $filePath = 'app/tmpUpload/' . $fileName;
-
-        if ($currentItem == null) {
-
-            $item = new ConciliarItem($this->conciliar_items_table);
-
-            $itemInfo = [
-                'header_id' => $actualHeader->id,
-                'account_id' => $data['account_id'],
-                'debit_externo' => 0,
-                'debit_local' => 0,
-                'credit_externo' => 0,
-                'credit_local' => 0,
-                'balance_externo' => 0,
-                'balance_local' => 0,
-                'file_path' => $filePath,
-                'file_name' => $request->file->getClientOriginalName(),
-                'total' => 0,
-                'status' => ConciliarHeader::OPEN_STATUS,
-            ];
-            $item->insert($itemInfo);
-
-            $currentItem = $itemTable->where('header_id', '=', $actualHeader->id)
-                ->where('account_id', '=', $data['account_id'])
-                ->first();
+        // return $request;
+        if (!$request->hasFile('file')) {
+            return $this->badRequestResponse("Param 'file' not found");
         }
 
-        $account = Account::with('map')->find($data['account_id']);
-
-        $mapInfo = $this->mapUploadFileAccount($request->file, $account, $currentItem);
-
-        $currentItem->credit_externo = $mapInfo->credit_externo;
-        $currentItem->debit_externo = $mapInfo->debit_externo;
-
-        $currentItem->save();
-
-        return $this->showArray($mapInfo);
-    }
-
-    private function getInfoMaped()
-    {
-    }
-
-    private function mapUploadFileAccount($file, $account, $item)
-    {
-        $user = Auth::user();
-
-        if (!Schema::hasTable($this->conciliar_items_tmp_table)) {
-
-            $this->createTmpTableConciliarItems();
-        }
-        if (!Schema::hasTable($this->conciliar_tmp_external_values_table)) {
-
-            $this->createTmpTableConciliarExternalValues();
-        } else {
-
-
-            $header = $this->getCurrentConciliacion();
-
-            $tmpItemsTable = new ConciliarItem($this->conciliar_items_tmp_table);
-
-            $tmpItems = $tmpItemsTable->where('header_id', $header->id)
-                ->where('account_id', $account->id)
-                ->first();
-
-
-            if (!$tmpItems) {
-
-                $item = [
-                    'header_id' => $header->id,
-                    'account_id' => $account->id,
-                    'debit_externo' => 0,
-                    'debit_local' => 0,
-                    'credit_externo' => 0,
-                    'credit_local' => 0,
-                    'balance_externo' => 0,
-                    'balance_local' => 0,
-                    'total' => 0,
-                    'status' => ConciliarItem::OPEN_STATUS,
-
-                ];
-                $tmpItemsTable = new ConciliarItem($this->conciliar_items_tmp_table);
-
-                $tmpItemsTable->insert($item);
-            }
-
-            $tmpItems = $tmpItemsTable->where('header_id', $header->id)
-                ->where('account_id', $account->id)
-                ->first();
+        if (!$request->has('account_id')) {
+            return $this->badRequestResponse("Param 'account_id' not found");
         }
 
-        $externalTxTable = ExternalTxType::where('bank_id', $account->bank_id)->get();
-        $mapFile = MapFile::find($account->map_id);
+        $accountId = $request->input('account_id');
+        $account = Account::with('map')->find($accountId);
 
+        $tmpItems = $this->uploadReconciliationExternalService->processFile($this->user, $account, $request->file);
 
-        $map =  json_decode($mapFile->map, true);
-        $base =  json_decode($mapFile->base);
-
-        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
-        $spreadsheet->setActiveSheetIndex(0);
-        $worksheet = $spreadsheet->getActiveSheet();
-        $highestRow = $worksheet->getHighestRow();
-        $highestColumn = $worksheet->getHighestColumn();
-        $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
-        $externalInsert = [];
-
-        $startRow = 2;
-
-        switch ($account->id) {
-            case 8:
-                $startRow = 2;
-                break;
-            default:
-                # code...
-                break;
-        }
-
-
-        for ($row = $startRow; $row <= $highestRow; $row++) {
-
-            $cell = array();
-            $insertCell = array();
-
-            $accountMap = DB::Table('map_bank_index')
-                ->orderBy('id')
-                ->get();
-
-            // return array($map, $accountMap);
-            for ($j = 0; $j < count($accountMap); $j++) {
-
-                $find = false;
-                for ($i = 0; $i < count($map); $i++) {
-
-                    $mapIndex = $map[$i]['mapIndex'];
-                    $fileColumn = $map[$i]['fileColumn'] + 1;
-
-                    if ($mapIndex == $accountMap[$j]->id && $mapIndex != 0) {
-                        $typeCell = $worksheet->getCellByColumnAndRow($fileColumn, $row)->getDataType();
-
-                        switch ($typeCell) {
-
-                            case "null":
-                                $valueCell = null;
-                                break;
-                            case "s":
-                                $valueCell = trim($worksheet->getCellByColumnAndRow($fileColumn, $row)->getValue());
-                                break;
-                            case "f":
-                                $valueCell = $worksheet->getCellByColumnAndRow($fileColumn, $row)->getCalculatedValue();
-                                break;
-
-                            case "n":
-
-                                $tmpValueCell = $valueCell = $worksheet->getCellByColumnAndRow($fileColumn, $row)->getValue();
-                                //validar si es de tipo fecha
-                                if (\PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($valueCell = $worksheet->getCellByColumnAndRow($fileColumn, $row))) {
-
-                                    $tmpValueCell = date("Y-m-d H:i:s", \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($tmpValueCell));
-                                }
-
-                                $valueCell = $tmpValueCell;
-
-                                break;
-
-                            default:
-                                $valueCell = $worksheet->getCellByColumnAndRow($fileColumn, $row)->getValue();
-                                break;
-                        }
-                        // TODO: Crear funcion para normalizar todos los currency values a decimal (decimal con punto(.) )
-                        if (in_array($accountMap[$j]->description, ["VALOR CRÉDITO", "VALOR DEBITO", "VALOR (DEBITO/CREDITO)"])) {
-                            $valueCell = str_replace("$", "", $valueCell);
-                            $valueCell = str_replace(".", "", $valueCell);
-                            $valueCell = str_replace(",", ".", $valueCell);
-                        }
-                        $insertCell[$accountMap[$j]->description] = $valueCell;
-                        $find = true;
-                    }
-                }
-
-                if (!$find) {
-
-                    $insertCell[$accountMap[$j]->description] = null;
-                }
-            }
-
-
-            // 'valor_credito' => $insertCell["VALOR CRÉDITO"],
-            // 'valor_debito' => $insertCell["VALOR DEBITO"],
-            // 'valor_debito_credito' => $insertCell["VALOR (DEBITO/CREDITO)"],
-            $tmpInsertCell = $this->cellToInsertExterno($insertCell);
-
-            $tmpInsertCell['item_id'] = $tmpItems['id'];
-
-            $txInfo = $this->getTxInfo($tmpInsertCell, $account->bank_id);
-
-            if ($txInfo[0]) {
-
-                $tmpInsertCell['tx_type_id'] = $txInfo[1]['id'];
-                $tmpInsertCell['tx_type_name'] = $txInfo[1]['tx'];
-            } else {
-
-                $error = \Illuminate\Validation\ValidationException::withMessages(
-                    ['No existe una transacción con descripción: ' . $tmpInsertCell['descripcion'], $tmpInsertCell, $txInfo]
-                );
-                throw $error;
-            }
-
-
-
-            $insertArray[] = $tmpInsertCell;
-        }
-
-        $externalValuesTmp = new ConciliarItem($this->conciliar_tmp_external_values_table);
-
-
-        $externalValuesTmp->where('item_id', $tmpItems->id)->delete();
-        $externalValuesTmp->insert($insertArray);
-
-
-        $query = DB::table($this->conciliar_tmp_external_values_table)
-            ->select(DB::raw("SUM(valor_credito) as credit,SUM(valor_debito) as debit,item_id"))
-            ->where('item_id', $tmpItems->id)
-            ->groupBy('item_id')
-            ->get();
-
-
-        $tmpItems->credit_externo = $query[0]->credit;
-        $tmpItems->debit_externo = $query[0]->debit;
-
-        $tmpItems->save();
-        return $tmpItems;
+        return $this->showArray($tmpItems);
     }
 
     public function getTxInfo($values, $bank_id)
@@ -721,75 +483,6 @@ class ConciliarController extends ApiController
             $user,
             $openHeader
         );
-
-
-        // $mapped = $this->getInserConciliarLocal($request->file, $company->map_id);
-        // // return $mapped;
-        // $this->createTmpTableConciliarLocalValues();
-
-        // DB::beginTransaction();
-        // $index = 0;
-        // try {
-
-        //     foreach (array_chunk($mapped, 1000) as $t) {
-        //         DB::table($this->conciliar_tmp_local_values_table)->insert($t);
-        //     }
-        // } catch (Exception $e) {
-        //     DB::rollBack();
-        //     throw new Exception(json_encode($mapped[$index]));
-        // }
-        // DB::commit();
-
-        // $conciliarCuadre = DB::table($this->conciliar_tmp_local_values_table)
-        //     ->select(
-        //         DB::raw("SUM(valor_credito) as credit,SUM(valor_debito) as debit, 
-        //                     " . $this->conciliar_tmp_local_values_table . ".local_account, accounts.id")
-        //     )
-        //     ->join('accounts', $this->conciliar_tmp_local_values_table . '.local_account', '=', 'accounts.local_account')
-        //     ->join('banks', 'accounts.bank_id', '=', 'banks.id')
-        //     ->where('accounts.company_id', '=', $user->current_company)
-        //     ->groupBy('local_account', 'accounts.id')
-        //     ->get();
-
-
-
-        // Schema::dropIfExists($this->conciliar_tmp_local_values_table);
-
-        // $itemTable = new ConciliarItem($this->conciliar_items_table);
-
-
-        // for ($i = 0; $i < count($conciliarCuadre); $i++) {
-
-        //     $openItemTable = $itemTable->where('header_id', '=', $openHeader->id)
-        //         ->where('account_id', '=', $conciliarCuadre[$i]->id)
-        //         ->first();
-
-        //     if ($openItemTable) {
-
-        //         $openItemTable->debit_local = (float)$conciliarCuadre[$i]->debit;
-        //         $openItemTable->credit_local = (float)$conciliarCuadre[$i]->credit;
-
-        //         $openItemTable->save();
-        //     } else {
-
-        //         $itemInfo = [
-        //             'header_id' => $openHeader->id,
-        //             'account_id' => $conciliarCuadre[$i]->id,
-        //             'debit_externo' => 0,
-        //             'debit_local' => $conciliarCuadre[$i]->debit,
-        //             'credit_externo' => 0,
-        //             'credit_local' => $conciliarCuadre[$i]->credit,
-        //             'balance_externo' => 0,
-        //             'balance_local' => 0,
-        //             'file_path' => '',
-        //             'file_name' => '',
-        //             'total' => 0,
-        //             'status' => ConciliarHeader::OPEN_STATUS,
-        //         ];
-
-        //         $item->insert($itemInfo);
-        //     }
-        // }
 
         return $this->showMessage(true);
     }
@@ -1294,84 +987,6 @@ class ConciliarController extends ApiController
 
         return $localInsert;
     }
-
-    private function getInserConciliarLocal($file, $map_id)
-    {
-
-        $fileArray = $this->fileToArray($file);
-
-        $mapModel = MapFile::find($map_id);
-
-        $map = json_decode($mapModel->map, true);
-
-        $tmpArray = array();
-        $tmpArray[] = null;
-        for ($i = 1; $i <= 29; $i++) {
-            $found = false;
-            for ($j = 0; $j < count($map); $j++) {
-
-                if ($i == $map[$j]['mapIndex']) {
-
-                    $found = true;
-                    $tmpArray[] = (string)$map[$j]['fileColumn'];
-                }
-            }
-            if (!$found) {
-
-                $tmpArray[] = null;
-            }
-        }
-
-        for ($i = 0; $i < count($fileArray); $i++) {
-            // return [$fileArray[$i][5], $tmpArray[1]];
-            if ($fileArray[$i][$tmpArray[1]] === 0) {
-                continue;
-            }
-            $mapped[] =  [
-                'matched' => 0,     //1
-                'item_id' => 0,     //2
-                'tx_type_id' => null,       //3
-                'tx_type_name' => null,     //4
-                'cuenta_externa' => '',   //8
-                'fecha_movimiento' => $tmpArray[1] == null ? null : $fileArray[$i][$tmpArray[1]],
-                'descripcion' => $tmpArray[7] == null ? null : $fileArray[$i][$tmpArray[7]],
-                'referencia_1' => $tmpArray[8] == null ? null : $fileArray[$i][$tmpArray[8]],
-                'saldo_actual' => $tmpArray[11] == null ? null : $fileArray[$i][$tmpArray[11]],
-                'oficina_destino' => $tmpArray[25] == null ? null : $fileArray[$i][$tmpArray[25]],
-                'nombre_agencia' => $tmpArray[2] == null ? null : $fileArray[$i][$tmpArray[2]],
-                'nombre_centro_costos' => $tmpArray[3] == null ? null : $fileArray[$i][$tmpArray[3]],
-                'codigo_centro_costo' => $tmpArray[8] == null ? null : $fileArray[$i][$tmpArray[8]],
-                'numero_comprobante' => $tmpArray[9] == null ? null : $fileArray[$i][$tmpArray[9]],
-                'nombre_usuario' => $tmpArray[10] == null ? null : $fileArray[$i][$tmpArray[10]],
-                'valor_debito_credito' => $tmpArray[11] == null ? null : $fileArray[$i][$tmpArray[11]],
-                'saldo_anterior' => $tmpArray[12] == null ? null : $fileArray[$i][$tmpArray[12]],
-                'nombre_cuenta_contable' => $tmpArray[13] == null ? null : $fileArray[$i][$tmpArray[13]],
-                'referencia_2' => $tmpArray[14] == null ? null : $fileArray[$i][$tmpArray[14]],
-                'referencia_3' => $tmpArray[15] == null ? null : $fileArray[$i][$tmpArray[15]],
-                'nombre_tercero' => $tmpArray[16] == null ? null : $fileArray[$i][$tmpArray[16]],
-                'identificacion_tercero' => $tmpArray[17] == null ? null : $fileArray[$i][$tmpArray[17]],
-                'valor_credito' => $tmpArray[18] == null ? null : $fileArray[$i][$tmpArray[18]],
-                'valor_debito' => $tmpArray[19] == null ? null : $fileArray[$i][$tmpArray[19]],
-                'codigo_usuario' => $tmpArray[20] == null ? null : $fileArray[$i][$tmpArray[20]],
-                'fecha_ingreso' => $tmpArray[21] == null ? null : $fileArray[$i][$tmpArray[21]],
-                'fecha_origen' => $tmpArray[22] == null ? null : $fileArray[$i][$tmpArray[22]],
-                'local_account' => $tmpArray[23] == null ? null : $fileArray[$i][$tmpArray[23]],
-                'numero_lote' => $tmpArray[24] == null ? null : $fileArray[$i][$tmpArray[24]],
-                'consecutivo_lote' => $tmpArray[25] == null ? null : $fileArray[$i][$tmpArray[25]],
-                'tipo_registro' => $tmpArray[26] == null ? null : $fileArray[$i][$tmpArray[26]],
-                'ambiente_origen' => $tmpArray[27] == null ? null : $fileArray[$i][$tmpArray[27]],
-                'otra_referencia' => $tmpArray[28] == null ? null : $fileArray[$i][$tmpArray[28]],
-                'beneficiario' => $tmpArray[29] == null ? null : $fileArray[$i][$tmpArray[29]],
-            ];
-            if (strtotime($fileArray[$i][$tmpArray[1]]) === false) {
-                throw new Exception("Fecha de movimiento inválida en {$i} - {$fileArray[$i][$tmpArray[1]]}" . json_encode($mapped[$i]));
-            }
-        }
-        return $mapped;
-    }
-
-
-
 
     private function getLocalIniSaldos($file)
     {

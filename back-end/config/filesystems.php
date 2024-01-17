@@ -54,6 +54,12 @@ return [
             'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
         ],
+        'reconciliation' => [
+            'driver' => 'local',
+            'root' => storage_path('reconciliation/'),
+            'url' => env('APP_URL') . '/storage/reconciliation',
+            'visibility' => 'private',
+        ],
         'cuadres' => [
             'driver' => 'local',
             'root' => storage_path('app/cuadres'),

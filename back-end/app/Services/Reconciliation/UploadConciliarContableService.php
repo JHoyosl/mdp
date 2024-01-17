@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Conciliar;
+namespace App\Services\Reconciliation;
 
 use Exception;
 use App\Models\MapFile;
@@ -55,8 +55,8 @@ class UploadConciliarContableService
             ->get();
 
 
-        // Schema::dropIfExists($this->conciliar_tmp_local_values_table);
-        // return $conciliarCuadre;
+        Schema::dropIfExists($this->conciliar_tmp_local_values_table);
+
         $itemTable = new ConciliarItem($this->conciliar_items_table);
 
         for ($i = 0; $i < count($conciliarCuadre); $i++) {
@@ -177,7 +177,7 @@ class UploadConciliarContableService
 
     private function fileToArray($file)
     {
-        //TODO: ACTUALIZAR LIBRERIA PHPSPREADSHEET
+        // TODO: ACTUALIZAR LIBRERIA PHPSPREADSHEET
         $alphabet = str_split(strtoupper("abcdefghijklmnopqrstuvwxyz"));
 
         $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
