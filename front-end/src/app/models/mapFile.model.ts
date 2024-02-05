@@ -19,7 +19,6 @@ export class MapFileModel {
     
     setUploadValues( Object:any){
         
-        console.log(Object);
         this.id = Object.id;
         this.bank_id = Object.bank_id;
         this.banks = Object.banks;

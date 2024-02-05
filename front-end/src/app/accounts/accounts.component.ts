@@ -76,7 +76,7 @@ export class AccountsComponent implements OnInit {
       }, (err) => {
 
         this.toastr.error('Se presentó un error', 'Error');
-        console.log(err);
+        console.error(err);
       });
 
   }
@@ -89,21 +89,17 @@ export class AccountsComponent implements OnInit {
 
   localMapSelected( format:any ) {
 
-    console.log(format);
-    console.log(this.setFormatAccount);
-
     const formData = new FormData();
     formData.set('company_id', this.setFormatAccount.companies.id);
     formData.set('map_id', format.id);
 
     this.apiRequest.postForm( formData, 'companies/setMap')
       .subscribe( (response) => {
-        console.log(response);
         this.toastr.success('Formato asociado', 'Correcto');
       }, (err) => {
 
         this.toastr.error('Se presentó un error', 'Error');
-        console.log(err);
+        console.error(err);
       });
 
   }
@@ -148,7 +144,7 @@ export class AccountsComponent implements OnInit {
       this.tabSet.activeId = 'List';
     }, (err) => {
 
-      console.log(err);
+      console.error(err);
       Swal.close();
       Swal.fire({
         title: 'Procesando',
@@ -177,11 +173,10 @@ export class AccountsComponent implements OnInit {
     this.apiRequest.getCollection( `mapFiles/formatsExterno/${bank_id}`)
       .subscribe( (response) => {
 
-        console.log(response);
         this.formatExternolist = response;
       }, (err) => {
 
-        console.log(err);
+        console.error(err);
       });
 
       this.apiRequest.getCollection( `mapFiles/formatsLocal/${company_id}`)
@@ -189,16 +184,14 @@ export class AccountsComponent implements OnInit {
         this.formatInternolist = response;
       }, (err) => {
 
-        console.log(err);
+        console.error(err);
       });
   }
 
   setFromatShow(account) {
 
-    console.log(account);
     this.setFormatAccount.setValues(account);
     // this.selectedLocal = this.setFormatAccount.map_id;
-    console.log(this.setFormatAccount);
     this.tabSet.activeId = 'format';
     this.getFormats(account.bank_id, account.company_id);
 
@@ -239,7 +232,7 @@ export class AccountsComponent implements OnInit {
 
       }, (err) => {
 
-        console.log(err);
+        console.error(err);
         Swal.fire({
           title: 'Procesando',
           imageUrl: 'assets/images/2.gif',

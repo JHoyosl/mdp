@@ -32,7 +32,6 @@ export class BanksComponent implements OnInit {
     
     this.bankUpdate = new BankModel();
     this.bankUpdate.setValues(bank);
-    console.log(this.bankUpdate);
 
     this.tabSet.activeId  = 'updateTab';
 
@@ -52,10 +51,10 @@ export class BanksComponent implements OnInit {
       this.apiRequest.delete( bank.id )
         .subscribe((response)=>{
           
-          console.log(response);
+          
         },(err)=>{
 
-          console.log(err);
+          console.error(err);
         })
     })
     
@@ -74,7 +73,7 @@ export class BanksComponent implements OnInit {
     this.apiRequest.putbank( this.bankUpdate )
       .subscribe( response => {
 
-        console.log(response);
+        
         this.getbanks();
         this.tabSet.activeId  = 'List';
         Swal.fire({
@@ -82,7 +81,7 @@ export class BanksComponent implements OnInit {
           text: 'Registro actualizado',
         });
       }, (err)=>{
-        console.log(err.error);
+        console.error(err.error);
         
       });
     
@@ -94,7 +93,7 @@ export class BanksComponent implements OnInit {
     this.apiRequest.getCollection('banks')
       .subscribe( (response:any) => {
         
-        console.log(response);
+        
         this.bankList = response;
         
       });

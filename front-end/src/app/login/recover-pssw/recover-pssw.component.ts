@@ -46,10 +46,10 @@ export class RecoverPsswComponent implements OnInit {
         });
         this.router.navigate(['/login']);
 
-        console.log(response);
+        
       }, (err)=>{
   
-        console.log(err);
+        console.error(err);
       })
   }
 }

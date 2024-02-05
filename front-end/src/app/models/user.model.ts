@@ -9,7 +9,6 @@ export class UserModel {
     token?: string;
 
     setValues( Object: any) {
-        // console.log(Object);
         this.id = Object.id;
         this.email = Object.email;
         this.password = Object.password;

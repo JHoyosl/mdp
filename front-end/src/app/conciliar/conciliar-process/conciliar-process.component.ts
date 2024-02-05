@@ -61,9 +61,6 @@ export class ConciliarProcessComponent implements OnInit {
 
   setViewConciliar() {
 
-    console.log(this.viewItemList);
-
-    console.log(this.iniAcounts);
     let currentBank = this.viewItemList[0].account.banks.name;
     let bankArray = [];
 
@@ -113,11 +110,6 @@ export class ConciliarProcessComponent implements OnInit {
         }
       }
     }
-
-
-
-
-    console.log(this.banksViewIniInfo);
     this.tabSet.activeId = 'detalle';
 
   }
@@ -130,11 +122,11 @@ export class ConciliarProcessComponent implements OnInit {
       .subscribe( (response) => {
         this.viewItemList = response;
         this.setViewConciliar();
-        console.log(response);
+        
         this.tabSet.activeId = 'detalle';
       }, (err) => {
 
-        console.log(err);
+        console.error(err);
       });
   }
 
@@ -174,7 +166,7 @@ export class ConciliarProcessComponent implements OnInit {
 
       }, (err) => {
         Swal.close();
-        console.log(err);
+        console.error(err);
 
       });
   }
@@ -206,7 +198,7 @@ export class ConciliarProcessComponent implements OnInit {
     this.apiRequest.getPostCollection(`conciliar/getCuentasToConciliar`)
       .subscribe( (response) => {
 
-        console.log(response);
+        
         // return;
         let tmp: any = [];
         tmp = response['data'];
@@ -228,7 +220,7 @@ export class ConciliarProcessComponent implements OnInit {
 
       }, (err) => {
 
-        console.log(err);
+        console.error(err);
 
       });
   }
@@ -246,10 +238,10 @@ export class ConciliarProcessComponent implements OnInit {
 
           this.hasIniDisplay = true;
         }
-        console.log(response);
+        
       }, (err) => {
 
-        console.log(err);
+        console.error(err);
       })
 
 
@@ -259,18 +251,14 @@ export class ConciliarProcessComponent implements OnInit {
 
     this.currentUploadInfoAccount = account;
     $('#uploadAccountFile').click();
-    console.log(account);
 
   }
 
   uploadAccountFile(file: FileList) {
 
-    console.log(file);
-    console.log(this.currentUploadInfoAccount);
     const formData = this.currentUploadInfoAccount.toFormData();
     formData.append('file', file.item(0));
 
-    console.log(formData.getAll);
     Swal.fire({
       title: 'Procesando',
       allowOutsideClick: false,
@@ -303,13 +291,12 @@ export class ConciliarProcessComponent implements OnInit {
           'warning'
         )
 
-        console.log(err);
+        console.error(err);
       })
   }
 
   orderConsolidadoInfo() {
 
-    console.log(this.iniAcounts);
     let currentBank = this.iniAcounts[0].bank_name;
     let bankArray = [];
 
@@ -366,8 +353,6 @@ export class ConciliarProcessComponent implements OnInit {
 
     account.getTotal();
 
-    // console.log("calculando");
-
   }
 
   uploadContableFile( contableFile: File){
@@ -387,10 +372,10 @@ export class ConciliarProcessComponent implements OnInit {
       .subscribe( (response) => {
         Swal.close();
         this.getAccounts();
-        console.log(response);
+        
       }, (err) => {
         Swal.close();
-        console.log(err);
+        console.error(err);
       });
 
   }
@@ -428,7 +413,6 @@ export class ConciliarProcessComponent implements OnInit {
 
         for (let i = 0; i < this.externalIniArray.length; i++) {
           const accountMatch = false;
-          // console.log(this.externalIniArray);
           for (let j = 0; j < this.localIniArray.length; j++) {
             if (this.externalIniArray[i].local_account === this.localIniArray[j].local_account) {
 
@@ -442,7 +426,6 @@ export class ConciliarProcessComponent implements OnInit {
               accountConciliar.bank_name = this.externalIniArray[i].name;
               accountConciliar.getTotal();
 
-              // console.log(accountConciliar);
               this.iniAcounts.push(accountConciliar);
 
 
@@ -462,7 +445,7 @@ export class ConciliarProcessComponent implements OnInit {
           err.error.errors.join(),
           'warning'
         );
-        console.log(err);
+        console.error(err);
 
       });
   }
@@ -495,7 +478,7 @@ export class ConciliarProcessComponent implements OnInit {
         tmpList.push(this.iniAcounts[i]);
 
       }
-      // console.log(this.iniAcounts[i]);
+
       if (Number(this.iniAcounts[i].cuadre.toFixed(2)) != 0) {
         Swal.fire(
           'Error',
@@ -553,7 +536,6 @@ export class ConciliarProcessComponent implements OnInit {
     const lastDay = new Date(this.fechaCierre['year'], this.fechaCierre['month'], 0);
 
     const formData = new FormData();
-    console.log(JSON.stringify(this.iniAcounts));
     formData.set('info', JSON.stringify(this.iniAcounts));
     formData.set('fecha_cierre', `${this.fechaCierre['year']}/${this.fechaCierre['month']}/${lastDay.getDate()}`);
 
@@ -565,7 +547,7 @@ export class ConciliarProcessComponent implements OnInit {
         this.tabSet.activeId = 'List';
       }, (err) => {
 
-        console.log(err);
+        console.error(err);
       })
   }
 

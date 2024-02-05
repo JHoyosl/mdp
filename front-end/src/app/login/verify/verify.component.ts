@@ -21,7 +21,6 @@ export class VerifyComponent implements OnInit {
   ngOnInit() {
     
     this.user.token = this.route.snapshot.paramMap.get("token");
-    // console.log(this.user.token);
 
   }
   
@@ -47,14 +46,14 @@ export class VerifyComponent implements OnInit {
     this.auth.validateUser( this.user )
       .subscribe( (response) => {
           
-        console.log(response);
+        
 
         this.auth.getAccessToken(this.user);
           
         
       }, (err)=>{
         
-        console.log(err);
+        console.error(err);
         Swal.fire({
           type: 'warning',
           text: 'Infromación Incorrecta, si el problema persiste, solicite nuevo correo de verificación',

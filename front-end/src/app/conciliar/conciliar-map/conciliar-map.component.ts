@@ -108,10 +108,10 @@ export class ConciliarMapComponent implements OnInit {
     }
     this.apiRequest.getCollection(`mapFiles/getMapIndex/${type}`)
       .subscribe( (response)=>{
-        console.log(response);
+        
         this.newMapFile.masterFields = response;
         this.updateMapFile.masterFields = response;
-        console.log(response);
+        
         for(let i = 0; i < this.updateMapFile.mappedFields.length; i++){
           
           this.updateMapFile.mappedFields[i]['mapIndex'] = 0;
@@ -119,7 +119,7 @@ export class ConciliarMapComponent implements OnInit {
         }
       }, (err)=>{
 
-        console.log(err);
+        console.error(err);
       })
   }
 
@@ -171,7 +171,7 @@ export class ConciliarMapComponent implements OnInit {
         
       }, (err) =>{
   
-        console.log(err.error);
+        console.error(err.error);
   
       })
   }
@@ -288,7 +288,7 @@ export class ConciliarMapComponent implements OnInit {
             text: JSON.stringify(err)
           });
           
-        console.log(err);
+        console.error(err);
       }) 
   }
   
@@ -309,7 +309,6 @@ export class ConciliarMapComponent implements OnInit {
       element.value = found ? found.description : '';
         
     });
-    console.log(this.updateMapFile);
     for(let i = 0; i < this.updateMapFile.masterFields.length; i++){
       if(this.updateMapFile.masterFields[i].type == '1'){
         let exist = false;
@@ -423,13 +422,12 @@ export class ConciliarMapComponent implements OnInit {
           text: JSON.stringify(err)
         });
         this.tabSet.activeId = 'List';
-        console.log(err);
+        console.error(err);
       })
 
   }
   editMap( mapFile:any ){
     
-    console.log(this.isAdmin);
     this.tabSet.activeId = 'updateTab';
     
     this.updateMapFile.setUploadValues(mapFile);

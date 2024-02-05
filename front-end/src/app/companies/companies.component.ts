@@ -56,7 +56,7 @@ export class CompaniesComponent implements OnInit {
     this.apiRequest.getCollection('companies')
       .subscribe( (response:any) => {
         
-        console.log(response);
+        
         this.companies = response;
   
       });
@@ -131,7 +131,7 @@ export class CompaniesComponent implements OnInit {
     this.apiRequest.put( body, `companies/${this.companyUpdate.id}`)
       .subscribe( (response)=>{
 
-          // console.log(response);
+          // 
           this.toastr.success('Formato asociado', 'Correcto');
           this.getCompanies();
           this.tabSet.activeId  = 'List';
@@ -141,14 +141,14 @@ export class CompaniesComponent implements OnInit {
         this.toastr.error('Error', 'Correcto');
         this.tabSet.activeId  = 'List';
         
-        console.log(err);
+        console.error(err);
       })
 
       
     // this.apiRequest.putCompany(this.companyUpdate )
     //   .subscribe( response => {
 
-    //     console.log(response);
+    //     
     //     this.getCompanies();
     //     this.tabSet.activeId  = 'List';
     //     Swal.fire({
@@ -156,7 +156,7 @@ export class CompaniesComponent implements OnInit {
     //       text: 'Registro actualizado',
     //     });
     //   }, (err)=>{
-    //     console.log(err.error);
+    //     console.error(err.error);
         
     //   });
     
@@ -184,7 +184,7 @@ export class CompaniesComponent implements OnInit {
         });
 
       }, (err)=>{
-        console.log(err.error.errors);
+        console.error(err.error.errors);
         
         if(err.error.errors){
           Swal.fire({

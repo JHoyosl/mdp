@@ -44,7 +44,7 @@ export class LoginComponent implements OnInit {
 
     this.apiRequest.getCollection(`users/getCompaniesByEmail/${this.user.email}`)
     .subscribe( (response) => {
-      console.log(response);
+      
       if (!(typeof(response.status) === 'undefined')) { return; }
 
       this.companyList = response;
@@ -54,7 +54,7 @@ export class LoginComponent implements OnInit {
       }
 
     }, (err) => {
-      console.log(err);
+      console.error(err);
       if (err.error.message === 'No query results for model [App\User]') {
 
         this.companyList = [];

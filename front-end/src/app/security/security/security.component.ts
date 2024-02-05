@@ -274,6 +274,6 @@ export class SecurityComponent implements OnInit {
   }
 
   nuevoRolShow(){
-    console.log("show nuevo rol");
+    
   }
 }

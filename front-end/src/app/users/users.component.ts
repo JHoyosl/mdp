@@ -114,7 +114,7 @@ export class UsersComponent implements OnInit {
         
       }, (err)=>{
 
-        console.log(err);
+        console.error(err);
       })
   }
 
@@ -126,7 +126,7 @@ export class UsersComponent implements OnInit {
         this.usersList = response;
       }, (err) =>{
 
-        console.log(err);
+        console.error(err);
       })
 
   }
@@ -148,7 +148,7 @@ export class UsersComponent implements OnInit {
       }, (err)=>{
         
         Swal.close();
-        console.log(err);
+        console.error(err);
       })
   }
 
@@ -161,7 +161,6 @@ export class UsersComponent implements OnInit {
 
   update( form:NgForm){
 
-    console.log(this.updateUser);
     const validEmailRegEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     
     if(!validEmailRegEx.test(this.updateUser.email)){
@@ -190,11 +189,7 @@ export class UsersComponent implements OnInit {
       imageUrl: "assets/images/2.gif",
        
     });
-   
-    // let body = new HttpParams();
 
-    // body = this.updateUser.toHttpParams();
-    // console.log(body);
 
     const body = new HttpParams()
       .set('id',this.updateUser.id.toString())
@@ -207,7 +202,7 @@ export class UsersComponent implements OnInit {
     this.apiRequest.put( body, `users/${this.updateUser.id}` )
       .subscribe( (response) =>{
         Swal.close();
-        console.log(response);
+        
         Swal.fire({
           type: 'success',
           text: 'Usuario Agregado',
@@ -216,7 +211,7 @@ export class UsersComponent implements OnInit {
         this.tabSet.activeId = 'List';
       }, (err)=>{
         
-        console.log(err);
+        console.error(err);
         Swal.close();
         let msnError = '';
 
@@ -231,9 +226,6 @@ export class UsersComponent implements OnInit {
           text: msnError,
         });
       })
-
-
-    console.log("hola");
   }
 
 
@@ -266,7 +258,7 @@ export class UsersComponent implements OnInit {
           type: 'error',
           text: err,
         });
-        console.log(err);
+        console.error(err);
       })
 
   }
@@ -298,11 +290,11 @@ export class UsersComponent implements OnInit {
             
           }, (err)=>{
     
-            console.log(err);
+            console.error(err);
           });
       }, (err)=>{
 
-        console.log(err);
+        console.error(err);
       });
 
     

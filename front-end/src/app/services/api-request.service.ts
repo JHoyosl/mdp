@@ -86,7 +86,7 @@ export class ApiRequestService {
     return this.http.get( this.url + endpoint , { headers: headers})
       .pipe( map( response => {
 
-        // console.log(response);
+        // 
         if (!response['status']){
 
           return response;
@@ -95,7 +95,7 @@ export class ApiRequestService {
 
       },  (err) => {
 
-        console.log(err);
+        console.error(err);
 
       }));
 
@@ -110,8 +110,6 @@ export class ApiRequestService {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Authorization': `Bearer ${localStorage.getItem('access_token')}`
     });
-
-    console.log(body);
 
     return this.http.put(`${this.url}${endPoint}`, body, {headers});
 
@@ -294,13 +292,13 @@ export class ApiRequestService {
 
                 this.router.navigate(['/main/companies']);
               }, (err) => {
-                console.log(err);
+                console.error(err);
               })
 
 
           }, (err) => {
 
-            console.log(err.error.error);
+            console.error(err.error.error);
 
             Swal.fire({
               type: 'info',
@@ -433,18 +431,8 @@ export class ApiRequestService {
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${localStorage.getItem('access_token')}`
     });
-
-    console.log(formData.get('file'));
-    console.log(formData.get('fecha'));
-
-    // if(endPoint == 'conciliar/uploadIniFile'){
-    //   return this.http.post(`${this.url}${endPoint}`,formData,{headers});
-    // }
-
-
     return this.http.post(`${this.url}${endPoint}`, formData, {headers} )
       .pipe( map( response => {
-        console.log(response);
         return response['data'];
 
       }));

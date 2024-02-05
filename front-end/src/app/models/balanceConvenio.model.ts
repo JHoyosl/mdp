@@ -18,7 +18,6 @@ export class BalanceConvenioModel{
 
     setValues( Object: any) {
         
-        console.log(Object);
         this.balanceHeader = Object.balance.header;
         this.balanceItems = Object.balance.items;
         this.convenioHeader = Object.convenios.header;
@@ -28,7 +27,6 @@ export class BalanceConvenioModel{
         this.nautralezaOperativa = Object.nautralezaOperativa;
         
         let tmpArray:any = [];
-        console.log(Object);
         for(let i = 0; i < this.convenioItems.length; i++){
             let found = false;
             for(let j = 0; j < this.indices.length; j++){

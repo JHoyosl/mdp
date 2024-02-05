@@ -1,0 +1,108 @@
+<div class="card">
+  <div class="card-body">
+    <div class="x_panel tile">
+        <i title = "cargar" 
+          style="border: 1px solid #ccc; float:right; cursor:pointer"
+          class="ti-upload actionIcon "
+          (click)="fileUpload.click()"></i>
+      <h6 class="card-subtitle">Exterena: {{account.bank_account}}</h6>
+      <h6 class="card-subtitle">Loca: {{account.local_account}}</h6>
+      
+    </div>
+    <div class="x_content">
+      <table class="table table-striped consolicado" style="width:100%">
+        <tr>
+          <th>
+          Saldo Ext. Ant.
+          </th>
+          <td>
+            <span class = "text-right" >{{ account.conciliarInfo.antExterno | currency}}</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+          Crédito Bancos
+          </th>
+          <td>
+          <span class = "text-right" >{{ account.conciliarInfo.creditExternal | currency}}</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+          Debito Bancos
+          </th>
+          <td>
+          <span class = "text-right" >{{ account.conciliarInfo.debitExternal | currency }}</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+          Saldo Extracto
+          </th>
+          <td>
+          <span class = "text-right" >
+            <input appInputCurrency [(ngModel)]="bankValue" (change)="updateBankDifference()" (blur)="updateBankDifference()">
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+          Diferencia Bancos
+          </th>
+          <td>
+              <span class = "text-right" >{{ bankDifference | currency}}</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+          Saldo Cont. Ant
+          </th>
+          <td>
+              <span class = "text-right" >{{ account.conciliarInfo.antLocal | currency}}</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+          Debito Libros
+          </th>
+          <td>
+            <span class = "text-right" >{{ account.conciliarInfo.debitLocal | currency }}</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+          Crédito Libros
+          </th>
+          <td>
+            <span class = "text-right" > {{account.conciliarInfo.creditLocal | currency}}</span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+          Saldo Contable
+          </th>
+          <td>
+            <span class = "text-right" >
+              <input appInputCurrency [(ngModel)]="localValue" (change)="updateLocalDifference()">
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <th>
+          Diferencia Libros
+          </th>
+          <td>
+              <span class = "text-right" >{{ localDifference | currency}}</span>
+          </td>
+        </tr>
+        
+      </table>
+    </div>
+    
+    <button type="button" class="btn btn-secundary" (click)="closeAccount()">Cerrar</button>
+  </div>
+  <input 
+    type="file"  
+    class="custom-file-input" 
+    id="uploadAccountFile" lang="en" (change)="uploadAccountFile($event.target.files)" #fileUpload>
+</div>

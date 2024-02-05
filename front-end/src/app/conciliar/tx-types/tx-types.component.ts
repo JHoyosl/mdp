@@ -38,12 +38,12 @@ export class TxTypesComponent implements OnInit {
     this.auth.isAdmin()
       .subscribe( (response)=>{
 
-        console.log(response);
+        
         this.isAdmin = response;
       }, (err)=>{
         
         this.isAdmin = false;
-        console.log(err);
+        console.error(err);
 
       });
   }
@@ -91,7 +91,7 @@ export class TxTypesComponent implements OnInit {
 
       }, (err)=>{
 
-        console.log(err);
+        console.error(err);
       })
   }
 
@@ -103,7 +103,7 @@ export class TxTypesComponent implements OnInit {
 
       }, (err)=>{
 
-        console.log(err);
+        console.error(err);
       })
 
   }
@@ -155,7 +155,7 @@ export class TxTypesComponent implements OnInit {
         
       }, (err)=>{
 
-        console.log(err);
+        console.error(err);
         Swal.fire({
           title: 'Procesando',
           imageUrl: "assets/images/2.gif",
@@ -198,7 +198,7 @@ export class TxTypesComponent implements OnInit {
         
       }, (err)=>{
 
-        console.log(err);
+        console.error(err);
         Swal.fire({
           title: 'Procesando',
           imageUrl: "assets/images/2.gif",
@@ -245,7 +245,7 @@ export class TxTypesComponent implements OnInit {
       this.tabSet.activeId = 'externalList';
     }, (err)=>{
       
-      console.log(err);
+      console.error(err);
       Swal.close();
       Swal.fire({
         title: 'Procesando',
@@ -295,7 +295,7 @@ export class TxTypesComponent implements OnInit {
       this.tabSet.activeId = 'localList';
     }, (err)=>{
       
-      console.log(err);
+      console.error(err);
       Swal.close();
       Swal.fire({
         title: 'Procesando',

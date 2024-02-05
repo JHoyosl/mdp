@@ -107,92 +107,14 @@
                           </div>
                           <div class="row">
                             <div class="col-xs-12 col-md-4" *ngFor="let account of bank; let i=index">
-                              <!-- Card -->
-                              <div class="card">
-                                <div class="card-body">
-                                  <div class="x_panel tile">
-                                      <i title = "cargar" 
-                                        style="border: 1px solid #ccc; float:right"
-                                        class="ti-upload actionIcon "
-                                        (click)="chooseUploadFile(account)"></i>
-                                    <h6 class="card-subtitle">Exterena: {{account.bank_account}}</h6>
-                                    <h6 class="card-subtitle">Loca: {{account.local_account}}</h6>
-                                    
-                                  </div>
-                                  <div class="x_content">
-                                    <table class="table table-striped consolicado" style="width:100%">
-                                      <tr>
-                                        <th>
-                                        Saldo Extracto
-                                        </th>
-                                        <td>
-                                        <span class = "text-right" >
-                                          <input>
-                                          </span>
-                                        </td>
-                                      </tr>
-                                      <tr>
-                                        <th>
-                                        Saldo Ext. Ant.
-                                        </th>
-                                        <td>
-                                          <span class = "text-right" >{{ account.conciliarInfo.antExterno | currency}}</span>
-                                        </td>
-                                      </tr>
-                                      <tr>
-                                        <th>
-                                        Crédito Bancos
-                                        </th>
-                                        <td>
-                                        <span class = "text-right" >{{ account.conciliarInfo.creditExternal | currency}}</span>
-                                        </td>
-                                      </tr>
-                                      <tr>
-                                        <th>
-                                        Crédito Libros
-                                        </th>
-                                        <td>
-                                          <span class = "text-right" > {{account.conciliarInfo.creditLocal | currency}}</span>
-                                        </td>
-                                      </tr>
-                                      <tr>
-                                        <th>
-                                        Debito Bancos
-                                        </th>
-                                        <td>
-                                        <span class = "text-right" >{{ account.conciliarInfo.debitExternal | currency }}</span>
-                                        </td>
-                                      </tr>
-                                      <tr>
-                                        <th>
-                                        Debito Libros
-                                        </th>
-                                        <td>
-                                          <span class = "text-right" >{{ account.conciliarInfo.debitLocal | currency }}</span>
-                                        </td>
-                                      </tr>
-                                      <tr>
-                                        <th>
-                                        Saldo Contable
-                                        </th>
-                                        <td>
-                                          <span class = "text-right" >
-                                              <input>
-                                          </span>
-                                        </td>
-                                      </tr>
-                                      <tr>
-                                        <th>
-                                        Saldo Cont. Ant
-                                        </th>
-                                        <td>
-                                            <span class = "text-right" >{{ account.conciliarInfo.antLocal | currency}}</span>
-                                        </td>
-                                      </tr>
-                                    </table>
-                                  </div>
-                                </div>
-                              </div>
+
+                              <!-- ACCOUNT BALANCE TABLE -->
+                              <app-account-balance-table 
+                                [account]="account"
+                                (updateInfo)="getAccounts()"
+                              ></app-account-balance-table>
+                              <!-- ACCOUNT BALANCE TABLE -->
+                              
                             </div>
                           </div>  
                         </div>

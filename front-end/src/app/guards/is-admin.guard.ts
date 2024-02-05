@@ -14,7 +14,7 @@ export class IsAdminGuard implements CanActivate {
   canActivate(): boolean{
     
     return true;
-    // console.log("isadmin");
+
     // if(this.authService.isAdmin()){
 
     //   return true;

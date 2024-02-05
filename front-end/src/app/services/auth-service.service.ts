@@ -98,7 +98,6 @@ export class AuthServiceService {
 
   setUserCompany(company_id){
 
-    console.log(company_id);
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -107,11 +106,11 @@ export class AuthServiceService {
     this.http.get(`${this.url}users/setCurrentCompany/${company_id}`,{headers})
       .subscribe((response)=>{
 
-        console.log(response);
+        
         // this.logOut();
       },(err)=>{
 
-        console.log(err);
+        console.error(err);
       })
 
     
@@ -127,7 +126,6 @@ export class AuthServiceService {
       .set('username', userLogin.email)
       .set('password', userLogin.password);
 
-    // console.log(userLogin);
     Swal.fire({
       allowOutsideClick: false,
       type: 'info',
@@ -162,7 +160,7 @@ export class AuthServiceService {
 
       }, (err) => {
 
-        console.log(err.error.error);
+        console.error(err.error.error);
 
         Swal.fire({
           type: 'info',
@@ -197,7 +195,7 @@ export class AuthServiceService {
 
       }, (err) => {
 
-        console.log(err);
+        console.error(err);
         localStorage.clear();
         this.router.navigate(['/login']);
 

@@ -35,7 +35,6 @@ export class AccountModel {
 
     setValues( Object: any) {
 
-        // console.log(Object);
         this.id = Object.id ? Object.id : null;
         this.bank_id = Object.bank_id;
         this.company_id = Object.company_id;
