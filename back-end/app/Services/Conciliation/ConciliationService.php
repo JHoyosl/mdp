@@ -1,15 +1,68 @@
 <?php
 
-namespace App\Services\Reconciliation;
+namespace App\Services\Conciliation;
 
 use App\Models\User;
 use App\Models\Account;
 use App\Models\ConciliarItem;
+use App\Models\ConciliarHeader;
 use Illuminate\Support\Facades\Schema;
 
-class ReconciliationService
+class ConciliationService
 {
 
+
+    public function balanceCloseAccount($externalBalance, $localBalance, $accountId, $companyId)
+    {
+        $conciliarItemsTable = 'conciliar_items_' . $companyId;
+        $conciliarHeaderTable = 'conciliar_headers_' . $companyId;
+
+        $itemTable = new ConciliarItem($conciliarItemsTable);
+        $headers = new ConciliarHeader($conciliarHeaderTable);
+
+        $openHeader = $headers->where('status', ConciliarHeader::OPEN_STATUS)
+            ->orderBy('id', 'desc')->first();
+
+
+        $openItemTable = $itemTable->where('header_id', '=', $openHeader->id)
+            ->where('account_id', '=', $accountId)
+            ->first();
+
+        return $this->getLastAccountBalance($companyId, $accountId);
+        return $openItemTable;
+        return [$externalBalance, $localBalance, $accountId, $companyId];
+    }
+
+
+    // public function localDifference(ConciliarItem $itemsTable, $localBalance){
+    //     const calcValue = $itemsTable[''] + $itemsTable->debit_local - $itemsTable->credit_local;
+    //     this.localDifference = calcValue - this.localValue;
+    // }
+
+    public function getLastAccountBalance($companyId, $accountId)
+    {
+
+        $conciliarHeaderTableName = 'conciliar_headers_' . $companyId;
+        $conciliarItemsTableName = 'conciliar_items_' . $companyId;
+        $conciliarHeaderTable = new ConciliarHeader($conciliarHeaderTableName);
+
+        $conciliarHeaderClose = $conciliarHeaderTable->where('status', '=', ConciliarHeader::CLOSE_STATUS)
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $conciliarItemsTable = new ConciliarItem($conciliarItemsTableName);
+
+        $conciliarItemsClose = $conciliarItemsTable
+            ->where('header_id', '=', $conciliarHeaderClose->id)
+            ->where('account_id', '=', $accountId)
+            ->first();
+
+        return [
+            "balanceExterno" => $conciliarItemsClose->balance_externo,
+            "balanceLocal" => $conciliarItemsClose->balance_local
+        ];
+    }
+    // TABLE CREATION
     public function createTmpTableConciliarItems(String $companyId)
     {
         $tmpItems = 'conciliar_tmp_items_' . $companyId;

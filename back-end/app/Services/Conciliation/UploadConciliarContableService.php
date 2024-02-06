@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Reconciliation;
+namespace App\Services\Conciliation;
 
 use Exception;
 use App\Models\MapFile;
@@ -18,11 +18,10 @@ class UploadConciliarContableService
     {
     }
 
-    public function startUploadProcess($file, $map_id, $conciliarLocalValues, $conciliarItemsTable, $user, $openHeader)
+    public function startUploadProcess($file, $map_id, $conciliarLocalValuesTable, $conciliarItemsTable, $user, $openHeader)
     {
 
-
-        $this->conciliar_tmp_local_values_table = $conciliarLocalValues;
+        $this->conciliar_tmp_local_values_table = $conciliarLocalValuesTable;
         $this->conciliar_items_table = $conciliarItemsTable;
 
         $mapped = $this->getInsertConciliarLocal($file, $map_id);
@@ -41,7 +40,6 @@ class UploadConciliarContableService
             throw new Exception($e);
         }
         DB::commit();
-
 
         $conciliarCuadre = DB::table($this->conciliar_tmp_local_values_table)
             ->select(

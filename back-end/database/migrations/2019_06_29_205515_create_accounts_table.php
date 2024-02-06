@@ -30,7 +30,6 @@ class CreateAccountsTable extends Migration
             $table->foreign('bank_id')->references('id')->on('banks');
             $table->foreign('company_id')->references('id')->on('companies');
             $table->foreign('map_id')->references('id')->on('map_files');
-            
         });
     }
 

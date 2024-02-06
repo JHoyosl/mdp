@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Reconciliation;
+namespace App\Services\Conciliation;
 
 use App\Models\User;
 use App\Models\Account;
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use App\Services\Account\AccountService;
 
-class UploadReconciliationExternalService
+class UploadConciliationExternalService
 {
     use SheetToolsTrait;
 
@@ -23,12 +23,12 @@ class UploadReconciliationExternalService
     protected $reconciliationItemsTemp = "";
 
     private AccountService $accountService;
-    private ReconciliationService $reconciliationService;
+    private ConciliationService $reconciliationService;
     private $filePath;
 
     public function __construct(
         AccountService $accountService,
-        ReconciliationService $reconciliationService
+        ConciliationService $reconciliationService
     ) {
         $this->accountService = $accountService;
         $this->reconciliationService = $reconciliationService;
@@ -73,14 +73,14 @@ class UploadReconciliationExternalService
 
         $this->filePath = $user->current_company . '/' . $conciliarHeader->id . '/external/' . $account['bank_account'] . '.' . $ext;
 
-        Storage::disk('reconciliation')->put($this->filePath, file_get_contents($file));
+        Storage::disk('conciliation')->put($this->filePath, file_get_contents($file));
 
-        return storage_path('reconciliation/') . '/' . $this->filePath;
+        return storage_path('conciliation/') . '/' . $this->filePath;
     }
 
     public function getFile(String $path)
     {
-        return Storage::disk('reconciliation')->get($path);
+        return Storage::disk('conciliation')->get($path);
     }
 
     public function getCurrentItem(User $user, String $headerId, String $accountId): ConciliarItem

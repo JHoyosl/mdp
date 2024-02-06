@@ -198,7 +198,7 @@ export class ConciliarProcessComponent implements OnInit {
     this.apiRequest.getPostCollection(`conciliar/getCuentasToConciliar`)
       .subscribe( (response) => {
 
-        
+        console.log(response);
         // return;
         let tmp: any = [];
         tmp = response['data'];

@@ -2,14 +2,10 @@
 
 namespace App\Http\Controllers\Conciliar;
 
-use Excel;
+
 use Schema;
-use Exception;
-use App\Models\User;
 use App\Models\Account;
 use App\Models\Company;
-use App\Models\MapFile;
-use Illuminate\Http\File;
 use App\Models\LocalTxType;
 use Illuminate\Http\Request;
 use App\Models\ConciliarItem;
@@ -20,11 +16,11 @@ use App\Models\ConciliarLocalValues;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
 use App\Models\ConciliarExternalValues;
-use App\Services\Reconciliation\ReconciliationService;
+use App\Services\Conciliation\ConciliationService;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
-use App\Services\Reconciliation\UploadConciliarContableService;
-use App\Services\Reconciliation\UploadReconciliationExternalService;
+use App\Services\Conciliation\UploadConciliarContableService;
+use App\Services\Conciliation\UploadConciliationExternalService;
 
 ini_set('memory_limit', '1000M');
 
@@ -47,15 +43,15 @@ class ConciliarController extends ApiController
     protected $conciliar_external_tx_type = 'external_tx_types';
 
     protected UploadConciliarContableService $uploadConciliarContableService;
-    protected UploadReconciliationExternalService $uploadReconciliationExternalService;
-    protected ReconciliationService $reconciliationService;
+    protected UploadConciliationExternalService $uploadConciliationExternalService;
+    protected ConciliationService $conciliationService;
 
     private $user;
 
     public function __construct(
         UploadConciliarContableService $uploadConciliarContableService,
-        UploadReconciliationExternalService $uploadReconciliationExternalService,
-        ReconciliationService $reconciliationService
+        UploadConciliationExternalService $uploadConciliationExternalService,
+        ConciliationService $conciliationService
     ) {
         $this->middleware('auth:api');
         $this->middleware(function ($request, $next) {
@@ -67,8 +63,9 @@ class ConciliarController extends ApiController
             return $next($request);
         });
 
+        $this->conciliationService = $conciliationService;
         $this->uploadConciliarContableService = $uploadConciliarContableService;
-        $this->uploadReconciliationExternalService = $uploadReconciliationExternalService;
+        $this->uploadConciliationExternalService = $uploadConciliationExternalService;
     }
 
     function init($user)
@@ -193,37 +190,22 @@ class ConciliarController extends ApiController
         return $conciliarTable;
     }
 
-    private function truncateTmpTables()
-    {
-
-        $tmpExternalValues = new ConciliarExternalValues();
-        $tmpExternalValues->truncate();
-
-        $tmpLocalValues = new ConciliarLocalValues();
-        $tmpLocalValues->truncate();
-    }
-
     public function closeIniConciliar(Request $request)
     {
 
-
         $user = Auth::user();
+        // return storage_path('app/conciliation/');
+        if (!is_dir(storage_path('conciliation/' . $user->current_company . '/'))) {
 
-        if (!is_dir(storage_path('app/conciliaciones/' . $user->current_company . '/'))) {
-
-            mkdir(storage_path('app/conciliaciones/' . $user->current_company . '/'), 0775);
+            mkdir(storage_path('conciliation/' . $user->current_company . '/'), 0775, true);
         }
 
-
-
         $info = $request->all();
-
 
         $infoArray = json_decode($info['info'], true);
         $fechaCierre = $info['fecha_cierre'];
 
         $insertArray = [];
-
 
         $header = $this->getLastConciliarHeader();
         // return $header;
@@ -265,7 +247,6 @@ class ConciliarController extends ApiController
             $itemsArray[] = $item;
             $item = [];
         }
-
 
         $file = Storage::files($header->file_path);
 
@@ -320,37 +301,8 @@ class ConciliarController extends ApiController
         return $header;
     }
 
-    private function getCurrentConciliacion()
-    {
-
-        $user = Auth::user();
-
-        $conciliarHeaderTable = new ConciliarHeader($this->conciliar_headers_table);
-        $header = $conciliarHeaderTable->where('status', ConciliarHeader::OPEN_STATUS)
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if ($header == null) {
-
-            $header = new ConciliarHeader($this->conciliar_headers_table);
-
-
-            $header->insert(
-                [
-                    'fecha_ini' => date('Y-m-d H:i:s'),
-                    'created_by' => $user->id,
-                    'status' => ConciliarHeader::OPEN_STATUS,
-
-                ]
-            );
-        }
-
-        return $header;
-    }
-
     public function uploadAccountFile(Request $request)
     {
-        // return $request;
         if (!$request->hasFile('file')) {
             return $this->badRequestResponse("Param 'file' not found");
         }
@@ -362,10 +314,35 @@ class ConciliarController extends ApiController
         $accountId = $request->input('account_id');
         $account = Account::with('map')->find($accountId);
 
-        $tmpItems = $this->uploadReconciliationExternalService->processFile($this->user, $account, $request->file);
+        $tmpItems = $this->uploadConciliationExternalService->processFile($this->user, $account, $request->file);
 
         return $this->showArray($tmpItems);
     }
+
+    public function balanceCloseAccount(Request $request)
+    {
+        $validated = $request->validate([
+            'externalBalance' => 'required|numeric|between:0,999999999999.99',
+            'localBalance' => 'required|numeric|between:0,999999999999.99',
+            'accountId' => 'required|exists:accounts,id',
+        ]);
+
+        return $this->conciliationService->balanceCloseAccount(
+            $validated['externalBalance'],
+            $validated['localBalance'],
+            $validated['accountId'],
+            $this->user->current_company
+        );
+        return $request->externalBalance;
+    }
+
+
+
+
+
+
+    //TODO: REMOVE UNUSED
+
 
     public function getTxInfo($values, $bank_id)
     {
@@ -568,7 +545,7 @@ class ConciliarController extends ApiController
                     $q->orderBy('banks.name', 'desc');
                 }])
                 ->get();
-            // return $conciliarItemsOpen;
+
             for ($i = 0; $i < $conciliarItemsOpen->count(); $i++) {
 
                 for ($j = 0; $j < $conciliarItemsClose->count(); $j++) {

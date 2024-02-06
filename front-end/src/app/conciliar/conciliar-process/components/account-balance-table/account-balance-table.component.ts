@@ -63,14 +63,16 @@ export class AccountBalanceTableComponent implements OnInit {
 
   updateBankDifference(){
     this.bankValue = Number(this.bankValue.toString().replace(this.currencyChars, ''));
-    const calcValue = this.account.conciliarInfo.saldoExtracto + this.account.conciliarInfo.creditExternal - this.account.conciliarInfo.debitExternal;
+    console.log(this.account.conciliarInfo);
+    const calcValue = Number(this.account.conciliarInfo.antExterno) + Number(this.account.conciliarInfo.creditExternal) - Number(this.account.conciliarInfo.debitExternal);
+    console.log(calcValue);
     this.bankDifference = calcValue - Number(this.bankValue);
 
   }
 
   updateLocalDifference(){
     this.localValue = Number(this.localValue.toString().replace(this.currencyChars, ''));
-    const calcValue = this.account.conciliarInfo.saldoContable + this.account.conciliarInfo.debitLocal - this.account.conciliarInfo.creditLocal;
+    const calcValue = Number(this.account.conciliarInfo.antLocal) + Number(this.account.conciliarInfo.debitLocal) - Number(this.account.conciliarInfo.creditLocal);
     this.localDifference = calcValue - this.localValue;
   }
 
