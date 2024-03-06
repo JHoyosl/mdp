@@ -18,6 +18,12 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });*/
 
+//ACCOUNTING ROUTER
+Route::post('accounting/uploadAccountingInfo', 'Accounting\AccountingController@uploadAccountingInfo');
+Route::post('accounting/deleteLastUpload', 'Accounting\AccountingController@deleteLastUpload');
+
+//ACCOUNTING ROUTER
+
 Route::resource('users', 'User\UserController');
 Route::resource('companies', 'Company\CompanyController', ['except' => 'create', 'edit']);
 Route::resource('locations', 'Location\LocationController', ['except' => 'create', 'edit']);

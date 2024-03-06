@@ -510,7 +510,6 @@ class ConciliarController extends ApiController
 
     public function getCuentasToConciliar()
     {
-
         $conciliarHeaderTable = new ConciliarHeader($this->conciliar_headers_table);
         $conciliarHeaderOpen = $conciliarHeaderTable->where('status', '=', ConciliarHeader::OPEN_STATUS)
             ->orderBy('id', 'desc')

@@ -28,16 +28,19 @@ class ConciliationService
             ->where('account_id', '=', $accountId)
             ->first();
 
-        return $this->getLastAccountBalance($companyId, $accountId);
-        return $openItemTable;
+        $lastBalance = $this->getLastAccountBalance($companyId, $accountId);
+
+        // return $this->localDifference();
         return [$externalBalance, $localBalance, $accountId, $companyId];
     }
 
 
-    // public function localDifference(ConciliarItem $itemsTable, $localBalance){
-    //     const calcValue = $itemsTable[''] + $itemsTable->debit_local - $itemsTable->credit_local;
-    //     this.localDifference = calcValue - this.localValue;
-    // }
+    public function localDifference(ConciliarItem $itemsTable, $lastLocalBalance, $localBalance)
+    {
+        $calcValue = $lastLocalBalance + $itemsTable->debit_local - $itemsTable->credit_local;
+        $diference = $calcValue - $localBalance;
+        return $diference;
+    }
 
     public function getLastAccountBalance($companyId, $accountId)
     {

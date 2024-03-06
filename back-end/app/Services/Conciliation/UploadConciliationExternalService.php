@@ -12,7 +12,7 @@ use App\Traits\SheetToolsTrait;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use App\Services\Account\AccountService;
+use App\Services\Account\AccountingService;
 
 class UploadConciliationExternalService
 {
@@ -22,15 +22,15 @@ class UploadConciliationExternalService
     protected $reconciliationItems = "";
     protected $reconciliationItemsTemp = "";
 
-    private AccountService $accountService;
+    private AccountingService $accountingService;
     private ConciliationService $reconciliationService;
     private $filePath;
 
     public function __construct(
-        AccountService $accountService,
+        AccountingService $accountingService,
         ConciliationService $reconciliationService
     ) {
-        $this->accountService = $accountService;
+        $this->accountingService = $accountingService;
         $this->reconciliationService = $reconciliationService;
     }
 
@@ -69,7 +69,7 @@ class UploadConciliationExternalService
 
         $ext = $file->extension() == 'txt' ? 'csv' : $file->extension();
 
-        $account = $this->accountService->getAccountById($accountId);
+        $account = $this->accountingService->getAccountById($accountId);
 
         $this->filePath = $user->current_company . '/' . $conciliarHeader->id . '/external/' . $account['bank_account'] . '.' . $ext;
 

@@ -1,102 +1,127 @@
 <?php
 
-namespace App\Services\Conciliation;
+namespace App\Services\Account;
 
 use Exception;
+use App\Models\Account;
+use App\Models\Company;
 use App\Models\MapFile;
-use App\Models\ConciliarItem;
-use App\Models\ConciliarHeader;
+use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
+use App\Models\AccountingItems;
 use Illuminate\Support\Facades\DB;
+use App\Models\HeaderAccountingInfo;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
-class UploadConciliarContableService
+class AccountingService
 {
-    protected $conciliar_tmp_local_values_table = '';
-    protected $conciliar_items_table = '';
 
-    function __construct()
+    protected $accountingItemsTable = '';
+
+    public function __construct()
     {
     }
 
-    public function startUploadProcess($file, $map_id, $conciliarLocalValuesTable, $conciliarItemsTable, $user, $openHeader)
+    public function uploadAccountInfo($user, $file, $startDate, $endDate, $company)
     {
 
+        $this->accountingItemsTable = $this->getAccountinItemsTableName($user->current_company);
 
-        $this->conciliar_tmp_local_values_table = $conciliarLocalValuesTable;
-        $this->conciliar_items_table = $conciliarItemsTable;
-
-        $mapped = $this->getInsertConciliarLocal($file, $map_id);
-
-        $this->createTmpTableConciliarLocalValues();
+        $this->createTableAccountingItems();
 
         DB::beginTransaction();
 
         try {
 
-            foreach (array_chunk($mapped, 1000) as $t) {
-                DB::table($this->conciliar_tmp_local_values_table)->insert($t);
+            $newHeader = $this->createAccountingHeaderInfo(
+                $user->current_company,
+                $user->id,
+                $file,
+                $startDate,
+                $endDate
+            );
+
+            $mapped = $this->getInsertConciliarLocal($file, $company->map_id, $startDate, $endDate, $newHeader->id);
+
+            foreach (array_chunk($mapped, 100) as $t) {
+                DB::table($this->accountingItemsTable)->insert($t);
             }
         } catch (Exception $e) {
             DB::rollBack();
-            throw new Exception($e);
+            throw $e;
         }
         DB::commit();
 
-        $conciliarCuadre = DB::table($this->conciliar_tmp_local_values_table)
-            ->select(
-                DB::raw("SUM(valor_credito) as credit,SUM(valor_debito) as debit, 
-                            " . $this->conciliar_tmp_local_values_table . ".local_account, accounts.id")
-            )
-            ->join('accounts', $this->conciliar_tmp_local_values_table . '.local_account', '=', 'accounts.local_account')
-            ->join('banks', 'accounts.bank_id', '=', 'banks.id')
-            ->where('accounts.company_id', '=', $user->current_company)
-            ->groupBy('local_account', 'accounts.id')
-            ->get();
-
-
-        Schema::dropIfExists($this->conciliar_tmp_local_values_table);
-
-        $itemTable = new ConciliarItem($this->conciliar_items_table);
-
-        for ($i = 0; $i < count($conciliarCuadre); $i++) {
-
-            $openItemTable = $itemTable->where('header_id', '=', $openHeader->id)
-                ->where('account_id', '=', $conciliarCuadre[$i]->id)
-                ->first();
-
-            if ($openItemTable) {
-
-                $openItemTable->debit_local = (float)$conciliarCuadre[$i]->debit;
-                $openItemTable->credit_local = (float)$conciliarCuadre[$i]->credit;
-
-                $openItemTable->save();
-            } else {
-
-                $itemInfo = [
-                    'header_id' => $openHeader->id,
-                    'account_id' => $conciliarCuadre[$i]->id,
-                    'debit_externo' => 0,
-                    'debit_local' => $conciliarCuadre[$i]->debit,
-                    'credit_externo' => 0,
-                    'credit_local' => $conciliarCuadre[$i]->credit,
-                    'balance_externo' => 0,
-                    'balance_local' => 0,
-                    'file_path' => '',
-                    'file_name' => '',
-                    'total' => 0,
-                    'status' => ConciliarHeader::OPEN_STATUS,
-                ];
-
-                $itemTable->insert($itemInfo);
-            }
-        }
-
-        return $conciliarCuadre;
+        return "uploadAccountInfo";
     }
 
-    public function getInsertConciliarLocal($file, $map_id)
+    private function createAccountingHeaderInfo($companyId, $userId, $file, $startDate, $endDate)
+    {
+        $this->dateValidation($startDate, $companyId);
+
+        //set accouting path
+        $path = $companyId . '/accounting/';
+
+        $lastHeader = HeaderAccountingInfo::where('status', HeaderAccountingInfo::STATUS_CREATED)->first();
+
+        if ($lastHeader) {
+            throw new Exception("");
+        }
+        // check if company folder exist
+        if (!is_dir(storage_path($path))) {
+
+            mkdir(storage_path($path), 0775, true);
+        }
+
+        $storedPath = Storage::disk('local')->put($path, $file);
+
+        $headerInfo = [
+            'id' => Str::uuid(),
+            'company_id' => $companyId,
+            'uploaded_by' => $userId,
+            'path' => $storedPath,
+            'file_name' => $file->getClientOriginalName(),
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ];
+
+        $newHeader = HeaderAccountingInfo::create($headerInfo);
+
+        return $newHeader;
+    }
+
+    private function dateValidation($startDate, $companyId)
+    {
+        $lastHeader = HeaderAccountingInfo::where('status', 'OPEN')
+            ->where('company_id', $companyId)
+            ->where('end_date', '>=', $startDate)
+            ->orderBy('created_at', 'DESC')->first();
+
+        if ($lastHeader) {
+            $headerDate = Carbon::parse($lastHeader->end_date);
+
+            $nextDay = $headerDate->addDay(1);
+
+            //check if upload is consecutive
+            if ($nextDay->ne($startDate)) {
+                throw new Exception("El cargue debe comenzar en {$nextDay->format('Y-m-d')} y el actual es {$startDate}");
+            }
+        }
+    }
+
+    public function getAccountById(String $id)
     {
 
+        $account = Account::findOrFail($id);
+        return $account;
+    }
+
+    public function getInsertConciliarLocal($file, $map_id, $startDate, $endDate, $headerId)
+    {
+        //Garantee miss match date with time
+        $carbonStart = Carbon::parse($startDate)->subDay();
+        $carbonEnd = Carbon::parse($endDate)->addDay();
         $fileArray = $this->fileToArray($file);
 
         $mapModel = MapFile::find($map_id);
@@ -130,7 +155,22 @@ class UploadConciliarContableService
             if ($fileArray[$i][$tmpArray[20]] == null) {
                 continue;
             }
+            // Check if date is valid
+            if (strtotime($fileArray[$i][$tmpArray[1]]) === false) {
+                throw new Exception("Fecha de movimiento inválida en {$i} - {$fileArray[$i][$tmpArray[1]]}" . json_encode($fileArray[$i][$tmpArray[1]]));
+            }
+
+            // Check if date is in range
+            $carbonCompare = Carbon::createFromFormat('Ymd', $fileArray[$i][$tmpArray[1]]);
+            if ($carbonCompare->gte($carbonEnd)) {
+                throw new Exception("Fecha de movimiento mayor del rango en {$i} - " . json_encode($fileArray[$i][$tmpArray[1]]));
+            }
+            if ($carbonCompare->lte($carbonStart)) {
+                throw new Exception("Fecha de movimiento menor de rango en {$i} - " . json_encode($fileArray[$i][$tmpArray[1]]));
+            }
+
             $mapped[] =  [
+                'header_id' => $headerId,     //1
                 'matched' => 0,     //1
                 'item_id' => 0,     //2
                 'tx_type_id' => null,       //3
@@ -166,10 +206,6 @@ class UploadConciliarContableService
                 'otra_referencia' => $tmpArray[7] == null ? null : $fileArray[$i][$tmpArray[7]],
                 'beneficiario' => $tmpArray[31] == null ? null : $fileArray[$i][$tmpArray[31]],
             ];
-
-            if (strtotime($fileArray[$i][$tmpArray[1]]) === false) {
-                throw new Exception("Fecha de movimiento inválida en {$i} - {$fileArray[$i][$tmpArray[1]]}" . json_encode($mapped[$i]));
-            }
         }
         return $mapped;
     }
@@ -240,15 +276,16 @@ class UploadConciliarContableService
         return $localInsert;
     }
 
-    public function createTmpTableConciliarLocalValues()
+    public function createTableAccountingItems()
     {
-
-        Schema::dropIfExists($this->conciliar_tmp_local_values_table);
-
-        Schema::create($this->conciliar_tmp_local_values_table, function ($table) {
+        if (Schema::hasTable($this->accountingItemsTable)) {
+            return;
+        }
+        Schema::create($this->accountingItemsTable, function ($table) {
             $table->bigIncrements('id');
+            $table->unsignedInteger('header_id');
             $table->boolean('matched')->default(false);
-            $table->integer('item_id')->unsigned()->nullable();
+            $table->integer('item_id')->unsigned();
             $table->integer('tx_type_id')->unsigned()->nullable();
             $table->string('tx_type_name')->nullable();
             $table->dateTime('fecha_movimiento');
@@ -284,8 +321,57 @@ class UploadConciliarContableService
             $table->string('ambiente_origen')->nullable();
             $table->string('beneficiario')->nullable();
 
-            $table->softDeletes();
             $table->timestamps();
+
+            $table->foreign('header_id')->references('id')->on('header_accounting_info');
+
+            $table->index(['header_id', 'item_id', 'fecha_movimiento', 'tx_type_id'], 'accountingIndex');
         });
+    }
+
+    public function canBeDeleted($id, $startDate, $endDate, $companyId)
+    {
+
+        $lastHeader = HeaderAccountingInfo::where('status', HeaderAccountingInfo::STATUS_OPEN)
+            ->Orderby('end_date', 'desc')
+            ->first();
+
+        if (!$lastHeader) {
+            throw new Exception('No existe cargues para eliminar', 400);
+        }
+        if ($lastHeader->id != $id) {
+            throw new Exception('El id no coincide con el último cargue', 400);
+        }
+
+        if ($lastHeader->start_date !== $startDate) {
+            throw new Exception('La fecha inicial no coincide con el último cargue', 400);
+        }
+
+        if ($lastHeader->end_date !== $endDate) {
+            throw new Exception('La fecha final no coincide con el último cargue', 400);
+        }
+
+        $accountingItemsTable = $this->getAccountinItemsTableName($companyId);
+
+        $items = new AccountingItems($accountingItemsTable);
+
+        DB::beginTransaction();
+        try {
+            $lastHeader->status = HeaderAccountingInfo::STATUS_DELETED;
+            $lastHeader->save();
+            $items->where('header_id', $id)->delete();
+            HeaderAccountingInfo::where('id', $lastHeader->id)->delete();
+            DB::commit();
+            return 'Success';
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw new Exception($e->getMessage(), 500);
+        }
+    }
+
+    public function getAccountinItemsTableName($companyId)
+    {
+
+        return $this->accountingItemsTable = 'accounting_items_' . $companyId;
     }
 }

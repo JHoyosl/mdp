@@ -46,7 +46,6 @@ trait ApiResponser
 
 	protected function badRequestResponse($message = "Bad Request")
 	{
-
 		return response()->json($message, 400);
 	}
 }

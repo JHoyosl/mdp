@@ -13,38 +13,38 @@ use App\Http\Controllers\ApiController;
 class AccountController extends ApiController
 {
 
-    public function __construct(){
+    public function __construct()
+    {
 
-        $this->middleware('auth:api')->only(['index','show','update','store','setMap','getAccountsByCenter']);
+        $this->middleware('auth:api')->only(['index', 'show', 'update', 'store', 'setMap', 'getAccountsByCenter']);
     }
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-        public function index()
-        {
-            $user = Auth::user();
+    public function index()
+    {
+        $user = Auth::user();
 
-            
-            if($user->type == User::SUPER_ADMIN){
 
-                $accounts = Account::with('banks')
-                            ->with('companies')
-                            ->get();
+        if ($user->type == User::SUPER_ADMIN) {
 
-                return $this->showAll($accounts,'',true);
+            $accounts = Account::with('banks')
+                ->with('companies')
+                ->get();
 
-            }else{
+            return $this->showAll($accounts, '', true);
+        } else {
 
-                $accounts = Account::where('company_id',$user->current_company)
-                        ->with('banks')
-                        ->with('companies')
-                        ->get();
+            $accounts = Account::where('company_id', $user->current_company)
+                ->with('banks')
+                ->with('companies')
+                ->get();
 
-                return $this->showAll($accounts,'',true);            
-            }
+            return $this->showAll($accounts, '', true);
         }
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -65,10 +65,10 @@ class AccountController extends ApiController
     public function store(Request $request)
     {
         $rules = [
-            'bank_id'=>'required|string',
-            'acc_type'=>'required|string',
-            'bank_account'=>'required|string',
-            'local_account'=>'required|string',
+            'bank_id' => 'required|string',
+            'acc_type' => 'required|string',
+            'bank_account' => 'required|string',
+            'local_account' => 'required|string',
         ];
 
         $request->validate($rules);
@@ -78,30 +78,25 @@ class AccountController extends ApiController
         $accountFields = $request->all();
 
         $accountCheck = Account::where('bank_id', $accountFields['bank_id'])
-                        ->where('company_id',$user->current_company)
-                        ->where('bank_account',$accountFields['bank_account'])
-                        ->where('local_account',$accountFields['local_account'])
-                        ->where('acc_type',$accountFields['acc_type'])
-                        ->first();
+            ->where('company_id', $user->current_company)
+            ->where('bank_account', $accountFields['bank_account'])
+            ->where('local_account', $accountFields['local_account'])
+            ->where('acc_type', $accountFields['acc_type'])
+            ->first();
 
-        
-        $accountFields['map_id'] = null;    
-        if($accountCheck === null){
 
-            $accountFields['company_id'] = $user->current_company;    
+        $accountFields['map_id'] = null;
+        if ($accountCheck === null) {
+
+            $accountFields['company_id'] = $user->current_company;
 
             $account = Account::create($accountFields);
 
-            return $this->showOne($account,'Ya existe la cuenta',true);
+            return $this->showOne($account, 'Ya existe la cuenta', true);
+        } else {
 
-        }else{
-
-            return $this->showOne($accountCheck->first(),'Ya existe la cuenta',false);
-
+            return $this->showOne($accountCheck->first(), 'Ya existe la cuenta', false);
         }
-        
-        
-        
     }
 
     /**
@@ -109,40 +104,39 @@ class AccountController extends ApiController
      *
      * @param  \App\Account  $account
      * @return \Illuminate\Http\Response
-     
-    public function show($company_id)
-    {
-        $user = Auth::user();
+     **/
+    // public function show($company_id)
+    // {
+    //     $user = Auth::user();
 
-            
-            if($user->type == User::SUPER_ADMIN){
 
-                $accounts = Account::findOrFail($id)
-                            ->with('banks')
-                            ->with('companies')
-                            ->get();
-                            
-                return $this->showOne($accounts,'',true);
+    //     if ($user->type == User::SUPER_ADMIN) {
 
-            }else{
+    //         $accounts = Account::findOrFail($id)
+    //             ->with('banks')
+    //             ->with('companies')
+    //             ->get();
 
-                $accounts = Account::where('company_id',$user->current_company)
-                        ->findOrFail($id)
-                        ->with('banks')
-                        ->with('companies')
-                        ->get();
+    //         return $this->showOne($accounts, '', true);
+    //     } else {
 
-                return $this->showOne($accounts,'',true);            
-            }
-    }
+    //         $accounts = Account::where('company_id', $user->current_company)
+    //             ->findOrFail($id)
+    //             ->with('banks')
+    //             ->with('companies')
+    //             ->get();
 
-    /**public function show($id)
+    //         return $this->showOne($accounts, '', true);
+    //     }
+    // }
+
+    public function show($id)
     {
         $location = Location::findOrFail($id);
 
         return $this->showOne($location);
     }
-     * Update the specified resource in storage.
+    /*** Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Account  $account
@@ -151,10 +145,10 @@ class AccountController extends ApiController
     public function update(Request $request, Account $account)
     {
         $rules = [
-            'bank_id'=>'required|string',
-            'acc_type'=>'required|string',
-            'bank_account'=>'required|string',
-            'local_account'=>'required|string',
+            'bank_id' => 'required|string',
+            'acc_type' => 'required|string',
+            'bank_account' => 'required|string',
+            'local_account' => 'required|string',
         ];
 
         $request->validate($rules);
@@ -170,7 +164,6 @@ class AccountController extends ApiController
         $account->save();
 
         return $this->showOne($account);
-        
     }
 
     /**
@@ -184,7 +177,8 @@ class AccountController extends ApiController
         //
     }
 
-    public function setMap(Request $request){
+    public function setMap(Request $request)
+    {
 
         $fields = $request->all();
 
@@ -193,30 +187,21 @@ class AccountController extends ApiController
         $account->map_id = $fields['map_id'];
 
         $account->save();
-        
-        return $this->showOne($account);
 
+        return $this->showOne($account);
     }
 
-    public function getAccountsByCenter(){
+    public function getAccountsByCenter()
+    {
 
         $user = Auth::user();
 
-        $accounts = Account::where('company_id',$user->current_company)
-                    ->with('banks')
-                    ->with('companies')
-                    ->orderBy('bank_id')
-                    ->get();
+        $accounts = Account::where('company_id', $user->current_company)
+            ->with('banks')
+            ->with('companies')
+            ->orderBy('bank_id')
+            ->get();
 
-            return $this->showAll($accounts,'',true);
-
+        return $this->showAll($accounts, '', true);
     }
-
-
-
-
-
-
-
-
 }

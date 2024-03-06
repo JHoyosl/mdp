@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     sudo \
     unzip \
     zip \
- && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 # 2. Apache configs + document root.
 RUN echo "ServerName laravel-app.local" >> /etc/apache2/apache2.conf
@@ -50,8 +50,8 @@ RUN apt-get update \
 
 # Install zpi extension
 RUN apt-get update \
-     && apt-get install -y libzip-dev \
-     && docker-php-ext-install zip
+    && apt-get install -y libzip-dev \
+    && docker-php-ext-install zip
 
 # Install mbstring extension
 RUN apt-get update \
@@ -59,9 +59,9 @@ RUN apt-get update \
     libxml2-dev \
     libxslt-dev \
     && docker-php-ext-install -j$(nproc) \
-        dom \
-        xmlrpc \
-        xsl
+    dom \
+    xmlrpc \
+    xsl
 
 # Install SOAP extension
 RUN docker-php-ext-install -j$(nproc) \
@@ -71,8 +71,8 @@ RUN docker-php-ext-install -j$(nproc) \
 RUN apt-get update \
     && apt-get install -y libonig-dev \
     && docker-php-ext-install -j$(nproc) \
-        gettext \
-        mbstring
+    gettext \
+    mbstring
 
 # Install gd extension
 RUN docker-php-ext-install gd
@@ -80,6 +80,11 @@ RUN docker-php-ext-install gd
 
 # 5. Composer.
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# 6. Set timezone
+RUN apt-get update && apt-get install -y tzdata
+ENV TZ=America/Bogota
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Copy laravel proyect
 # COPY . /var/www/html/
