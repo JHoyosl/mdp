@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Accounting;
 
 use App\Models\Company;
 use Illuminate\Http\Request;
+use App\Models\HeaderAccountingInfo;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
 use App\Services\Account\AccountingService;
@@ -30,6 +31,14 @@ class AccountingController extends ApiController
     }
 
 
+    public function index()
+    {
+        $companyId = $this->user->current_company;
+        $info = $this->accountingService->index($companyId);
+        return $this->showAll($info);
+    }
+
+
     public function uploadAccountingInfo(Request $request)
     {
         //TODO: VALIDATE MIMES AND SIZE
@@ -47,7 +56,7 @@ class AccountingController extends ApiController
         }
 
         try {
-            return $this->accountingService
+            $data = $this->accountingService
                 ->uploadAccountInfo(
                     $this->user,
                     $request->file('accountingInfo'),
@@ -55,8 +64,11 @@ class AccountingController extends ApiController
                     $request->endDate,
                     $company
                 );
+
+            return $this->showOne($data);
         } catch (\Exception $e) {
-            return json_encode($e->getMessage());
+
+            return $this->errorResponse($e->getMessage(), $e->getCode());
         }
     }
 
@@ -72,6 +84,22 @@ class AccountingController extends ApiController
             $result = $this->accountingService
                 ->canBeDeleted($request->id, $request->startDate, $request->endDate, $this->user->current_company);
             return $this->showMessage($result, 200);
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), $e->getCode());
+        }
+    }
+
+    public function getAccountingItems(Request $request)
+    {
+
+        $validated = $request->validate([
+            'headerId' => 'required'
+        ]);
+
+        $company =  Company::find($this->user->current_company);
+        try {
+            $items = $this->accountingService->getHeaderItems($request->headerId, $company->id);
+            return $this->showAll($items);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }

@@ -23,9 +23,15 @@ class AccountingService
     {
     }
 
-    public function uploadAccountInfo($user, $file, $startDate, $endDate, $company)
+    public function index($companyId)
     {
 
+        return HeaderAccountingInfo::all();
+    }
+
+    public function uploadAccountInfo($user, $file, $startDate, $endDate, $company)
+    {
+        ini_set('memory_limit', '-1');
         $this->accountingItemsTable = $this->getAccountinItemsTableName($user->current_company);
 
         $this->createTableAccountingItems();
@@ -44,7 +50,7 @@ class AccountingService
 
             $mapped = $this->getInsertConciliarLocal($file, $company->map_id, $startDate, $endDate, $newHeader->id);
 
-            foreach (array_chunk($mapped, 100) as $t) {
+            foreach (array_chunk($mapped, 500) as $t) {
                 DB::table($this->accountingItemsTable)->insert($t);
             }
         } catch (Exception $e) {
@@ -52,8 +58,7 @@ class AccountingService
             throw $e;
         }
         DB::commit();
-
-        return "uploadAccountInfo";
+        return $newHeader;
     }
 
     private function createAccountingHeaderInfo($companyId, $userId, $file, $startDate, $endDate)
@@ -157,16 +162,16 @@ class AccountingService
             }
             // Check if date is valid
             if (strtotime($fileArray[$i][$tmpArray[1]]) === false) {
-                throw new Exception("Fecha de movimiento inválida en {$i} - {$fileArray[$i][$tmpArray[1]]}" . json_encode($fileArray[$i][$tmpArray[1]]));
+                throw new Exception("Fecha de movimiento inválida en {$i} - {$fileArray[$i][$tmpArray[1]]}" . json_encode($fileArray[$i][$tmpArray[1]]), 400);
             }
 
             // Check if date is in range
             $carbonCompare = Carbon::createFromFormat('Ymd', $fileArray[$i][$tmpArray[1]]);
             if ($carbonCompare->gte($carbonEnd)) {
-                throw new Exception("Fecha de movimiento mayor del rango en {$i} - " . json_encode($fileArray[$i][$tmpArray[1]]));
+                throw new Exception("Fecha de movimiento mayor del rango en {$i} - " . json_encode($fileArray[$i][$tmpArray[1]]), 400);
             }
             if ($carbonCompare->lte($carbonStart)) {
-                throw new Exception("Fecha de movimiento menor de rango en {$i} - " . json_encode($fileArray[$i][$tmpArray[1]]));
+                throw new Exception("Fecha de movimiento menor de rango en {$i} - " . json_encode($fileArray[$i][$tmpArray[1]]), 400);
             }
 
             $mapped[] =  [
@@ -373,5 +378,19 @@ class AccountingService
     {
 
         return $this->accountingItemsTable = 'accounting_items_' . $companyId;
+    }
+
+    public function getHeaderItems($headerId, $companyId)
+    {
+        $header = HeaderAccountingInfo::where('id', $headerId)
+            ->where('company_id', $companyId)
+            ->first();
+
+        if ($header) {
+            $tableName = $this->getAccountinItemsTableName($companyId);
+            $accountingItems = new AccountingItems($tableName);
+            return $accountingItems->where('header_id', $header->id)->get();
+        }
+        throw new Exception('No existen items para el encabezado', 400);
     }
 }

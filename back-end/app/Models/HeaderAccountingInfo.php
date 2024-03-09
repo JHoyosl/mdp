@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat\Wizard\Accounting;
 
 class HeaderAccountingInfo extends Model
 {
@@ -38,5 +39,10 @@ class HeaderAccountingInfo extends Model
     function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    static function items($headerId)
+    {
+        return AccountingItems::where('header_id', $headerId);
     }
 }

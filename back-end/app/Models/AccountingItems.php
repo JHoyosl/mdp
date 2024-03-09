@@ -23,7 +23,7 @@ class AccountingItems extends Model
      * @var array
      */
     protected $fillable = [
-        'matched', 'item_id', 'tx_type_id', 'tx_type_name',
+        'header_id', 'matched', 'item_id', 'tx_type_id', 'tx_type_name',
         'fecha_movimiento', 'descripcion', 'local_account',
         'cuenta_externa', 'referencia_1', 'referencia_2',
         'referencia_3', 'otra_referencia', 'saldo_actual',
@@ -37,4 +37,9 @@ class AccountingItems extends Model
         'beneficiario',
 
     ];
+
+    public function header()
+    {
+        return $this->belongsTo(HeaderAccountingInfo::class, 'header_id', 'id');
+    }
 }

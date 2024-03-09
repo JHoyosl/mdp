@@ -19,8 +19,13 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });*/
 
 //ACCOUNTING ROUTER
+Route::get('accounting/getAccountingItems', 'Accounting\AccountingController@getAccountingItems');
+
 Route::post('accounting/uploadAccountingInfo', 'Accounting\AccountingController@uploadAccountingInfo');
 Route::post('accounting/deleteLastUpload', 'Accounting\AccountingController@deleteLastUpload');
+
+Route::resource('accounting', 'Accounting\AccountingController');
+
 
 //ACCOUNTING ROUTER
 
