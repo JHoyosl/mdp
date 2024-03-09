@@ -1,0 +1,40 @@
+<div class="row">
+    <div class="col">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Historico Contable</h4>
+            <h6 class="card-subtitle">Listado de Cargues</h6>
+        </div>
+        <div class="table-responsive m-t-20">
+            <table class="table table-bordered table-responsive-md  ">
+                <thead class ="bg-info text-white border border-info">
+                    <tr >
+                        <th scope="col" class="text-center text-wrap">Desde</th>
+                        <th scope="col" class="text-center text-wrap">Hasta</th>
+                        <th scope="col" class="text-center">Cargado</th>
+                        <th scope="col" class="text-center">Archivo</th>
+                        <th scope="col" class="text-center">Stado</th>
+                        <th scope="col" class="text-center"></th>
+                    </tr>
+                </thead>
+                <tbody >
+                    <tr *ngFor="let header of accountingHeader; let i=index">
+                        <td class="text-center text-nowrap">{{ header.startDate | date:'dd-MM-y' }}</td>
+                        <td class="text-center text-nowrap">{{ header.endDate | date:'dd-MM-y' }}</td>
+                        <td class="text-center">{{ header.createdAt | date:'dd-MM-y' }}</td>
+                        <td class="text-truncate" style="max-width: 150px; cursor: pointer;" title="{{ header.fileName }}">{{ header.fileName }}</td>
+                        <td>{{ header.status }}</td>
+                        <td><i (click)="headerDetail(header)" 
+                            title = "Detalle" 
+                            class="ti-zoom-in actionIcon"></i>
+                          <i (click)="removeValidation(header)" 
+                            title = "Eliminar" 
+                            class="ti-trash actionIcon"></i>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+</div>

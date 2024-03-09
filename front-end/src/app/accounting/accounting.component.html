@@ -1,0 +1,36 @@
+
+
+<div class="row">
+  <!-- <button (click)="onClick( tabset)">name</button> -->
+  
+<div class="col-md-12">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Información Contable</h3>
+            <h6 class="card-subtitle">Gestion de la información Contable</h6>
+            <ngb-tabset #tabSet >
+              <ngb-tab title="Listado" id="List">
+                <ng-template ngbTabContent>
+                    <app-accounting-info></app-accounting-info>
+                  <div class="row">
+                  </div>
+                </ng-template>
+              </ngb-tab>
+              <ngb-tab id="New" title="Cargar">
+                  <!-- FORMULARIO -->
+                <ng-template ngbTabContent>
+                  <app-accounting-upload (successUpload)="successUpload($event)"></app-accounting-upload>
+                </ng-template>
+              </ngb-tab>
+              <ngb-tab title="Detalle"  id='detail' [disabled]="updateDisabled">
+                  <ng-template ngbTabContent>
+                      <div class="row ">
+
+                      </div>
+                  </ng-template>
+                </ngb-tab>
+            </ngb-tabset>
+    </div>
+    </div>
+</div>
+</div>

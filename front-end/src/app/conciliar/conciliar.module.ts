@@ -11,6 +11,7 @@ import { TxTypesComponent } from './tx-types/tx-types.component';
 import { AccountBalanceTableComponent } from './conciliar-process/components/account-balance-table/account-balance-table.component';
 import { DirectivesModule } from '../shared/directives/directives.module';
 import { ComponentsModule } from '../shared/components/components.module';
+import { AccountResumeComponent } from './components/account-resume/account-resume.component';
 
 
 
@@ -20,6 +21,7 @@ import { ComponentsModule } from '../shared/components/components.module';
     ConciliarProcessComponent,
     TxTypesComponent,
     AccountBalanceTableComponent,
+    AccountResumeComponent,
   ],
   imports: [
     CommonModule,

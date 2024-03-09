@@ -1,0 +1,8 @@
+.datePickerIcon{
+    max-width: 40px;
+    max-height: 35px;
+}
+
+.input-group-text-datepicker{
+    padding: 0 !important;
+}

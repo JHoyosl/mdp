@@ -10,7 +10,7 @@ import {
 } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { HttpClientModule, HttpClient, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { Routes, RouterModule } from '@angular/router';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -36,6 +36,9 @@ import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { environment } from 'src/environments/environment';
 import { CurrencyPipe } from "@angular/common";
+import { AuthInterceptor } from './Interceptors/aut-hInterceptor';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
+
 
 
 
@@ -66,6 +69,7 @@ const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
     ToastrModule.forRoot(),
     CommonModule,
     BrowserModule,
+    FormsModule,
     BrowserAnimationsModule,
     FormsModule,
     HttpClientModule,
@@ -76,6 +80,12 @@ const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
     AgmCoreModule.forRoot({ apiKey: 'AIzaSyBUb3jDWJQ28vDJhuQZxkC0NXr_zycm8D0' })
   ],
   providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    },
+    { provide: MAT_DATE_LOCALE, useValue: 'en-GB' },
     CurrencyPipe,
     DecimalPipe,
     {

@@ -25,6 +25,7 @@ export const Approutes: Routes = [
     children: [
       { path: '', redirectTo: '/users', pathMatch: 'full' },
       { path: 'banks', loadChildren: './banks/banks.module#BanksModule' },
+      { path: 'accounting', loadChildren: './accounting/accounting.module#AccountingModule'},
       { path: 'accounts', loadChildren: './accounts/accounts.module#AccountsModule' },
       { path: 'companies', loadChildren: './companies/companies.module#CompaniesModule' },
       { path: 'users', loadChildren: './users/users.module#UsersModule' },

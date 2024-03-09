@@ -1,0 +1,74 @@
+<div class="row ">
+                    
+  <div class="col-lg-6 mx-auto">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Infrmación Contable</h4>
+            <h6 class="card-subtitle">Cargar Información Contable</h6>
+            <form class="form-horizontal p-t-20" [formGroup]="uploadForm" (submit)="onSubmit()">
+                <div class="form-group row">
+                    <label for="username" class="col-sm-3 control-label">Desde</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-text-datepicker">
+                                  <mat-datepicker-toggle matIconSuffix [for]="fromPicker" class="datePickerIcon"></mat-datepicker-toggle>
+                                </span>
+                                <input matInput 
+                                  formControlName="startDate"
+                                  [matDatepicker]="fromPicker" 
+                                  placeholder="DD/MM/AAAA"
+                                >
+                                <mat-datepicker #fromPicker></mat-datepicker>
+                            </div>                                
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="email4" class="col-sm-3 control-label">Hasta</label>
+                    <div class="col-sm-9">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-text-datepicker">
+                                  <mat-datepicker-toggle matIconSuffix [for]="toPicker" class="datePickerIcon"></mat-datepicker-toggle>
+                                </span>
+                                <input matInput 
+                                  formControlName="endDate"
+                                  [matDatepicker]="toPicker" 
+                                  placeholder="DD/MM/AAAA"
+                                >
+                                <mat-datepicker #toPicker></mat-datepicker>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                  <label for="email4" class="col-sm-3 control-label">Archivo</label>
+                  <div class="col-sm-9">
+                      <div class="input-group">
+                          <div class="input-group-prepend">
+                              <span class="input-group-text">
+                                  <i class="ti-upload"></i>
+                              </span>
+                          </div>
+                          <input type="file" 
+                              class="form-control" 
+                              (change)="onFileChange($event)"
+                          >
+                        </div>
+                    </div>
+                </div>
+                
+                
+                <div class="form-group row m-b-0">
+                    <div class="offset-sm-3 col-sm-9">
+                        <button type="submit" class="btn btn-info m-r-5 waves-effect waves-light">Cargar</button>
+                        <button type="button" class="btn btn-danger m-r-5 waves-effect waves-light">Cancelar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+  </div>
+
+</div>

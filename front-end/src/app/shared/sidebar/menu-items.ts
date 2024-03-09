@@ -12,6 +12,14 @@ export const ROUTES: RouteInfo[] = [
       
   },
   {
+    path: '/accounting',
+    title: 'Contabilidad',
+    icon: 'icon-Calculator',
+    class: '',
+    extralink: false,
+    submenu: []
+  },
+  {
     path: '',
     title: 'Cuadres',
     icon: 'icon-Calculator',
