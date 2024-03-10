@@ -17,7 +17,7 @@ trait ApiResponser
 	protected function errorResponse($message, $code)
 	{
 
-		return response()->json($message, $code);
+		return response()->json($message, ($code > 200 &&  $code < 600) ? $code : 500);
 	}
 
 	protected function showAll(Collection $collection, $message = '', $status = true, $code = 200)

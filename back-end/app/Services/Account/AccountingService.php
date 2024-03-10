@@ -71,7 +71,7 @@ class AccountingService
         $lastHeader = HeaderAccountingInfo::where('status', HeaderAccountingInfo::STATUS_CREATED)->first();
 
         if ($lastHeader) {
-            throw new Exception("");
+            throw new Exception("TODO: Mensje de exception");
         }
         // check if company folder exist
         if (!is_dir(storage_path($path))) {
@@ -79,7 +79,7 @@ class AccountingService
             mkdir(storage_path($path), 0775, true);
         }
 
-        $storedPath = Storage::disk('local')->put($path, $file);
+        $storedPath = Storage::disk('accounting')->put($path, $file);
 
         $headerInfo = [
             'id' => Str::uuid(),
@@ -100,8 +100,8 @@ class AccountingService
     {
         $lastHeader = HeaderAccountingInfo::where('status', 'OPEN')
             ->where('company_id', $companyId)
-            ->where('end_date', '>=', $startDate)
-            ->orderBy('created_at', 'DESC')->first();
+            ->orderBy('created_at', 'DESC')
+            ->first();
 
         if ($lastHeader) {
             $headerDate = Carbon::parse($lastHeader->end_date);

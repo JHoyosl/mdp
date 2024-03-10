@@ -23,7 +23,7 @@ class AccountingController extends ApiController
         $this->middleware('auth:api');
         $this->middleware(function ($request, $next) {
             $this->user = Auth::user();
-            $this->companyId = $this->user;
+            $this->companyId = $this->user->current_company;
             return $next($request);
         });
 

@@ -180,8 +180,6 @@ class ConciliarController extends ApiController
 
     private function getLastConciliarHeader()
     {
-
-
         $conciliarModel = new ConciliarHeader($this->conciliar_headers_table);
 
         $conciliarTable = $conciliarModel->where('status', '=', ConciliarHeader::OPEN_STATUS)
