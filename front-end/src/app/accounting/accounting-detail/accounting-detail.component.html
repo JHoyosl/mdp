@@ -1,3 +1,48 @@
-<p>
-  accounting-detail works!
-</p>
+<div class="mat-elevation-z8">
+  <table mat-table [dataSource]="dataSource">
+
+    <!-- fecha_movimiento Column -->
+    <ng-container matColumnDef="fecha_movimiento">
+      <th mat-header-cell *matHeaderCellDef> Fecha Movimiento </th>
+      <td mat-cell *matCellDef="let element"> {{element.fecha_movimiento | date: 'dd-MM-y'}} </td>
+    </ng-container>
+
+    <!-- Descripcion Column -->
+    <ng-container matColumnDef="descripcion">
+      <th mat-header-cell *matHeaderCellDef> Descripcion </th>
+      <td mat-cell *matCellDef="let element"> {{element.descripcion}} </td>
+    </ng-container>
+
+    <!-- referencia_1 Column -->
+    <ng-container matColumnDef="referencia_1">
+      <th mat-header-cell *matHeaderCellDef> Referencia 1 </th>
+      <td mat-cell *matCellDef="let element"> {{element.referencia_1}} </td>
+    </ng-container>
+
+    <!-- valor_debito Column -->
+    <ng-container matColumnDef="valor_debito">
+      <th mat-header-cell *matHeaderCellDef> Debito </th>
+      <td mat-cell *matCellDef="let element"> {{ element.valor_debito | currency }} </td>
+    </ng-container>
+
+    <!-- referencia_1 Column -->
+    <ng-container matColumnDef="valor_credito">
+      <th mat-header-cell *matHeaderCellDef> Credito </th>
+      <td mat-cell *matCellDef="let element"> {{ element.valor_credito | currency }} </td>
+    </ng-container>
+
+    <!-- referencia_1 Column -->
+    <ng-container matColumnDef="valor_debito_credito">
+      <th mat-header-cell *matHeaderCellDef> Credito/Debito </th>
+      <td mat-cell *matCellDef="let element"> {{ element.valor_debito_credito | currency }} </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <mat-paginator [pageSizeOptions]="[100, 500, 1000]"
+                 showFirstLastButtons
+                 aria-label="Select page of periodic elements">
+  </mat-paginator>
+</div>

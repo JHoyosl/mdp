@@ -12,6 +12,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatNativeDateModule } from '@angular/material/core';
 import { AccountingDetailComponent } from './accounting-detail/accounting-detail.component';
 import {MatTableModule} from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material';
 
 @NgModule({
   declarations: [AccountingComponent, AccountingInfoComponent, AccountingUploadComponent, AccountingDetailComponent],
@@ -24,7 +25,8 @@ import {MatTableModule} from '@angular/material/table';
     MatFormFieldModule,
     MatNativeDateModule,
     ReactiveFormsModule,
-    MatTableModule
+    MatTableModule,
+    MatPaginatorModule
     
   ]
 })

@@ -1,0 +1,13 @@
+table {
+    width: 100%;
+  }
+
+  td, th {
+    text-align: center !important;
+    vertical-align: middle !important;
+    padding: auto 5px auto 5px;
+}
+
+.mat-sort-header-container {
+    justify-content: center !important;
+}

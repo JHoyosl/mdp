@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import {MatPaginator, MatTableDataSource} from '@angular/material';
 import { ToastrService } from 'ngx-toastr';
 import { AccountingHeader } from 'src/app/Interfaces/accounting.interface';
 import { AccountingService } from 'src/app/services/accounting.service';
@@ -11,7 +12,10 @@ import Swal from 'sweetalert2';
 })
 export class AccountingInfoComponent implements OnInit {
 
-  public accountingHeader: AccountingHeader[];
+  @Output() selectedAccountingHeader = new EventEmitter<AccountingHeader>();
+
+  public accountingHeaders: AccountingHeader[];
+
   constructor(
     private accountingService: AccountingService, 
     private toastr: ToastrService) { }
@@ -30,14 +34,14 @@ export class AccountingInfoComponent implements OnInit {
     });
     this.accountingService.index().subscribe(
       (response) => {
-        this.accountingHeader = response;
+        this.accountingHeaders = response;
         Swal.close();
       }
     );
   }
 
-  headerDetail(accountingHeader: AccountingHeader): void{
-    console.log('detail ' + accountingHeader);
+  headerDetail(accountingHeader: AccountingHeader): void {
+    this.selectedAccountingHeader.emit(accountingHeader);
   }
 
   removeValidation(accountingHeader: AccountingHeader): void{

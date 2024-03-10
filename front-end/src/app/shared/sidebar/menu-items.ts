@@ -12,12 +12,29 @@ export const ROUTES: RouteInfo[] = [
       
   },
   {
-    path: '/accounting',
-    title: 'Contabilidad',
+    path: '',
+    title: 'Información Contable',
     icon: 'icon-Calculator',
-    class: '',
+    class: 'has-arrow',
     extralink: false,
-    submenu: []
+    submenu: [
+      {
+        path: '/accounting',
+        title: 'Auxiliar Contable',
+        icon: '',
+        class: '',
+        extralink: false,
+        submenu: []
+      },
+      {
+        path: '/accounting/thirdParties',
+        title: 'Terceros',
+        icon: '',
+        class: '',
+        extralink: false,
+        submenu: []
+      },
+    ]
   },
   {
     path: '',

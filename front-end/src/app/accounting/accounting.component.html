@@ -11,7 +11,9 @@
             <ngb-tabset #tabSet >
               <ngb-tab title="Listado" id="List">
                 <ng-template ngbTabContent>
-                    <app-accounting-info></app-accounting-info>
+                    <app-accounting-info
+                      (selectedAccountingHeader)="updateSelectedHeader($event)"
+                    ></app-accounting-info>
                   <div class="row">
                   </div>
                 </ng-template>
@@ -24,9 +26,7 @@
               </ngb-tab>
               <ngb-tab title="Detalle"  id='detail' [disabled]="updateDisabled">
                   <ng-template ngbTabContent>
-                      <div class="row ">
-
-                      </div>
+                      <app-accounting-detail [accountingHeader]="selectedAccountingHeader"></app-accounting-detail>
                   </ng-template>
                 </ngb-tab>
             </ngb-tabset>

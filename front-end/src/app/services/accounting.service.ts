@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { AccountingHeader, AccountingHeaderResponse, AccountingUploadInfo } from '../Interfaces/accounting.interface';
+import { AccountingHeader, AccountingHeaderResponse, AccountingItem, AccountingUploadInfo } from '../Interfaces/accounting.interface';
 import { map } from 'rxjs/operators';
 import { AccountingModel } from '../models/accounting.model';
 import { GenericResponse } from '../Interfaces/shared.interfaces';
@@ -46,6 +46,14 @@ export class AccountingService {
     };
 
     return this.httpClient.post<GenericResponse>(`${this.baseUrl}/deleteLastUpload`, body);
+  }
 
+  getAccountingItems(accountingHeader: AccountingHeader): Observable<AccountingItem[]>{
+
+    const params = new HttpParams()
+      .append('headerId', accountingHeader.id.toString());
+
+    return this.httpClient.get<GenericResponse>(`${this.baseUrl}/getAccountingItems`,{ params: params })
+      .pipe(map((response) => response.data));
   }
 }
