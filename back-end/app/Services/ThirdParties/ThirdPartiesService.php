@@ -8,14 +8,24 @@ use App\Models\Account;
 use App\Models\MapFile;
 use Illuminate\Support\Str;
 use App\Models\ExternalTxType;
+use App\Models\ThirdPartiesItems;
 use Illuminate\Support\Facades\DB;
+
 use App\Models\HeaderThirdPartiesInfo;
-use App\Models\ThirdPartiesItem;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class ThirdPartiesService
 {
+    public function getAccountHeaderInfo($companyId, $accountId)
+    {
+        $headerInfo = HeaderThirdPartiesInfo::where('company_id', $companyId)
+            ->where('account_id', $accountId)
+            ->get();
+
+        return $headerInfo;
+    }
+
     public function getThirdPartiesAccounts($companyId)
     {
         $accounts = Account::where('company_id', $companyId)
@@ -25,10 +35,27 @@ class ThirdPartiesService
         return $accounts;
     }
 
-    public function deletelastHeaderInfo($headerId, $startDate, $endDate)
+    public function getHeaderItems($headerId)
+    {
+        $header = HeaderThirdPartiesInfo::where('id', $headerId)->first();
+
+        if (!$header) {
+            throw new Exception('No se encuentra el encabezado', 400);
+        }
+
+        $tableName = $this->getThirdPartiesItemsTableName($header->account_id);
+        $itemsTable = new ThirdPartiesItems($tableName);
+
+        $items = $itemsTable->where('header_id', $header->id)->get();
+
+        return $items;
+    }
+
+    public function deletelastHeaderInfo($headerId, $accountId, $startDate, $endDate)
     {
 
-        $lastHeader = HeaderThirdPartiesInfo::where('status', HeaderThirdPartiesInfo::STATUS_OPEN)
+        $lastHeader = HeaderThirdPartiesInfo::where('account_id', $accountId)
+            ->where('status', HeaderThirdPartiesInfo::STATUS_OPEN)
             ->Orderby('end_date', 'desc')
             ->first();
 
@@ -49,7 +76,7 @@ class ThirdPartiesService
 
         $tableName = $this->getThirdPartiesItemsTableName($lastHeader->account_id);
 
-        $items = new ThirdPartiesItem($tableName);
+        $items = new ThirdPartiesItems($tableName);
 
         DB::beginTransaction();
         try {
@@ -117,7 +144,6 @@ class ThirdPartiesService
     {
         $path = $companyId . '/' . $accountId;
 
-        // Create folder if not exist
         if (!is_dir(storage_path($path))) {
             mkdir(storage_path($path), 0775, true);
         }
@@ -153,7 +179,10 @@ class ThirdPartiesService
         // Get mapping  model
         $mappedInfo = $this->mapInfo($account, $header, $file, $startDate, $endDate);
 
+        $header->rows = count($mappedInfo);
+        $header->save();
         $this->insertInfo($mappedInfo, $account->id, $startDate, $endDate);
+
 
         return $account;
     }

@@ -31,21 +31,33 @@ class ThirdPartiesController extends ApiController
 
     public function index()
     {
-        return $this->thirdPartiesService->getThirdPartiesAccounts($this->companyId);
+        $accounts = $this->thirdPartiesService->getThirdPartiesAccounts($this->companyId);
+        return $this->showAll($accounts);
+    }
+
+    public function getAccountHeaderInfo(Request $request)
+    {
+        $validated = $request->validate([
+            'accountId' => 'required|exists:accounts,id'
+        ]);
+        $data = $this->thirdPartiesService->getAccountHeaderInfo($this->companyId, $request->accountId);
+        return $this->showAll($data);
     }
 
     public function deleteLastUpload(Request $request)
     {
         $validated = $request->validate([
-            "headerId" => "required|exists:header_accounting_info,id",
+            "headerId" => "required|exists:header_third_parties_info,id",
             "startDate" => "required",
-            "endDate" => "required"
+            "endDate" => "required",
+            "accountId" => "required|exists:accounts,id",
         ]);
 
         try {
 
             $response = $this->thirdPartiesService->deletelastHeaderInfo(
                 $request->headerId,
+                $request->accountId,
                 $request->startDate,
                 $request->endDate
             );
@@ -73,6 +85,20 @@ class ThirdPartiesController extends ApiController
                 $request->endDate
             );
             return $this->showOne($header);
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage(), $e->getCode());
+        }
+    }
+
+    public  function getHeaderItems(Request $request)
+    {
+        $validated = $request->validate([
+            'headerId' => 'required|exists:header_third_parties_info,id'
+        ]);
+
+        try {
+            $items = $this->thirdPartiesService->getHeaderItems($request->headerId);
+            return $this->showAll($items);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }

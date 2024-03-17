@@ -28,6 +28,7 @@ class HeaderAccountingInfo extends Model
         'file_name',
         'start_date',
         'end_date',
+        'rows',
         'status',
     ];
 

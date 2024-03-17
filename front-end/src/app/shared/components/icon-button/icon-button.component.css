@@ -1,0 +1,14 @@
+
+.mat-button{
+    padding: 0px !important;
+    min-width: unset !important;
+    width: fit-content !important;
+}
+
+.mat-button:hover{
+    background-color: unset !important;
+}
+
+.mat-button:active {
+    border: none;
+}

@@ -1,3 +1,59 @@
-<p>
-  third-parties-upload works!
-</p>
+
+
+<div class="d-flex flex-row justify-content-center" >
+<div class="card col-4">
+  <div class="card-body">
+    <h4 class="card-title">Infrmación Contable</h4>
+    <h6 class="card-subtitle">Cargar Información Contable</h6>
+    <form class="form-horizontal p-t-20" [formGroup]="uploadForm" (submit)="onSubmit(form, $event)">
+      <div class="form-group">
+        <mat-form-field class="full-width-input">
+          <input matInput 
+            formControlName="startDate"
+            [matDatepicker]="fromPicker" 
+            placeholder="Desde"
+          >
+          <mat-hint>DD/MM/AAAA</mat-hint>
+          <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+          <mat-datepicker #fromPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+      <div class="form-group">
+        <mat-form-field class="full-width-input">
+          <input matInput 
+            formControlName="endDate"
+            [matDatepicker]="toPicker" 
+            placeholder="Hasta"
+          >
+          <mat-hint>DD/MM/AAAA</mat-hint>
+          <mat-datepicker-toggle matSuffix [for]="toPicker"></mat-datepicker-toggle>
+          <mat-datepicker #toPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+      
+      <div class="form-group">
+        <input type="file" #fileInput style="display: none;" (change)="onFileChange($event)">
+
+        <mat-form-field 
+          class="full-width-input"
+          (click)="openFileUpload($event)">
+          <mat-label>Archivo</mat-label>
+          <input matInput 
+            value="{{  fileName }}"
+            placeholder="Archivo"
+            disabled
+          >
+          <mat-icon matSuffix 
+            style="cursor: pointer"
+          >cloud_upload</mat-icon>
+          <mat-hint>Información de Tercero</mat-hint>
+        </mat-form-field>
+      </div>      
+      <div class="form-group row justify-content-md-center">
+          <button type="submit" class="btn btn-info waves-effect waves-light mr-5">Cargar</button>
+          <button type="button" class="btn btn-danger waves-effect waves-light">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>

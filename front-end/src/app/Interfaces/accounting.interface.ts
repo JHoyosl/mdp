@@ -6,6 +6,7 @@ export interface AccountingHeader {
     'fileName': string;
     'startDate': string;
     'endDate': string;
+    'rows': number;
     'status': string;
     'createdAt': string;
     'updatedAt': string;

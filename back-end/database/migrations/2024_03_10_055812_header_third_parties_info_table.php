@@ -24,6 +24,7 @@ class HeaderThirdPartiesInfoTable extends Migration
             $table->date('start_date');
             $table->date('end_date');
             $table->string('status')->default(HeaderThirdPartiesInfo::STATUS_OPEN);
+            $table->integer('rows')->default(0);
 
             $table->timestamps();
             $table->softDeletes();

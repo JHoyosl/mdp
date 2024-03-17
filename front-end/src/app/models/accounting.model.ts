@@ -1,6 +1,6 @@
 import { AccountingHeader } from "../Interfaces/accounting.interface";
 
-export class AccountingModel {
+export class AccountingHeaderModel {
 
     static toInterface(Object: any): AccountingHeader{
         return {
@@ -11,6 +11,7 @@ export class AccountingModel {
             'fileName': Object.file_name,
             'startDate': Object.start_date,
             'endDate': Object.end_date,
+            'rows': Object.rows,
             'status': Object.status,
             'createdAt': Object.created_at,
             'updatedAt': Object.updated_at,

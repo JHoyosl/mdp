@@ -21,6 +21,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 //START ACCOUNTING ROUTER
 Route::get('accounting/getAccountingItems', 'Accounting\AccountingController@getAccountingItems');
 
+
 Route::post('accounting/uploadAccountingInfo', 'Accounting\AccountingController@uploadAccountingInfo');
 Route::post('accounting/deleteLastUpload', 'Accounting\AccountingController@deleteLastUpload');
 
@@ -29,6 +30,8 @@ Route::resource('accounting', 'Accounting\AccountingController');
 //END ACCOUNTING ROUTER
 
 //START ACCOUNTING ROUTER
+Route::get('thirdParties/getAccountHeaderInfo', 'ThirdParties\ThirdPartiesController@getAccountHeaderInfo');
+Route::get('thirdParties/getHeaderItems', 'ThirdParties\ThirdPartiesController@getHeaderItems');
 
 Route::post('thirdParties/uploadAccountInfo', 'ThirdParties\ThirdPartiesController@uploadAccountInfo');
 Route::post('thirdParties/deleteLastUpload', 'ThirdParties\ThirdPartiesController@deleteLastUpload');

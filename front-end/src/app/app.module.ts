@@ -39,7 +39,6 @@ import { CurrencyPipe } from "@angular/common";
 import { AuthInterceptor } from './Interceptors/aut-hInterceptor';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 
-
 const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
   suppressScrollX: true,
   wheelSpeed: 1,
@@ -55,7 +54,7 @@ const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
     BlankComponent,
     NavigationComponent,
     BreadcrumbComponent,
-    SidebarComponent,
+    SidebarComponent
   ],
   imports: [
     StoreModule.forRoot( appReducers ),

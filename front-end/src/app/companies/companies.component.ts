@@ -63,20 +63,15 @@ export class CompaniesComponent implements OnInit {
   }
   editCompany(company: any ){
     
-    
     this.companyUpdate = new CompanyModel();
     this.companyUpdate.setValues(company);
-    console.log(this.companyUpdate);
-    this.apiRequest.getCitiesList( parseInt(this.companyUpdate.state_id) )
 
-        .subscribe( response =>{
-          
+    this.apiRequest.getCitiesList( parseInt(this.companyUpdate.state_id) )
+        .subscribe( (response) =>{
           this.citiesList = response;
           this.companyUpdate.setValues(company);
           this.tabSet.activeId  = 'updateTab';
-          
-        })
-
+        });
   }
 
   stateChange( type: String ){

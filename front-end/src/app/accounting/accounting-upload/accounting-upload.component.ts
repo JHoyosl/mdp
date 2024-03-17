@@ -68,7 +68,7 @@ export class AccountingUploadComponent implements OnInit {
         });
         console.error(err.error);
       });
-    console.log(uploadAccountingInfo);
+
   }
 
 }

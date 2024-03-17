@@ -11,6 +11,7 @@
                     <tr >
                         <th scope="col" class="text-center text-wrap">Desde</th>
                         <th scope="col" class="text-center text-wrap">Hasta</th>
+                        <th scope="col" class="text-center text-wrap">Registros</th>
                         <th scope="col" class="text-center">Cargado</th>
                         <th scope="col" class="text-center">Archivo</th>
                         <th scope="col" class="text-center">Stado</th>
@@ -21,6 +22,7 @@
                     <tr *ngFor="let header of accountingHeaders; let i=index">
                         <td class="text-center text-nowrap">{{ header.startDate | date:'dd-MM-y' }}</td>
                         <td class="text-center text-nowrap">{{ header.endDate | date:'dd-MM-y' }}</td>
+                        <td class="text-center text-nowrap">{{ header.rows }}</td>
                         <td class="text-center">{{ header.createdAt | date:'dd-MM-y' }}</td>
                         <td class="text-truncate" style="max-width: 150px; cursor: pointer;" title="{{ header.fileName }}">{{ header.fileName }}</td>
                         <td>{{ header.status }}</td>

@@ -50,6 +50,9 @@ class AccountingService
 
             $mapped = $this->getInsertConciliarLocal($file, $company->map_id, $startDate, $endDate, $newHeader->id);
 
+            $newHeader->rows = count($mapped);
+            $newHeader->save();
+
             foreach (array_chunk($mapped, 500) as $t) {
                 DB::table($this->accountingItemsTable)->insert($t);
             }

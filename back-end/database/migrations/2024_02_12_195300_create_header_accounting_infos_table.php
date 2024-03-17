@@ -24,6 +24,7 @@ class CreateHeaderAccountingInfosTable extends Migration
             $table->date('start_date');
             $table->date('end_date');
             $table->string('status')->default(HeaderAccountingInfo::STATUS_OPEN);
+            $table->integer('rows')->default(0);
             $table->timestamps();
             $table->softDeletes();
 
@@ -39,6 +40,8 @@ class CreateHeaderAccountingInfosTable extends Migration
      */
     public function down()
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
         Schema::dropIfExists('header_accounting_info');
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
     }
 }

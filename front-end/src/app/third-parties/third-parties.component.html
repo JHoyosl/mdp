@@ -1,11 +1,42 @@
-<mat-tab-group>
-  <mat-tab label="Historial">
-    <app-third-parties-info></app-third-parties-info>
-  </mat-tab>
-  <mat-tab label="Cargue">
-    <app-third-parties-upload></app-third-parties-upload>
-  </mat-tab>
-  <mat-tab label="Editar">  
-    <app-third-parties-details></app-third-parties-details>
-  </mat-tab>
-</mat-tab-group>
+<!-- <button (click)="onClick( tabset)">name</button> -->
+<div class="card">
+    <div class="card-body">
+      <mat-form-field class="float-right">
+        <mat-label>Seleccionar Cuenta</mat-label>
+        <mat-select (selectionChange)="changeSelectedAccount($event.value)"
+          [(value)]="selectedValue">
+          <mat-option *ngFor="let account of accountList" [value]="account.id">
+            {{account.banks.name }} - {{ account.local_account}}/{{ account.bank_account}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>  
+      <h3 class="card-title">Información de Terceros</h3>
+      <h6 class="card-subtitle">Gestion de la información de Terceros</h6>
+        <mat-tab-group  [(selectedIndex)]="selectedIndex">
+          <mat-tab label="Historial" >
+            <ng-template matTabContent >
+              <app-third-parties-info 
+              [(account)]="selectedAccount"
+              (showDetail)="showDetail($event)"
+              ></app-third-parties-info>
+            </ng-template>
+          </mat-tab>
+          <mat-tab label="Cargue" [disabled]="!selectedAccount">
+            <app-third-parties-upload
+              [account]="selectedAccount"
+              (successUpload)="successUpload($event)"
+            ></app-third-parties-upload>
+          </mat-tab>
+          <mat-tab label="Editar" disabled>  
+            <ng-template matTabContent >
+              <app-third-parties-details 
+                [header]="detailHeader"
+              ></app-third-parties-details>
+            </ng-template>
+          </mat-tab>
+        </mat-tab-group>
+    </div>
+</div>
+
+
+

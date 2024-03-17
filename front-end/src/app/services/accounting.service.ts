@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AccountingHeader, AccountingHeaderResponse, AccountingItem, AccountingUploadInfo } from '../Interfaces/accounting.interface';
 import { map } from 'rxjs/operators';
-import { AccountingModel } from '../models/accounting.model';
+import { AccountingHeaderModel } from '../models/accounting.model';
 import { GenericResponse } from '../Interfaces/shared.interfaces';
 
 @Injectable({
@@ -23,7 +23,7 @@ export class AccountingService {
     return this.httpClient.get<AccountingHeaderResponse>(this.baseUrl).pipe(
       map(( response ) => {
         return response.data.map(
-          (raw) => AccountingModel.toInterface(raw)
+          (raw) => AccountingHeaderModel.toInterface(raw)
         );
       })
     );
