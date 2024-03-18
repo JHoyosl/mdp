@@ -1,26 +1,27 @@
 <?php
 
-namespace App\Http\Controllers\Conciliar;
+namespace App\Http\Controllers\Reconciliation;
 
 
 use Schema;
+use Exception;
 use App\Models\Account;
 use App\Models\Company;
 use App\Models\LocalTxType;
 use Illuminate\Http\Request;
 use App\Models\ConciliarItem;
 use App\Models\ExternalTxType;
-use App\Models\ConciliarHeader;
 use Illuminate\Support\Facades\DB;
 use App\Models\ConciliarLocalValues;
+use App\Models\ReconciliationHeader;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
-use App\Models\ConciliarExternalValues;
-use App\Services\Conciliation\ConciliationService;
 use Illuminate\Support\Facades\Session;
+
 use Illuminate\Support\Facades\Storage;
-use App\Services\Conciliation\UploadConciliarContableService;
-use App\Services\Conciliation\UploadConciliationExternalService;
+use App\Services\Reconciliation\ReconciliationService;
+use App\Services\Reconciliation\UploadConciliarContableService;
+use App\Services\Reconciliation\UploadConciliationExternalService;
 
 ini_set('memory_limit', '1000M');
 
@@ -30,7 +31,7 @@ set_time_limit(-1);
 define("CONTABLE_COLS", 17);
 define("RECAUDO_COLS", 13);
 
-class ConciliarController extends ApiController
+class ReconciliationController extends ApiController
 {
     protected $conciliar_headers_table = '';
     protected $conciliar_items_table = '';
@@ -44,26 +45,28 @@ class ConciliarController extends ApiController
 
     protected UploadConciliarContableService $uploadConciliarContableService;
     protected UploadConciliationExternalService $uploadConciliationExternalService;
-    protected ConciliationService $conciliationService;
+    protected ReconciliationService $reconciliationService;
 
     private $user;
+    private $companyId;
 
     public function __construct(
         UploadConciliarContableService $uploadConciliarContableService,
         UploadConciliationExternalService $uploadConciliationExternalService,
-        ConciliationService $conciliationService
+        ReconciliationService $reconciliationService
     ) {
         $this->middleware('auth:api');
         $this->middleware(function ($request, $next) {
 
             $user = Auth::user();
-            $this->init($user);
+            // $this->init($user);
             $this->user = $user;
+            $this->companyId = $this->user->current_company;
 
             return $next($request);
         });
 
-        $this->conciliationService = $conciliationService;
+        $this->reconciliationService = $reconciliationService;
         $this->uploadConciliarContableService = $uploadConciliarContableService;
         $this->uploadConciliationExternalService = $uploadConciliationExternalService;
     }
@@ -92,7 +95,7 @@ class ConciliarController extends ApiController
 
         $user = Auth::user();
 
-        $headers = new ConciliarHeader($this->conciliar_headers_table);
+        $headers = new ReconciliationHeader($this->conciliar_headers_table);
 
         return $headers->get();
     }
@@ -162,6 +165,28 @@ class ConciliarController extends ApiController
     {
     }
 
+    public function iniReconciliation(Request $request)
+    {
+        $validated = $request->validate([
+            'file' => 'required',
+            'date' => 'required'
+        ]);
+
+        try {
+            return $this->reconciliationService->IniReconciliation(
+                $request->date,
+                $request->file,
+                $this->user,
+                $this->companyId
+            );
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage(), $e->getCode());
+        }
+    }
+
+
+    // TODO: OLD REMOVE
+
     public function createTablesInit()
     {
         // DB::statement('SET FOREIGN_KEY_CHECKS=0;');
@@ -180,9 +205,9 @@ class ConciliarController extends ApiController
 
     private function getLastConciliarHeader()
     {
-        $conciliarModel = new ConciliarHeader($this->conciliar_headers_table);
+        $conciliarModel = new ReconciliationHeader($this->conciliar_headers_table);
 
-        $conciliarTable = $conciliarModel->where('status', '=', ConciliarHeader::OPEN_STATUS)
+        $conciliarTable = $conciliarModel->where('status', '=', ReconciliationHeader::OPEN_STATUS)
             ->first();
 
         return $conciliarTable;
@@ -207,7 +232,7 @@ class ConciliarController extends ApiController
 
         $header = $this->getLastConciliarHeader();
         // return $header;
-        if ($header->status != ConciliarHeader::OPEN_STATUS) {
+        if ($header->status != ReconciliationHeader::OPEN_STATUS) {
 
             $error = \Illuminate\Validation\ValidationException::withMessages(
                 [
@@ -250,7 +275,7 @@ class ConciliarController extends ApiController
 
         $header->close_by = $user->id;
         $header->fecha_end = date("Y-m-d H:i:s");
-        $header->status = ConciliarHeader::CLOSE_STATUS;
+        $header->status = ReconciliationHeader::CLOSE_STATUS;
         $header->fecha_cierre = $fechaCierre;
 
         $fromPath = storage_path($header->file_path);
@@ -325,7 +350,7 @@ class ConciliarController extends ApiController
             'accountId' => 'required|exists:accounts,id',
         ]);
 
-        return $this->conciliationService->balanceCloseAccount(
+        return $this->reconciliationService->balanceCloseAccount(
             $validated['externalBalance'],
             $validated['localBalance'],
             $validated['accountId'],
@@ -444,9 +469,9 @@ class ConciliarController extends ApiController
             return $this->errorResponse("No hay un formato asociado", 400);
         }
 
-        $headers = new ConciliarHeader($this->conciliar_headers_table);
+        $headers = new ReconciliationHeader($this->conciliar_headers_table);
 
-        $openHeader = $headers->where('status', ConciliarHeader::OPEN_STATUS)
+        $openHeader = $headers->where('status', ReconciliationHeader::OPEN_STATUS)
             ->orderBy('id', 'desc')->first();
 
 
@@ -465,9 +490,10 @@ class ConciliarController extends ApiController
     public function uploadIniFile(Request $request)
     {
 
+        // return $this->reconciliationService->IniReconciliation($request->file, $this->user)
         $user = Auth::user();
 
-        $headers = new ConciliarHeader($this->conciliar_headers_table);
+        $headers = new ReconciliationHeader($this->conciliar_headers_table);
 
         $lastHeader = $headers->orderBy('id', 'desc')->first();
 
@@ -483,16 +509,17 @@ class ConciliarController extends ApiController
             $lastHeader->save();
         } else {
 
-            $header = new ConciliarHeader($this->conciliar_headers_table);
+            $header = new ReconciliationHeader($this->conciliar_headers_table);
 
 
             $header->insert(
                 [
                     'fecha_ini' => date('Y-m-d H:i:s'),
+                    'fecha_end' => date('Y-m-d H:i:s'),
                     'created_by' => $user->id,
-                    'status' => ConciliarHeader::OPEN_STATUS,
-                    'file_name' => $request->file->getClientOriginalName(),
-                    'file_path' => 'app/tmpUpload/' . $user->id . 'iniFile.' . $ext,
+                    'step' => 1,
+                    'status' => ReconciliationHeader::OPEN_STATUS,
+                    'type' => ReconciliationHeader::TYPE_INITIAL
                 ]
             );
         }
@@ -508,12 +535,12 @@ class ConciliarController extends ApiController
 
     public function getCuentasToConciliar()
     {
-        $conciliarHeaderTable = new ConciliarHeader($this->conciliar_headers_table);
-        $conciliarHeaderOpen = $conciliarHeaderTable->where('status', '=', ConciliarHeader::OPEN_STATUS)
+        $conciliarHeaderTable = new ReconciliationHeader($this->conciliar_headers_table);
+        $conciliarHeaderOpen = $conciliarHeaderTable->where('status', '=', ReconciliationHeader::OPEN_STATUS)
             ->orderBy('id', 'desc')
             ->first();
 
-        $conciliarHeaderClose = $conciliarHeaderTable->where('status', '=', ConciliarHeader::CLOSE_STATUS)
+        $conciliarHeaderClose = $conciliarHeaderTable->where('status', '=', ReconciliationHeader::CLOSE_STATUS)
             ->orderBy('id', 'desc')
             ->first();
 
@@ -577,10 +604,10 @@ class ConciliarController extends ApiController
             $this->createTablesInit();
         }
 
-        $conciliarModel = new ConciliarHeader($this->conciliar_headers_table);
+        $conciliarModel = new ReconciliationHeader($this->conciliar_headers_table);
 
         $conciliarTable = $conciliarModel->where('id', '=', 1)
-            ->where('status', '=', ConciliarHeader::CLOSE_STATUS)
+            ->where('status', '=', ReconciliationHeader::CLOSE_STATUS)
             ->get();
 
 

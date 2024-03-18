@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Conciliation;
+namespace App\Services\Reconciliation;
 
 use Exception;
 use App\Models\MapFile;

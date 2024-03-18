@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use App\Models\Account;
-use App\Models\ConciliarHeader;
+use App\Models\ReconciliationHeader;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ConciliarItem extends Model
+class ReconciliationItem extends Model
 {
     use SoftDeletes;
 
@@ -17,10 +17,10 @@ class ConciliarItem extends Model
     protected $table = "conciliar_items";
     protected $dates = ['deleted_at'];
 
-    public function __construct($tableName){
+    public function __construct($tableName)
+    {
 
         $this->table = $tableName;
-
     }
     /**
      * The attributes that are mass assignable.
@@ -28,11 +28,11 @@ class ConciliarItem extends Model
      * @var array
      */
     protected $fillable = [
-        'header_id', 
+        'header_id',
         'account_id',
-        'debit_externo', 
+        'debit_externo',
         'debit_local',
-        'credit_externo', 
+        'credit_externo',
         'credit_local',
         'balance_externo',
         'balance_local',
@@ -40,18 +40,18 @@ class ConciliarItem extends Model
         'file_name',
         'total',
         'status',
-        
+
     ];
 
-    function headers(){
+    function headers()
+    {
 
-    	return $this->belongsTo(ConciliarHeader::class, 'header_id');
+        return $this->belongsTo(ReconciliationHeader::class, 'header_id');
     }
 
-    function account(){
+    function account()
+    {
 
-    	return $this->belongsTo(Account::class, 'account_id');
+        return $this->belongsTo(Account::class, 'account_id');
     }
-
-
 }

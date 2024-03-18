@@ -60,10 +60,10 @@ return [
             'url' => env('APP_URL') . '/storage',
             'visibility' => 'public',
         ],
-        'conciliation' => [
+        'reconciliation' => [
             'driver' => 'local',
-            'root' => storage_path('conciliation/'),
-            'url' => env('APP_URL') . '/storage/conciliation',
+            'root' => storage_path('reconciliation/'),
+            'url' => env('APP_URL') . '/storage/reconciliation',
             'visibility' => 'private',
         ],
         'cuadres' => [

@@ -50,7 +50,7 @@ Route::resource('mapFiles', 'MapFile\MapFileController', ['except' => 'create', 
 Route::resource('usersCompanies', 'User\UserCompanyController');
 
 //CONCILIAR ROUTES
-Route::resource('conciliar', 'Conciliar\ConciliarController')->only(
+Route::resource('reconciliation', 'Reconciliation\ReconciliationController')->only(
 	[
 		'index',
 		'uploadIniFile',
@@ -59,9 +59,15 @@ Route::resource('conciliar', 'Conciliar\ConciliarController')->only(
 		'closeIniConciliar',
 		'uploadAccountFile',
 		'getCuentasToConciliar',
-		'uploadConciliarContable'
+		'uploadConciliarContable',
+		'iniReconciliation'
 	]
 );
+
+Route::post('reconciliation/iniReconciliation', 'Reconciliation\ReconciliationController@iniReconciliation');
+
+
+// TODO: OLD ROUTES REMOVE
 Route::name('getCuentasToConciliar')
 	->get('conciliar/getCuentasToConciliar', 'Conciliar\ConciliarController@getCuentasToConciliar');
 Route::name('setIniProcess')

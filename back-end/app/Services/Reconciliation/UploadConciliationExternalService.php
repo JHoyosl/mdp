@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Conciliation;
+namespace App\Services\Reconciliation;
 
 use App\Models\User;
 use App\Models\Account;
@@ -23,12 +23,12 @@ class UploadConciliationExternalService
     protected $reconciliationItemsTemp = "";
 
     private AccountingService $accountingService;
-    private ConciliationService $reconciliationService;
+    private ReconciliationService $reconciliationService;
     private $filePath;
 
     public function __construct(
         AccountingService $accountingService,
-        ConciliationService $reconciliationService
+        ReconciliationService $reconciliationService
     ) {
         $this->accountingService = $accountingService;
         $this->reconciliationService = $reconciliationService;

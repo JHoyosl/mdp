@@ -8,21 +8,25 @@ use App\Models\ConciliarItem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ConciliarHeader extends Model
+class ReconciliationHeader extends Model
 {
     use SoftDeletes;
-    
+
     protected $table = "conciliar_headers";
     protected $dates = ['deleted_at'];
 
     const OPEN_STATUS = 'OPEN';
     const CLOSE_STATUS = 'CLOSE';
-    
 
-    public function __construct($tableName){
+    const TYPE_ACCCOUNTING = 'ACCOUNT';
+    const TYPE_INITIAL = 'INITIAL';
+
+
+
+    public function __construct($tableName)
+    {
 
         $this->table = $tableName;
-
     }
     /**
      * The attributes that are mass assignable.
@@ -30,24 +34,26 @@ class ConciliarHeader extends Model
      * @var array
      */
     protected $fillable = [
-        'fecha_ini', 
-        'fecha_end', 
+        'fecha_ini',
+        'fecha_end',
         'created_by',
         'close_by',
+        'external_balance',
+        'local_calance',
+        'step',
         'status',
-        'file_name',
-        'file_path',
-        
+        'type'
     ];
 
-    function usersCreate(){
+    function usersCreate()
+    {
 
-    	return $this->hasOne(User::class, 'id','created_by');
+        return $this->hasOne(User::class, 'id', 'created_by');
     }
 
-    function usersClose(){
+    function usersClose()
+    {
 
-        return $this->hasOne(User::class, 'id','close_by');
+        return $this->hasOne(User::class, 'id', 'close_by');
     }
-
 }
