@@ -173,12 +173,14 @@ class ReconciliationController extends ApiController
         ]);
 
         try {
-            return $this->reconciliationService->IniReconciliation(
+            $initReconciliation = $this->reconciliationService->IniReconciliation(
                 $request->date,
                 $request->file,
                 $this->user,
                 $this->companyId
             );
+
+            return $this->showAll($initReconciliation);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }

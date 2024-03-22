@@ -20,6 +20,7 @@ class ReconciliationService
 
     public function IniReconciliation($date, $file, $user, $companyId)
     {
+
         //TODO: TOMAR EL ULTIMO DIA DEL MES
         $endDate = Carbon::createFromFormat('Y-m-d', $date);
         $startDate = Carbon::createFromFormat('Y-m-d', $date)->subDay();
@@ -32,21 +33,17 @@ class ReconciliationService
 
         $process = $this->insertExternalIni($externalInfo, $user, $companyId, $startDate, $endDate);
 
-        // return $process;
-        $externalValuesTableName = $this->getReconciliationExternalValuesTableName($companyId);
+        $balance =  $this->getProcessBalance($process, $companyId);
 
-        $query = DB::table($externalValuesTableName)
-            ->select(DB::raw("accounts.id, SUM(valor_credito) as credit,SUM(valor_debito) as debit, numero_cuenta,
-                    banks.name, accounts.local_account, banks.name"))
-            ->join('accounts', $externalValuesTableName . '.numero_cuenta', '=', 'accounts.bank_account')
-            ->join('banks', 'accounts.bank_id', '=', 'banks.id')
-            ->where('accounts.company_id', '=', $user->current_company)
-            ->groupBy('id', 'numero_cuenta', 'banks.name', 'accounts.local_account', 'bank_account')
-            ->orderBy('banks.name', 'DESC')
-            ->orderBy('numero_cuenta', 'ASC')
+        $this->setReconciliationBalance($balance, $companyId);
+
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
+        $reconciliattionItems = (new ReconciliationItem($itemsTableName))
+            ->where('process', $process)
+            ->with('account')
             ->get();
 
-        return $query;
+        return $reconciliattionItems;
         // if ($headerTable->first()) {
         //     throw new Exception('Ya existe una inicial', 400);
         // }
@@ -67,6 +64,46 @@ class ReconciliationService
         // return $headers->first();
 
         return [$date, $user, $file];
+    }
+
+    public function setReconciliationBalance($balance, $companyId)
+    {
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
+
+        foreach ($balance as $key => $value) {
+            $item = (new ReconciliationItem($itemsTableName))
+                ->where('id', $value->id)
+                ->first();
+
+            $item->external_credit = $value->credit;
+            $item->external_debit = $value->debit;
+            $item->save();
+        }
+    }
+
+    public function getProcessBalance($process, $companyId)
+    {
+
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
+        $ids = (new ReconciliationItem($itemsTableName))
+            ->where('process', $process)
+            ->pluck('id')
+            ->toArray();
+
+        $externalValuesTableName = $this->getReconciliationExternalValuesTableName($companyId);
+        $query = DB::table($externalValuesTableName)
+            ->select(DB::raw("accounts.id, SUM(valor_credito) as credit,SUM(valor_debito) as debit, numero_cuenta,
+                    banks.name, accounts.local_account, banks.name"))
+            ->join('accounts', $externalValuesTableName . '.numero_cuenta', '=', 'accounts.bank_account')
+            ->join('banks', 'accounts.bank_id', '=', 'banks.id')
+            ->whereIn('item_id', $ids)
+            ->where('accounts.company_id', '=', $companyId)
+            ->groupBy('id', 'numero_cuenta', 'banks.name', 'accounts.local_account', 'bank_account')
+            ->orderBy('banks.name', 'DESC')
+            ->orderBy('numero_cuenta', 'ASC')
+            ->get();
+
+        return $query;
     }
 
     public function createTablesIfExists($companyId)

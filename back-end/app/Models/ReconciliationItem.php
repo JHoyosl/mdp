@@ -52,7 +52,6 @@ class ReconciliationItem extends Model
 
     function account()
     {
-
         return $this->belongsTo(Account::class, 'account_id');
     }
 }
