@@ -38,8 +38,7 @@ class ReconciliationHeader extends Model
         'fecha_end',
         'created_by',
         'close_by',
-        'external_balance',
-        'local_calance',
+        'accounts_id',
         'step',
         'status',
         'type'

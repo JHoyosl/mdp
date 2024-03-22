@@ -3,16 +3,20 @@
 namespace App\Models;
 
 use App\Models\Account;
-use App\Models\ReconciliationHeader;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ReconciliationItem extends Model
 {
-    use SoftDeletes;
 
     const OPEN_STATUS = 'OPEN';
     const CLOSE_STATUS = 'CLOSE';
+
+    const TYPE_PARTIAL = 'PARTIAL';
+    const TYPE_CLOSE = 'CLOSE';
+    const TYPE_INIT = 'INIT';
+
+    const STEP_UPLOADED = 'UPLOADED';
 
     protected $table = "conciliar_items";
     protected $dates = ['deleted_at'];
@@ -28,26 +32,23 @@ class ReconciliationItem extends Model
      * @var array
      */
     protected $fillable = [
-        'header_id',
         'account_id',
-        'debit_externo',
-        'debit_local',
-        'credit_externo',
-        'credit_local',
-        'balance_externo',
-        'balance_local',
-        'file_path',
-        'file_name',
-        'total',
+        'process',
+        'start_date',
+        'end_date',
+        'external_debit',
+        'external_credit',
+        'local_debit',
+        'local_credit',
+        'external_balance',
+        'local_balance',
+        'difference',
         'status',
-
+        'step',
+        'type',
+        'updated_at',
+        'created_at',
     ];
-
-    function headers()
-    {
-
-        return $this->belongsTo(ReconciliationHeader::class, 'header_id');
-    }
 
     function account()
     {
