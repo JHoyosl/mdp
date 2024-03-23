@@ -12,6 +12,10 @@ import { AccountBalanceTableComponent } from './conciliar-process/components/acc
 import { DirectivesModule } from '../shared/directives/directives.module';
 import { ComponentsModule } from '../shared/components/components.module';
 import { AccountResumeComponent } from './components/account-resume/account-resume.component';
+import { MatPaginatorModule, MatTableModule, MatTabsModule } from '@angular/material';
+import { ConciliarComponent } from './conciliar.component';
+import { InitializeAccountComponent } from './initialize-account/initialize-account.component';
+import { ReconciliationHisotryComponent } from './reconciliation-hisotry/reconciliation-hisotry.component';
 
 
 
@@ -22,6 +26,9 @@ import { AccountResumeComponent } from './components/account-resume/account-resu
     TxTypesComponent,
     AccountBalanceTableComponent,
     AccountResumeComponent,
+    ConciliarComponent,
+    InitializeAccountComponent,
+    ReconciliationHisotryComponent,
   ],
   imports: [
     CommonModule,
@@ -30,7 +37,10 @@ import { AccountResumeComponent } from './components/account-resume/account-resu
     RouterModule.forChild(ConciliarRoutes),
     FileUploadModule,
     DirectivesModule,
-    ComponentsModule
+    ComponentsModule,
+    MatTabsModule,
+    MatTableModule,
+    MatPaginatorModule
 
   ]
 })

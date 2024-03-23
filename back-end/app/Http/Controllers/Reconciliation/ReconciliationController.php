@@ -165,6 +165,12 @@ class ReconciliationController extends ApiController
     {
     }
 
+    public function getAccountProcess()
+    {
+        $data = $this->reconciliationService->getAccountProcess($this->companyId);
+        return $this->showAll($data);
+    }
+
     public function iniReconciliation(Request $request)
     {
         $validated = $request->validate([

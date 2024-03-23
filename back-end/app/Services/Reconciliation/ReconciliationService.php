@@ -17,10 +17,23 @@ use App\Models\ReconciliationExternalValues;
 class ReconciliationService
 {
 
+    public function getAccountProcess($companyId)
+    {
+        $ItemstableName = $this->getReconciliationItemTableName($companyId);
+        if (!Schema::hasTable($ItemstableName)) {
+            return [];
+        }
+        $items = Account::join($ItemstableName, 'accounts.id', $ItemstableName . '.id')
+            ->join('banks', 'banks.id', 'accounts.bank_id')
+            ->where('company_id', $companyId)
+            ->where('status', 'OPEN')
+            ->get();
+        return $items;
+    }
 
     public function IniReconciliation($date, $file, $user, $companyId)
     {
-
+        //TODO: BEGIN-COMMIT TX
         //TODO: TOMAR EL ULTIMO DIA DEL MES
         $endDate = Carbon::createFromFormat('Y-m-d', $date);
         $startDate = Carbon::createFromFormat('Y-m-d', $date)->subDay();

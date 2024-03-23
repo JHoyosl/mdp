@@ -1,0 +1,24 @@
+<!-- <button (click)="onClick( tabset)">name</button> -->
+<div class="card">
+  <div class="card-body">
+    <h3 class="card-title">Conciliaciones</h3>
+    <h6 class="card-subtitle">Conciliación de Cuentas</h6>
+      <mat-tab-group  [(selectedIndex)]="selectedIndex">
+        <mat-tab label="Cuentas" >
+          <ng-template matTabContent >
+            <app-reconciliation-hisotry></app-reconciliation-hisotry>
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Cargue" [disabled]="!selectedAccount">
+        </mat-tab>
+        <mat-tab label="Editar" disabled>  
+          <ng-template matTabContent >
+           
+          </ng-template>
+        </mat-tab>
+      </mat-tab-group>
+  </div>
+</div>
+
+
+

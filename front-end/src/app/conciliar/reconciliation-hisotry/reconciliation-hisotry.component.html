@@ -1,0 +1,66 @@
+<div class="mat-elevation-z8">
+  <table mat-table [dataSource]="dataSource">
+
+    <!-- Position Column -->
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef> Banco </th>
+      <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+    </ng-container>
+
+    <!-- Name Column -->
+    <ng-container matColumnDef="bankAccount">
+      <th mat-header-cell *matHeaderCellDef> Cuenta </th>
+      <td mat-cell *matCellDef="let element"> {{element.bankAccount}} </td>
+    </ng-container>
+
+    <!-- EXTERNAL INFO -->
+    <!-- Weight Column -->
+    <ng-container matColumnDef="externalDebit">
+      <th mat-header-cell *matHeaderCellDef> Db Externo </th>
+      <td class="currency" mat-cell *matCellDef="let element"> {{element.externalDebit | currency }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="externalCredit">
+      <th mat-header-cell *matHeaderCellDef> Cr Externo </th>
+      <td class="currency" mat-cell *matCellDef="let element"> {{element.externalCredit | currency }} </td>
+    </ng-container>
+
+
+    <!-- Symbol Column -->
+
+
+    <!-- LOCAL INFO -->
+    <!-- Weight Column -->
+    
+    <!-- Symbol Column -->
+    <ng-container matColumnDef="localCredit">
+      <th mat-header-cell *matHeaderCellDef> Cr Cont </th>
+      <td mat-cell *matCellDef="let element"> {{element.localCredit | currency }} </td>
+    </ng-container>
+
+    <!-- Symbol Column -->
+    <ng-container matColumnDef="localDebit">
+      <th mat-header-cell *matHeaderCellDef> Db Cont </th>
+      <td class="currency" mat-cell *matCellDef="let element"> {{ element.localDebit | currency }} </td>
+    </ng-container>
+
+    <!-- Symbol Column -->
+    <ng-container matColumnDef="Actions">
+      <th mat-header-cell *matHeaderCellDef> Acciones </th>
+      <td mat-cell *matCellDef="let element"> 
+        <app-icon-button 
+          icon="delete_forever"
+        ></app-icon-button>
+
+        <app-icon-button 
+          icon="zoom_in"
+        ></app-icon-button>        
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+</div>

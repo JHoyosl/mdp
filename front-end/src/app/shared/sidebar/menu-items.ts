@@ -61,7 +61,7 @@ export const ROUTES: RouteInfo[] = [
     extralink: false,
     submenu: [
       {
-        path: '/conciliar/conciliarProcess',
+        path: '/conciliar',
         title: 'Conciliar',
         icon: '',
         class: '',

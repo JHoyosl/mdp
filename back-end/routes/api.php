@@ -60,9 +60,12 @@ Route::resource('reconciliation', 'Reconciliation\ReconciliationController')->on
 		'uploadAccountFile',
 		'getCuentasToConciliar',
 		'uploadConciliarContable',
-		'iniReconciliation'
+		'iniReconciliation',
+		'getAccountProcess'
 	]
 );
+
+Route::get('reconciliation/getAccountProcess', 'Reconciliation\ReconciliationController@getAccountProcess');
 
 Route::post('reconciliation/iniReconciliation', 'Reconciliation\ReconciliationController@iniReconciliation');
 
