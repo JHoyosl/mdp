@@ -5,12 +5,14 @@ namespace App\Services\Reconciliation;
 use Exception;
 use Carbon\Carbon;
 use App\Models\Account;
+use App\Models\LocalTxType;
 use Illuminate\Support\Str;
 use App\Models\ExternalTxType;
 use App\Models\ReconciliationItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use App\Models\ReconciliationLocalValues;
 use Illuminate\Database\Schema\Blueprint;
 use App\Models\ReconciliationExternalValues;
 
@@ -40,13 +42,20 @@ class ReconciliationService
 
         $this->createTablesIfExists($companyId);
 
+        //ID to group reconciliation under ad ID
+        $process = Str::random(9);
+
         $filePath = $this->saveIniReconciliationFile($file, $companyId);
 
-        $externalInfo = $this->getIniExternalArray($user, $filePath);
+        $externalInfo = $this->fileToArray($filePath);
+        $localInfo = $this->fileToArray($filePath, 1);
 
-        $process = $this->insertExternalIni($externalInfo, $user, $companyId, $startDate, $endDate);
+        $this->insertLocalIni($localInfo, $companyId, $startDate, $endDate, $process);
+        $this->insertExternalIni($externalInfo, $user, $companyId, $startDate, $endDate, $process);
 
         $balance =  $this->getProcessBalance($process, $companyId);
+
+
 
         $this->setReconciliationBalance($balance, $companyId);
 
@@ -57,26 +66,6 @@ class ReconciliationService
             ->get();
 
         return $reconciliattionItems;
-        // if ($headerTable->first()) {
-        //     throw new Exception('Ya existe una inicial', 400);
-        // }
-
-
-        // $headerTable->insert(
-        //     [
-        //         'fecha_ini' => date('Y-m-d H:i:s'),
-        //         'fecha_end' => date('Y-m-d H:i:s'),
-        //         'created_by' => $user->id,
-        //         'step' => 1,
-        //         'status' => ReconciliationHeader::OPEN_STATUS,
-        //         'type' => ReconciliationHeader::TYPE_INITIAL
-        //     ]
-        // );
-
-
-        // return $headers->first();
-
-        return [$date, $user, $file];
     }
 
     public function setReconciliationBalance($balance, $companyId)
@@ -85,11 +74,13 @@ class ReconciliationService
 
         foreach ($balance as $key => $value) {
             $item = (new ReconciliationItem($itemsTableName))
-                ->where('id', $value->id)
+                ->where('id', $value->accountId)
                 ->first();
 
-            $item->external_credit = $value->credit;
-            $item->external_debit = $value->debit;
+            $item->external_credit = $value->externalCredit;
+            $item->external_debit = $value->externalDebit;
+            $item->local_credit = $value->localCredit;
+            $item->local_debit = $value->localDebit;
             $item->save();
         }
     }
@@ -104,19 +95,43 @@ class ReconciliationService
             ->toArray();
 
         $externalValuesTableName = $this->getReconciliationExternalValuesTableName($companyId);
-        $query = DB::table($externalValuesTableName)
-            ->select(DB::raw("accounts.id, SUM(valor_credito) as credit,SUM(valor_debito) as debit, numero_cuenta,
-                    banks.name, accounts.local_account, banks.name"))
-            ->join('accounts', $externalValuesTableName . '.numero_cuenta', '=', 'accounts.bank_account')
+        // TODO: VALIDATE AND REMOVE
+        // $externalBalance = DB::table($externalValuesTableName)
+        //     ->select(DB::raw("accounts.id, SUM(valor_credito) as credit, SUM(valor_debito) as debit, numero_cuenta,
+        //             banks.name, accounts.local_account, banks.name"))
+        //     ->join('accounts', $externalValuesTableName . '.numero_cuenta', '=', 'accounts.bank_account')
+        //     ->join('banks', 'accounts.bank_id', '=', 'banks.id')
+        //     ->whereIn('item_id', $ids)
+        //     ->where('accounts.company_id', '=', $companyId)
+        //     ->groupBy('id', 'numero_cuenta', 'banks.name', 'accounts.local_account', 'bank_account')
+        //     ->orderBy('banks.name', 'DESC')
+        //     ->orderBy('numero_cuenta', 'ASC')
+        //     ->get();
+
+        // return $externalBalance;
+
+        $localValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
+
+        $balance = DB::table($localValuesTableName)
+            ->select(DB::raw("
+                accounts.id AS accountId, 
+                SUM(" . $localValuesTableName . ".valor_credito) as localCredit, 
+                SUM(" . $localValuesTableName . ".valor_debito) as localDebit,
+                SUM(" . $externalValuesTableName . ".valor_credito) as externalCredit, 
+                SUM(" . $externalValuesTableName . ".valor_debito) as externalDebit,"
+                . $localValuesTableName . ".local_account"))
+            ->join($externalValuesTableName, $localValuesTableName . '.local_account', '=', $externalValuesTableName . '.local_account')
+            ->join('accounts', $localValuesTableName . '.local_account', '=', 'accounts.local_account')
             ->join('banks', 'accounts.bank_id', '=', 'banks.id')
-            ->whereIn('item_id', $ids)
+            ->whereIn($localValuesTableName . '.item_id', $ids)
             ->where('accounts.company_id', '=', $companyId)
-            ->groupBy('id', 'numero_cuenta', 'banks.name', 'accounts.local_account', 'bank_account')
+            ->groupBy('accountId', 'banks.name', 'accounts.local_account')
             ->orderBy('banks.name', 'DESC')
-            ->orderBy('numero_cuenta', 'ASC')
+            ->orderBy('local_account', 'ASC')
             ->get();
 
-        return $query;
+
+        return $balance;
     }
 
     public function createTablesIfExists($companyId)
@@ -164,7 +179,7 @@ class ReconciliationService
         }
     }
 
-    public function createReconciliationItem($user, $account, $companyId, $startDate, $endDate, $process)
+    public function createReconciliationItem($account, $companyId, $startDate, $endDate, $process)
     {
         $tableName = $this->getReconciliationItemTableName($companyId);
 
@@ -211,10 +226,88 @@ class ReconciliationService
         }
     }
 
-    public function insertExternalIni($externalInfo, $user, $companyId, $startDate, $endDate)
+    public function insertLocalIni($localInfo, $companyId, $startDate, $endDate, $process)
     {
         $now = Carbon::now();
-        $process = Str::random(9);
+        $tableName = $this->getLocalTxTypeTableName($companyId);
+        $localTxTypeTable = new LocalTxType($tableName);
+
+        $localInsert = [];
+        $accountNumber = $localInfo[0][0];
+
+        $account = Account::where('local_account', $accountNumber)
+            ->with('banks')
+            ->first();
+
+        $itemId = $this->createReconciliationItem($account, $companyId, $startDate, $endDate, $process);
+        $itemsIdList[] = $itemId;
+
+        if (!$account) {
+            throw new Exception(`No existe la cuenta {$accountNumber}`);
+        }
+
+        foreach ($localInfo as $key => $row) {
+            if (!$row || $row[3] == null) {
+                continue;
+            }
+            if ($row[0] != $accountNumber) {
+                $accountNumber = $row[0];
+                $account = Account::where('local_account', $accountNumber)
+                    ->with('banks')
+                    ->first();
+
+                if (!$account) {
+                    throw new Exception(`No existe la cuenta {$accountNumber}`);
+                }
+                $itemId = $this->createReconciliationItem($account, $companyId, $startDate, $endDate, $process);
+                $itemsIdList[] = $itemId;
+            }
+
+            $txTypeId = null;
+            $txTypeName = null;
+
+            $txType = $localTxTypeTable
+                ->where('description', strtoupper($row[8]))
+                ->first();
+
+            if (!$txType) {
+                throw new Exception('No existe una transacción con descripción: ' . $row[8], 400);
+            }
+
+            if ($txType) {
+                $txTypeId = $txType->id;
+                $txTypeName = $txType->tx;
+            }
+
+            $localInsert[] = [
+                'item_id' => $itemId,
+                'tx_type_id' => $txTypeId,
+                'tx_type_name' => $txTypeName,
+                'local_account' => $row[0],
+                'cuenta_externa' => $row[3],
+                'fecha_movimiento' => date('Y-m-d', strtotime($row[4])),
+                'numero_comprobante' => $row[5],
+                'referencia_1' => $row[6],
+                'identificacion_tercero' => $row[7],
+                'descripcion' => $row[8],
+                'valor_debito' => $row[9],
+                'valor_credito' => $row[10],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        $tableName = $this->getReconciliationLocalValuesTableName($companyId);
+        $localValuesTable =  new ReconciliationLocalValues($tableName);
+        $localValuesTable->whereIn('item_id', $itemsIdList)->delete();
+
+        $localValuesTable->insert($localInsert);
+    }
+
+    public function insertExternalIni($externalInfo, $user, $companyId, $startDate, $endDate, $process)
+    {
+        $now = Carbon::now();
+
         $externalInsert = [];
         $itemsIdList = [];
         $accountNumber = $externalInfo[0][2];
@@ -223,7 +316,7 @@ class ReconciliationService
             ->with('banks')
             ->first();
 
-        $itemId = $this->createReconciliationItem($user, $account, $companyId, $startDate, $endDate, $process);
+        $itemId = $this->createReconciliationItem($account, $companyId, $startDate, $endDate, $process);
         $itemsIdList[] = $itemId;
 
         if (!$account) {
@@ -231,6 +324,9 @@ class ReconciliationService
         }
 
         foreach ($externalInfo as $key => $row) {
+            if (!$row || $row[3] == null) {
+                continue;
+            }
             if ($row[2] != $accountNumber) {
                 $accountNumber = $row[2];
                 $account = Account::where('bank_account', $accountNumber)
@@ -240,7 +336,7 @@ class ReconciliationService
                 if (!$account) {
                     throw new Exception(`No existe la cuenta {$accountNumber}`);
                 }
-                $itemId = $this->createReconciliationItem($user, $account, $companyId, $startDate, $endDate, $process);
+                $itemId = $this->createReconciliationItem($account, $companyId, $startDate, $endDate, $process);
                 $itemsIdList[] = $itemId;
             }
 
@@ -274,6 +370,7 @@ class ReconciliationService
                 'item_id' => $itemId,
                 'tx_type_id' => $txTypeId,
                 'tx_type_name' => $txTypeName,
+                'local_account' => $account->local_account,
                 'numero_cuenta' => $row[2],
                 'fecha_movimiento' => date('Y-m-d', strtotime($row[3])),
                 'referencia_1' => $row[4],
@@ -292,8 +389,35 @@ class ReconciliationService
         $externalValuesTable->whereIn('item_id', $itemsIdList)->delete();
 
         $externalValuesTable->insert($externalInsert);
+    }
 
-        return ['process' => $process];
+    public function fileToArray($filePath, $sheet = 0, $extenssion = 'Xlsx')
+    {
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
+        $spreadsheet = $reader->load($filePath);
+        $spreadsheet->setActiveSheetIndex($sheet);
+        $worksheet = $spreadsheet->getActiveSheet();
+        $startRow = 3;
+
+        $data = [];
+
+        foreach ($worksheet->getRowIterator($startRow) as $rowKey => $row) {
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(true);
+
+            $rows = [];
+            foreach ($cellIterator as  $columnKey => $cell) {
+
+                if (\PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($cell)) {
+                    $rows[] = date("Y-m-d H:i:s", \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($cell->getValue()));
+                    continue;
+                }
+                $rows[] = $cell->getValue();
+            }
+            $data[] = $rows;
+        }
+
+        return $data;
     }
 
     public function getIniExternalArray($user, $filePath)
@@ -318,19 +442,8 @@ class ReconciliationService
                     continue;
                 }
                 $rows[] = $cell->getValue();
-                // TODO: REMOVER
-                if ($columnKey == 'J') {
-                    break;
-                }
-                // TODO: REMOVER
             }
             $data[] = $rows;
-
-            // TODO: REMOVER
-            if ($rowKey == '36') {
-                break;
-            }
-            // TODO: REMOVER
         }
 
         return $data;
@@ -411,6 +524,10 @@ class ReconciliationService
     {
         return 'reconciliation_external_values_' . $companyId;
     }
+    public function getLocalTxTypeTableName($companyId): string
+    {
+        return 'reconciliation_local_tx_types_' . $companyId;
+    }
 
     public function saveIniReconciliationFile($file, $companyId)
     {
@@ -460,10 +577,11 @@ class ReconciliationService
             $table->bigIncrements('id');
             $table->integer('item_id')->unsigned()->nullable();
             $table->boolean('matched')->default(false);
-            $table->bigInteger('matched_id')->unsigned();
+            $table->bigInteger('matched_id')->unsigned()->nullable();
             $table->integer('tx_type_id')->unsigned();
             $table->string('tx_type_name')->nullable();
             $table->string('descripcion')->comment = 'transaccion/descripcion';
+            $table->string('local_account');
             $table->string('operador')->nullable();
             $table->decimal('valor_credito', 24, 2)->nullable();
             $table->decimal('valor_debito', 24, 2)->nullable();
@@ -503,7 +621,7 @@ class ReconciliationService
             $table->bigIncrements('id');
             $table->integer('item_id')->unsigned()->nullable();
             $table->boolean('matched')->default(false);
-            $table->bigInteger('matched_id')->unsigned();
+            $table->bigInteger('matched_id')->unsigned()->nullable();
             $table->integer('tx_type_id')->unsigned()->nullable();
             $table->string('tx_type_name')->nullable();
             $table->dateTime('fecha_movimiento');

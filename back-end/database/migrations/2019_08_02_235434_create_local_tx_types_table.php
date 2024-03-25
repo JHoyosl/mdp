@@ -13,18 +13,14 @@ class CreateLocalTxTypesTable extends Migration
      */
     public function up()
     {
-        Schema::create('local_tx_types', function (Blueprint $table) {
+        Schema::create('local_tx_types_[companyId]', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('description');
             $table->string('tx');
-            $table->integer('company_id')->unsigned()->nullable();
             $table->string('reference');
             $table->string('sign');
             $table->softDeletes();
             $table->timestamps();
-
-            $table->foreign('company_id')->references('id')->on('companies');
-
         });
     }
 
