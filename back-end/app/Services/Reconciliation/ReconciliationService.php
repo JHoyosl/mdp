@@ -28,7 +28,8 @@ class ReconciliationService
         $items = Account::join($ItemstableName, 'accounts.id', $ItemstableName . '.id')
             ->join('banks', 'banks.id', 'accounts.bank_id')
             ->where('company_id', $companyId)
-            ->where('status', 'OPEN')
+            ->orderBy('start_date', 'DESC')
+            ->orderBy('account_id', 'DESC')
             ->get();
         return $items;
     }
@@ -54,8 +55,6 @@ class ReconciliationService
         $this->insertExternalIni($externalInfo, $user, $companyId, $startDate, $endDate, $process);
 
         $balance =  $this->getProcessBalance($process, $companyId);
-
-
 
         $this->setReconciliationBalance($balance, $companyId);
 

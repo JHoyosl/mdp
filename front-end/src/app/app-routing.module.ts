@@ -30,7 +30,7 @@ export const Approutes: Routes = [
       { path: 'accounts', loadChildren: './accounts/accounts.module#AccountsModule' },
       { path: 'companies', loadChildren: './companies/companies.module#CompaniesModule' },
       { path: 'users', loadChildren: './users/users.module#UsersModule' },
-      { path: 'conciliar', loadChildren: './conciliar/conciliar.module#ConciliarModule' },
+      { path: 'conciliar', loadChildren: './reconciliation/conciliar.module#ConciliarModule' },
       { path: 'cuadres', loadChildren: './cuadres/cuadres.module#CuadresModule' },
       { path: 'cartera', loadChildren: './cartera/cartera.module#CarteraModule' },
       { path: 'security', loadChildren: './security/security.module#SecurityModule' },

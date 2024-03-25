@@ -12,10 +12,11 @@ import { AccountBalanceTableComponent } from './conciliar-process/components/acc
 import { DirectivesModule } from '../shared/directives/directives.module';
 import { ComponentsModule } from '../shared/components/components.module';
 import { AccountResumeComponent } from './components/account-resume/account-resume.component';
-import { MatPaginatorModule, MatTableModule, MatTabsModule } from '@angular/material';
+import { MatPaginatorModule, MatStepperModule, MatTableModule, MatTabsModule } from '@angular/material';
 import { ConciliarComponent } from './conciliar.component';
 import { InitializeAccountComponent } from './initialize-account/initialize-account.component';
 import { ReconciliationHisotryComponent } from './reconciliation-hisotry/reconciliation-hisotry.component';
+import { ReconciliationProcessComponent } from './reconciliation-process/reconciliation-process.component';
 
 
 
@@ -29,6 +30,7 @@ import { ReconciliationHisotryComponent } from './reconciliation-hisotry/reconci
     ConciliarComponent,
     InitializeAccountComponent,
     ReconciliationHisotryComponent,
+    ReconciliationProcessComponent,
   ],
   imports: [
     CommonModule,
@@ -40,7 +42,8 @@ import { ReconciliationHisotryComponent } from './reconciliation-hisotry/reconci
     ComponentsModule,
     MatTabsModule,
     MatTableModule,
-    MatPaginatorModule
+    MatPaginatorModule,
+    MatStepperModule
 
   ]
 })

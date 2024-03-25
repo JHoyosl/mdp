@@ -1,0 +1,144 @@
+<table mat-table
+       [dataSource]="dataSource" multiTemplateDataRows
+       class="mat-elevation-z8">
+   <!-- Position Column -->
+   <ng-container matColumnDef="process">
+    <th mat-header-cell *matHeaderCellDef> Proceso </th>
+    <td mat-cell *matCellDef="let element"> 
+      {{element[0].process}}
+    </td>
+  </ng-container>
+
+  <!-- Position Column -->
+  <ng-container matColumnDef="dates">
+    <th mat-header-cell *matHeaderCellDef> Fechas </th>
+    <td mat-cell *matCellDef="let element"> 
+      {{element[0].startDate}}
+      <br/> 
+      {{element[0].endDate}} 
+    </td>
+  </ng-container>
+
+  <!-- Name Column -->
+  <ng-container matColumnDef="type">
+    <th mat-header-cell *matHeaderCellDef> Tipo </th>
+    <td mat-cell *matCellDef="let element"> 
+      <span>{{element[0].type}}</span>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="step">
+    <th mat-header-cell *matHeaderCellDef> Paso </th>
+    <td mat-cell *matCellDef="let element"> 
+      <span>{{element[0].step}}</span>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="status">
+    <th mat-header-cell *matHeaderCellDef> Estado </th>
+    <td mat-cell *matCellDef="let element"> 
+      <span>{{element[0].status}}</span>
+    </td>
+  </ng-container>
+  
+  <!-- Symbol Column -->
+  <ng-container matColumnDef="Actions">
+    <th mat-header-cell *matHeaderCellDef> Acciones </th>
+    <td mat-cell *matCellDef="let element"> 
+      <app-icon-button 
+        icon="restore"
+        (click)="goToProcess($event, element[0])"
+      ></app-icon-button>
+
+      <app-icon-button 
+        icon="zoom_in"
+      ></app-icon-button>        
+    </td>
+  </ng-container>
+
+  <!-- Expanded Content Column - The detail row is made up of this one column that spans across all columns -->
+  <ng-container matColumnDef="expandedDetail" >
+    <td mat-cell *matCellDef="let element" [attr.colspan]="columnsToDisplay.length" style="padding: 0;">
+      <div class="example-element-detail"
+           [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
+           <table mat-table
+              [dataSource]="element" multiTemplateDataRows
+              class="mat-elevation-z8">
+              {{element | json }}
+              <ng-container matColumnDef="dates">
+                <th mat-header-cell *matHeaderCellDef> Fechas </th>
+                <td mat-cell *matCellDef="let element"> 
+                  {{element.startDate}}
+                  <br/> 
+                  {{element.endDate}} 
+                </td>
+              </ng-container>
+
+              <!-- Position Column -->
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef> Banco </th>
+                <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+              </ng-container>
+
+              <!-- Name Column -->
+              <ng-container matColumnDef="bankAccount">
+                <th mat-header-cell *matHeaderCellDef> No. Cuenta </th>
+                <td mat-cell *matCellDef="let element"> 
+                  <span>{{element.localAccount}}</span>
+                  <br/>
+                  <span>{{element.bankAccount}}</span>
+                </td>
+              </ng-container>
+
+              <!-- EXTERNAL INFO -->
+              <!-- Weight Column -->
+              <ng-container matColumnDef="externalDebit">
+                <th mat-header-cell *matHeaderCellDef> Debito Externo </th>
+                <td class="right-align" mat-cell *matCellDef="let element"> {{element.externalDebit | currency }} </td>
+              </ng-container>
+
+              <ng-container matColumnDef="externalCredit">
+                <th mat-header-cell *matHeaderCellDef> Credito Externo </th>
+                <td class="right-align" mat-cell *matCellDef="let element"> {{element.externalCredit | currency }} </td>
+              </ng-container>
+
+              <!-- LOCAL INFO -->
+              <!-- Weight Column -->
+              
+              <!-- Symbol Column -->
+              <ng-container matColumnDef="localCredit">
+                <th mat-header-cell *matHeaderCellDef> Credito Cont </th>
+                <td class="right-align" mat-cell *matCellDef="let element"> {{element.localCredit | currency }} </td>
+              </ng-container>
+
+              <!-- Symbol Column -->
+              <ng-container matColumnDef="localDebit">
+                <th mat-header-cell *matHeaderCellDef> Debito Cont </th>
+                <td class="right-align" mat-cell *matCellDef="let element"> {{ element.localDebit | currency }} </td>
+              </ng-container>
+
+              <!-- Position Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef> Estado </th>
+                <td mat-cell *matCellDef="let element"> {{ element.status}} </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="subColumnsToDisplay"></tr>
+              <tr mat-row *matRowDef="let row; columns: subColumnsToDisplay;"></tr>
+           </table>
+      </div>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+  <tr mat-row *matRowDef="let element; columns: columnsToDisplay;"
+      class="example-element-row"
+      [class.example-expanded-row]="expandedElement === element"
+      (click)="expandedElement = expandedElement === element ? null : element">
+  </tr>
+  <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row" style="padding: 0;"></tr>
+</table>
+
+
+<!-- Copyright 2019 Google LLC. All Rights Reserved.
+    Use of this source code is governed by an MIT-style license that
+    can be found in the LICENSE file at http://angular.io/license -->
