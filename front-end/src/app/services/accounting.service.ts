@@ -56,4 +56,5 @@ export class AccountingService {
     return this.httpClient.get<GenericResponse>(`${this.baseUrl}/getAccountingItems`,{ params: params })
       .pipe(map((response) => response.data));
   }
+
 }

@@ -165,6 +165,14 @@ class ReconciliationController extends ApiController
     {
     }
 
+    public function getAccountProcessById(String $process)
+    {
+        $accounts = $this->reconciliationService
+            ->getAccountProcessById($this->companyId, $process);
+
+        return $this->showAll($accounts);
+    }
+
     public function getAccountProcess()
     {
         $data = $this->reconciliationService->getAccountProcess($this->companyId);
@@ -193,6 +201,11 @@ class ReconciliationController extends ApiController
         }
     }
 
+    public function getReconciliationAccount()
+    {
+        $accounts = $this->reconciliationService->getReconciliationAccount($this->companyId);
+        return $this->showAll($accounts);
+    }
 
     // TODO: OLD REMOVE
 

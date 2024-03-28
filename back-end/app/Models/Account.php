@@ -12,12 +12,12 @@ class Account extends Model
 {
 
     use SoftDeletes;
-    
+
     const CHECKING_ACCOUNT = 'checking';
     const SAVING_ACCOUNT = 'saving';
 
     protected $dates = ['deleted_at'];
-     /**
+    /**
      * The attributes that are mass assignable.
      *
      * @var array
@@ -26,27 +26,28 @@ class Account extends Model
         'bank_id', // banco
         'acc_type',  //tipo de cuenta? ahorro,..?
         'bank_account', //cuenta del banco
-        'local_account',//cuenta de la empresa?
-        'company_id',//empresa de la cuenta
-        'map_id'//
-        
+        'local_account', //cuenta de la empresa?
+        'company_id', //empresa de la cuenta
+        'map_id' //
+
     ];
 
 
-    function map(){
+    function map()
+    {
 
         return $this->hasOne(MapFile::class, 'id');
-
     }
 
-    function banks(){
+    function banks()
+    {
 
-    	return $this->belongsTo(Bank::class, 'bank_id');
+        return $this->belongsTo(Bank::class, 'bank_id');
     }
 
-    function companies(){
+    function companies()
+    {
 
-    	return $this->belongsTo(Company::class, 'company_id');
+        return $this->belongsTo(Company::class, 'company_id');
     }
-
 }

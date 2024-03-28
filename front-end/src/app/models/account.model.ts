@@ -1,3 +1,4 @@
+import { Account } from '../Interfaces/account.interface';
 import { BankModel } from './bank.model';
 import { CompanyModel } from './company.model';
 import { ConciliarModel } from './conciliar.model';
@@ -45,5 +46,21 @@ export class AccountModel {
         this.companies = Object['companies'] == null ? new CompanyModel() : Object['companies'];
         this.map_id = Object['map_id'];
 
+    }
+
+    static accountToInterface(obj: any): Account {
+        return {
+            id: obj.id,
+            bankId: obj.bank_id,
+            companyId: obj.company_id,
+            accType: obj.acc_type,
+            bankAccount: obj.bank_account,
+            localAccount: obj.local_account,
+            mapId: obj.map_id,
+            deletedAt: obj.deleted_at,
+            createdAt: obj.created_at,
+            updatedAt: obj.updated_at,
+            banks: obj.banks,
+        }
     }
 }

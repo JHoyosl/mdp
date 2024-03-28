@@ -2,6 +2,9 @@
 <mat-horizontal-stepper [linear]="isLinear" #stepper>
   <mat-step [stepControl]="firstFormGroup">
     step 1
+    <app-reconciliation-begin-process
+      [process]="process"
+    ></app-reconciliation-begin-process>
   </mat-step>
   <mat-step [stepControl]="secondFormGroup">
     step 2

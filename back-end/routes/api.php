@@ -61,11 +61,14 @@ Route::resource('reconciliation', 'Reconciliation\ReconciliationController')->on
 		'getCuentasToConciliar',
 		'uploadConciliarContable',
 		'iniReconciliation',
-		'getAccountProcess'
+		'getAccountProcess',
+		'getReconciliationAccount'
 	]
 );
 
 Route::get('reconciliation/getAccountProcess', 'Reconciliation\ReconciliationController@getAccountProcess');
+Route::get('reconciliation/getAccountProcessById/{process}', 'Reconciliation\ReconciliationController@getAccountProcessById');
+Route::get('reconciliation/getReconciliationAccount', 'Reconciliation\ReconciliationController@getReconciliationAccount');
 
 Route::post('reconciliation/iniReconciliation', 'Reconciliation\ReconciliationController@iniReconciliation');
 

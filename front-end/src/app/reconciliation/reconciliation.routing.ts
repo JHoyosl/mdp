@@ -2,14 +2,16 @@ import { Routes } from '@angular/router';
 import { ConciliarMapComponent } from './conciliar-map/conciliar-map.component';
 import { ConciliarProcessComponent } from './conciliar-process/conciliar-process.component';
 import { TxTypesComponent } from './tx-types/tx-types.component';
-import { ConciliarComponent } from './conciliar.component';
+
 import { ReconciliationProcessComponent } from './reconciliation-process/reconciliation-process.component';
+import { ReconciliationComponent } from './reconciliation.component';
 
 
-export const ConciliarRoutes: Routes = [
+
+export const reconciliationRoutes: Routes = [
     {
       path: '',
-          component: ConciliarComponent,
+          component: ReconciliationComponent,
           data: {
             title: 'Conciliación',
             urls: [
@@ -17,6 +19,17 @@ export const ConciliarRoutes: Routes = [
               { title: 'Conciliación de Cuentas' }
             ]
           }
+    },
+    {
+      path: 'process/:id',
+      component: ReconciliationProcessComponent,
+      data: {
+        title: 'Processo Conciliar',
+        urls: [
+          { title: 'Conciliación', url: '' },
+          { title: 'Processo Conciliar' }
+        ]
+      }
     },
     {
       path: 'process',
@@ -29,6 +42,7 @@ export const ConciliarRoutes: Routes = [
         ]
       }
     },
+    
     {
       path: 'conciliarMap',
       component: ConciliarMapComponent,

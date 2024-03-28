@@ -1,7 +1,7 @@
 import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ThirdPartyAccount, ThirdPartyAccountInfoUpload } from 'src/app/Interfaces/thirdParties.interface';
-import * as dayjs from 'dayjs'
+import * as dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { ThirdPartiesService } from 'src/app/services/third-parties.service';
 import { ToastrService } from 'ngx-toastr';

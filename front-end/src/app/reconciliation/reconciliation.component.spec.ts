@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ConciliarComponent } from './conciliar.component';
+import { ConciliarComponent } from './reconciliation.component';
 
 describe('ConciliarComponent', () => {
   let component: ConciliarComponent;

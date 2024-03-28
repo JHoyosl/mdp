@@ -1,4 +1,4 @@
-import { ReconciliationItem } from "../Interfaces/reconciliation.interface";
+import { ReconciliationItem, ReonciliationBalance } from "../Interfaces/reconciliation.interface";
 
 export class ReconciliationModel{
 
@@ -35,4 +35,28 @@ export class ReconciliationModel{
         portal: object.portal,
     }
   }
+
+  static ReonciliationBalanceToInterface(object: any ): ReonciliationBalance {
+    return {
+      id: object.id,
+      accountId: object.account_id,
+      process: object.id,
+      startDate: object.start_date,
+      endDate: object.end_date,
+      externalDebit: object.external_debit,
+      externalCredit: object.external_credit,
+      localDebit: object.local_debit,
+      localCredit: object.local_credit,
+      externalBalance: object.external_balance,
+      localBalance: object.local_balance,
+      difference: object.difference,
+      status: object.status,
+      step: object.step,
+      type: object.type,
+      deletedAt: object.deleted_at,
+      createdAt: object.created_at,
+      updatedAt: object.updated_at,
+      account: object.account,
+    }
+  }  
 }

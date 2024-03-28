@@ -19,6 +19,22 @@ use App\Models\ReconciliationExternalValues;
 class ReconciliationService
 {
 
+
+    public function getAccountProcessById($companyId, $process)
+    {
+        $ItemstableName = $this->getReconciliationItemTableName($companyId);
+
+
+        $items = Account::join($ItemstableName, 'accounts.id', $ItemstableName . '.id')
+            ->join('banks', 'banks.id', 'accounts.bank_id')
+            ->where('company_id', $companyId)
+            ->where('process', $process)
+            ->orderBy('start_date', 'DESC')
+            ->orderBy('account_id', 'DESC')
+            ->get();
+        return $items;
+    }
+
     public function getAccountProcess($companyId)
     {
         $ItemstableName = $this->getReconciliationItemTableName($companyId);
@@ -32,6 +48,16 @@ class ReconciliationService
             ->orderBy('account_id', 'DESC')
             ->get();
         return $items;
+    }
+
+    public function getReconciliationAccount($companyId)
+    {
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
+        $accounts = Account::where('company_id', $companyId)
+            ->leftJoin($itemsTableName, 'accounts.id', $itemsTableName . '.account_id')
+            ->get();
+
+        return $accounts;
     }
 
     public function IniReconciliation($date, $file, $user, $companyId)
@@ -121,11 +147,9 @@ class ReconciliationService
                 . $localValuesTableName . ".local_account"))
             ->join($externalValuesTableName, $localValuesTableName . '.local_account', '=', $externalValuesTableName . '.local_account')
             ->join('accounts', $localValuesTableName . '.local_account', '=', 'accounts.local_account')
-            ->join('banks', 'accounts.bank_id', '=', 'banks.id')
             ->whereIn($localValuesTableName . '.item_id', $ids)
             ->where('accounts.company_id', '=', $companyId)
-            ->groupBy('accountId', 'banks.name', 'accounts.local_account')
-            ->orderBy('banks.name', 'DESC')
+            ->groupBy('accountId', 'accounts.local_account')
             ->orderBy('local_account', 'ASC')
             ->get();
 
