@@ -1,5 +1,5 @@
 
-<form class="form-horizontal p-t-20" [formGroup]="balanceForm" (submit)="onSubmit(form, $event)">
+<form class="form-horizontal p-t-20" [formGroup]="balanceForm" (submit)="onSubmit($event)" style="overflow: auto;">
   <table mat-table
     [dataSource]="dataSource" multiTemplateDataRows
     class="mat-elevation-z8">
@@ -32,23 +32,26 @@
     <!-- external debit -->
     <ng-container matColumnDef="externalDebit">
       <th mat-header-cell *matHeaderCellDef> Debito Externo </th>
-      <td class="right-align" mat-cell *matCellDef="let element"> {{element.externalDebit | currency }} </td>
+      <td class="right-align currency" mat-cell *matCellDef="let element"> {{element.externalDebit | currency }} </td>
     </ng-container>
     <!-- external credit -->
     <ng-container matColumnDef="externalCredit">
       <th mat-header-cell *matHeaderCellDef> Credito Externo </th>
-      <td class="right-align" mat-cell *matCellDef="let element"> {{element.externalCredit | currency }} </td>
+      <td class="right-align currency" mat-cell *matCellDef="let element"> {{element.externalCredit | currency }} </td>
     </ng-container>
     <!-- external balance -->
     <ng-container matColumnDef="externalBalance">
       <th mat-header-cell *matHeaderCellDef> Saldo Externo </th>
       
-        <td class="right-align" mat-cell *matCellDef="let element">
+        <td class="right-align balance-cell" mat-cell *matCellDef="let element">
           <div formGroupName="{{element.localAccount}}">
             <mat-form-field 
-              class="full-width-input">
+              class="balance-input">
               <mat-label>Saldo</mat-label>
               <input matInput 
+                type="number"
+                (change)="balanceChange('external', element)"
+                formControlName="externalBalance"
                 value=""
               >
             </mat-form-field>
@@ -62,22 +65,45 @@
     <!-- local credit -->
     <ng-container matColumnDef="localCredit">
       <th mat-header-cell *matHeaderCellDef> Credito Cont </th>
-      <td class="right-align" mat-cell *matCellDef="let element"> {{element.localCredit | currency }} </td>
+      <td class="right-align currency" mat-cell *matCellDef="let element"> {{element.localCredit | currency }} </td>
     </ng-container>
 
     <!-- local debit -->
     <ng-container matColumnDef="localDebit">
       <th mat-header-cell *matHeaderCellDef> Debito Cont </th>
-      <td class="right-align" mat-cell *matCellDef="let element"> {{ element.localDebit | currency }} </td>
+      <td class="right-align currency" mat-cell *matCellDef="let element"> {{ element.localDebit | currency }} </td>
     </ng-container>
 
     <!-- local balance -->
     <ng-container matColumnDef="localBalance">
       <th mat-header-cell *matHeaderCellDef> Saldo Contable </th>
-      <td class="right-align" mat-cell *matCellDef="let element"> {{ element.localBalance | currency }} </td>
+      <td class="right-align balance-cell" mat-cell *matCellDef="let element">
+        <div formGroupName="{{element.localAccount}}">
+          <mat-form-field 
+            class="balance-input">
+            <mat-label>Saldo</mat-label>
+            <input matInput 
+              type="number"
+              (change)="balanceChange('local', element)"
+              formControlName="localBalance"
+              value=""
+            >
+          </mat-form-field>
+        </div> 
+      </td>
+    </ng-container>
+
+    <!-- local/external difference -->
+    <ng-container matColumnDef="difference">
+      <th mat-header-cell *matHeaderCellDef> Diferencia </th>
+      <td class="right-align currency" mat-cell *matCellDef="let element"> {{ element.difference | currency }} </td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
     <tr mat-row *matRowDef="let row; columns: columnsToDisplay;"></tr>
   </table>
+  <div class="d-flex justify-content-start m-4">
+    <button type="submit" mat-raised-button color="primary" class="mr-4">Guardar</button>
+    <button type="button" mat-stroked-button color="primary">Cancelar</button>
+  </div>
 </form>

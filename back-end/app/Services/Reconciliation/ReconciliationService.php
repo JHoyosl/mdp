@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\ReconciliationLocalValues;
 use Illuminate\Database\Schema\Blueprint;
 use App\Models\ReconciliationExternalValues;
+use Maatwebsite\Excel\Sheet;
 
 class ReconciliationService
 {
@@ -97,15 +98,16 @@ class ReconciliationService
     {
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
 
-        foreach ($balance as $key => $value) {
+        foreach ($balance as $value) {
             $item = (new ReconciliationItem($itemsTableName))
-                ->where('id', $value->accountId)
+                ->where('id', $value['item_id'])
                 ->first();
 
-            $item->external_credit = $value->externalCredit;
-            $item->external_debit = $value->externalDebit;
-            $item->local_credit = $value->localCredit;
-            $item->local_debit = $value->localDebit;
+            $item->external_credit = $value['externalCredit'];
+            $item->external_debit = $value['externalDebit'];
+            $item->local_credit = $value['localCredit'];
+            $item->local_debit = $value['localDebit'];
+            $item->difference = $this->balanceDifference($item);
             $item->save();
         }
     }
@@ -120,39 +122,47 @@ class ReconciliationService
             ->toArray();
 
         $externalValuesTableName = $this->getReconciliationExternalValuesTableName($companyId);
-        // TODO: VALIDATE AND REMOVE
-        // $externalBalance = DB::table($externalValuesTableName)
-        //     ->select(DB::raw("accounts.id, SUM(valor_credito) as credit, SUM(valor_debito) as debit, numero_cuenta,
-        //             banks.name, accounts.local_account, banks.name"))
-        //     ->join('accounts', $externalValuesTableName . '.numero_cuenta', '=', 'accounts.bank_account')
-        //     ->join('banks', 'accounts.bank_id', '=', 'banks.id')
-        //     ->whereIn('item_id', $ids)
-        //     ->where('accounts.company_id', '=', $companyId)
-        //     ->groupBy('id', 'numero_cuenta', 'banks.name', 'accounts.local_account', 'bank_account')
-        //     ->orderBy('banks.name', 'DESC')
-        //     ->orderBy('numero_cuenta', 'ASC')
-        //     ->get();
-
-        // return $externalBalance;
-
-        $localValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
-
-        $balance = DB::table($localValuesTableName)
-            ->select(DB::raw("
-                accounts.id AS accountId, 
-                SUM(" . $localValuesTableName . ".valor_credito) as localCredit, 
-                SUM(" . $localValuesTableName . ".valor_debito) as localDebit,
-                SUM(" . $externalValuesTableName . ".valor_credito) as externalCredit, 
-                SUM(" . $externalValuesTableName . ".valor_debito) as externalDebit,"
-                . $localValuesTableName . ".local_account"))
-            ->join($externalValuesTableName, $localValuesTableName . '.local_account', '=', $externalValuesTableName . '.local_account')
-            ->join('accounts', $localValuesTableName . '.local_account', '=', 'accounts.local_account')
-            ->whereIn($localValuesTableName . '.item_id', $ids)
-            ->where('accounts.company_id', '=', $companyId)
-            ->groupBy('accountId', 'accounts.local_account')
+        $eBalance = DB::table($externalValuesTableName)
+            ->select(DB::raw(
+                "
+                {$externalValuesTableName}.item_id, 
+                {$externalValuesTableName}.local_account, 
+                SUM({$externalValuesTableName}.valor_credito) as externalCredit, 
+                SUM({$externalValuesTableName}.valor_debito) as externalDebit"
+            ))
+            ->whereIn("{$externalValuesTableName}.item_id", $ids)
+            ->groupBy("{$externalValuesTableName}.local_account", "{$externalValuesTableName}.item_id")
             ->orderBy('local_account', 'ASC')
             ->get();
 
+        $localValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
+        $lBalance = DB::table($localValuesTableName)
+            ->select(DB::raw(
+                "
+                {$localValuesTableName}.item_id, 
+                {$localValuesTableName}.local_account, 
+                SUM({$localValuesTableName}.valor_credito) as localCredit, 
+                SUM({$localValuesTableName}.valor_debito) as localDebit"
+            ))
+            ->whereIn("{$localValuesTableName}.item_id", $ids)
+            ->groupBy("{$localValuesTableName}.local_account", "{$localValuesTableName}.item_id")
+            ->orderBy('local_account', 'ASC')
+            ->get();
+
+        $balance = [];
+        foreach ($eBalance as $external) {
+            foreach ($lBalance as $local) {
+                if ($external->local_account == $local->local_account) {
+                    $balance[] = [
+                        'item_id' => $external->item_id,
+                        'localCredit' => $local->localCredit,
+                        'localDebit' => $local->localDebit,
+                        'externalCredit' => $external->externalCredit,
+                        'externalDebit' => $external->externalDebit,
+                    ];
+                }
+            }
+        }
 
         return $balance;
     }
@@ -420,7 +430,8 @@ class ReconciliationService
         $spreadsheet = $reader->load($filePath);
         $spreadsheet->setActiveSheetIndex($sheet);
         $worksheet = $spreadsheet->getActiveSheet();
-        $startRow = 3;
+        // TODO: Fix logic or fix file, start in one column
+        $startRow = $sheet == 0 ? 3 : 2;
 
         $data = [];
 
@@ -443,6 +454,7 @@ class ReconciliationService
         return $data;
     }
 
+    // TODO:REMOVER, VALIDAR ANTES
     public function getIniExternalArray($user, $filePath)
     {
 
@@ -526,6 +538,17 @@ class ReconciliationService
     }
 
     // HELPERS
+
+    public function balanceDifference(ReconciliationItem $item)
+    {
+        return $item->external_balance +
+            $item->local_debit -
+            $item->external_credit +
+            $item->external_debit -
+            $item->local_debit -
+            $item->local_balance;
+    }
+
     public function listTableForeignKeys($table)
     {
         $conn = Schema::getConnection()->getDoctrineSchemaManager();
