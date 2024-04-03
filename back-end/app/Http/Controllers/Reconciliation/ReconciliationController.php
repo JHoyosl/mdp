@@ -55,20 +55,22 @@ class ReconciliationController extends ApiController
         UploadConciliationExternalService $uploadConciliationExternalService,
         ReconciliationService $reconciliationService
     ) {
+        $this->reconciliationService = $reconciliationService;
+        $this->uploadConciliarContableService = $uploadConciliarContableService;
+        $this->uploadConciliationExternalService = $uploadConciliationExternalService;
+
         $this->middleware('auth:api');
         $this->middleware(function ($request, $next) {
 
             $user = Auth::user();
-            // $this->init($user);
             $this->user = $user;
             $this->companyId = $this->user->current_company;
 
+            if ($this->companyId) {
+                $this->reconciliationService->createTablesIfExists($this->companyId);
+            }
             return $next($request);
         });
-
-        $this->reconciliationService = $reconciliationService;
-        $this->uploadConciliarContableService = $uploadConciliarContableService;
-        $this->uploadConciliationExternalService = $uploadConciliationExternalService;
     }
 
     function init($user)
@@ -165,9 +167,15 @@ class ReconciliationController extends ApiController
     {
     }
 
-    public function getAccountProcessById(String $process)
+    public function getAccountResume()
     {
 
+        $accounts = $this->reconciliationService->getAccountResume($this->companyId);
+        return $this->showAll($accounts);
+    }
+
+    public function getAccountProcessById(String $process)
+    {
         $accounts = $this->reconciliationService
             ->getAccountProcessById($this->companyId, $process);
 
@@ -194,20 +202,36 @@ class ReconciliationController extends ApiController
                 $this->user,
                 $this->companyId
             );
-            return $initReconciliation; //remove
             return $this->showAll($initReconciliation);
         } catch (Exception $e) {
-            throw $e;
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
     }
 
-    public function getReconciliationAccount()
+    public function getReconciliationAccounts()
     {
-        $accounts = $this->reconciliationService->getReconciliationAccount($this->companyId);
+        $accounts = $this->reconciliationService->getReconciliationAccounts($this->companyId);
         return $this->showAll($accounts);
     }
 
+    public function setBalance(Request $request)
+    {
+        $validated = $request->validate([
+            'balance' => 'required',
+            'process' => 'required'
+        ]);
+
+        $balanceInfo = json_decode($request->balance, true);
+
+        if (!$balanceInfo) {
+            return $this->errorResponse('Invalid Json', 400);
+        }
+        try {
+            return $this->reconciliationService->setBalance($this->companyId, $balanceInfo, $request->process);
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage(), $e->getCode());
+        }
+    }
     // TODO: OLD REMOVE
 
     public function createTablesInit()

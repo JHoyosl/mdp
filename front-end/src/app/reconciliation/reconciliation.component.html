@@ -6,10 +6,28 @@
       <mat-tab-group  [(selectedIndex)]="selectedIndex">
         <mat-tab label="Cuentas" >
           <ng-template matTabContent >
-            <mat-card class="example-card">
+            <mat-card>
               <mat-card-header>
-                <mat-card-title>Iniciar Conciliación</mat-card-title>
-                <mat-card-subtitle>Cargar Archivo</mat-card-subtitle>
+                <mat-card-title>Resumen de Cuentas</mat-card-title>
+                <mat-card-subtitle>Ultima conciliación</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                
+                <app-account-resume></app-account-resume>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-button>LIKE</button>
+                <button mat-button>SHARE</button>
+              </mat-card-actions>
+            </mat-card>      
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Historico">
+          <ng-template matTabContent >
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Historico de conciliaciones</mat-card-title>
+                <mat-card-subtitle>Procesos realizados</mat-card-subtitle>
               </mat-card-header>
               <mat-card-content>
                 <app-reconciliation-hisotry></app-reconciliation-hisotry>
@@ -20,8 +38,6 @@
               </mat-card-actions>
             </mat-card>      
           </ng-template>
-        </mat-tab>
-        <mat-tab label="Cargue" [disabled]="!selectedAccount">
         </mat-tab>
         <mat-tab label="Editar" disabled>  
           <ng-template matTabContent >

@@ -4,6 +4,7 @@ import { ReconciliationIniUpload, ReconciliationItem, ReonciliationBalance } fro
 import { ReconciliationService } from 'src/app/services/reconciliation.service';
 import * as dayjs from 'dayjs';
 import Swal from 'sweetalert2';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-reconciliation-begin-process',
@@ -27,7 +28,8 @@ export class BeginProcessComponent implements OnInit {
   
   constructor( 
       private reconciliaitionService: ReconciliationService, 
-      private fb: FormBuilder
+      private fb: FormBuilder,
+      private location: Location,
     ){
       this.uploadFile = this.fb.group({
         date: ['', [Validators.required]],
@@ -40,7 +42,7 @@ export class BeginProcessComponent implements OnInit {
   }
 
   getBalanceByProcess(): void {
-    this.reconciliaitionService.getProcessById('4P4BFej7a').subscribe(
+    this.reconciliaitionService.getProcessById('yH39y6Q8b').subscribe(
       (response) => {
         this.accountsResume = response;
       },
@@ -91,7 +93,11 @@ export class BeginProcessComponent implements OnInit {
     this.reconciliaitionService.uploadIni(data).subscribe(
       (response) => {
         Swal.close();
-        // this.accountsResume = response;
+        
+        this.accountsResume = response;
+        if(response.length > 0){
+          this.location.go(`/conciliar/process/${response[0].process}`);
+        }
       },
       (err) => {
         Swal.close();

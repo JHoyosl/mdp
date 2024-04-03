@@ -12,7 +12,7 @@ import { AccountBalanceTableComponent } from './conciliar-process/components/acc
 import { DirectivesModule } from '../shared/directives/directives.module';
 import { ComponentsModule } from '../shared/components/components.module';
 import { AccountResumeComponent } from './components/account-resume/account-resume.component';
-import { MatButtonModule, MatCardModule, MatDatepickerModule, MatFormFieldModule, MatIconModule, MatInputModule, MatNativeDateModule, MatPaginatorModule, MatStepperModule, MatTableModule, MatTabsModule } from '@angular/material';
+import { MatButtonModule, MatCardModule, MatCheckboxModule, MatDatepickerModule, MatFormFieldModule, MatIconModule, MatInputModule, MatNativeDateModule, MatPaginatorModule, MatStepperModule, MatTableModule, MatTabsModule } from '@angular/material';
 import { ReconciliationComponent } from './reconciliation.component';
 import { InitializeAccountComponent } from './initialize-account/initialize-account.component';
 import { ReconciliationHisotryComponent } from './reconciliation-hisotry/reconciliation-hisotry.component';
@@ -55,6 +55,7 @@ import { SetBalanceComponent } from './components/set-balance/set-balance.compon
     MatInputModule,
     MatIconModule,
     MatButtonModule,
+    MatCheckboxModule,
 
   ]
 })

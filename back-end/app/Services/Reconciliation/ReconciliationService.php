@@ -20,18 +20,107 @@ use Maatwebsite\Excel\Sheet;
 class ReconciliationService
 {
 
+    public function getAccountResume($companyId)
+    {
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
+        $itemsTable = new ReconciliationItem($itemsTableName);
+
+        if (is_Null($itemsTable->first())) {
+            return collect([]);
+        }
+        $accounts = Account::where('company_id', $companyId)
+            ->join('banks', 'accounts.bank_id', 'banks.id')
+            ->leftjoin($itemsTableName . ' AS items', 'accounts.id', 'items.account_id')
+            ->select(
+                'accounts.id AS accountId',
+                'accounts.bank_id',
+                'accounts.bank_account',
+                'accounts.local_account',
+                'banks.name',
+                'items.process',
+                'items.start_date',
+                'items.end_date',
+                'items.external_debit',
+                'items.external_credit',
+                'items.local_debit',
+                'items.local_credit',
+                'items.external_balance',
+                'items.local_balance',
+                'items.difference',
+                'items.type',
+            )
+            ->get();
+
+        return $accounts;
+    }
+
+    public function setBalance($companyId, $balanceInfo, $process)
+    {
+        $tableName = $this->getReconciliationItemTableName($companyId);
+        $itemsIds = [];
+        foreach ($balanceInfo as $value) {
+            $itemsIds[] = $value['id'];
+        }
+
+        $itemsTable = new ReconciliationItem($tableName);
+        $items = $itemsTable->where($tableName . '.process', $process)
+            ->whereIn('id', $itemsIds)
+            ->get();
+
+        $invalidItems = [];
+        foreach ($items as $item) {
+            foreach ($balanceInfo as $balance) {
+                if ($item->id == $balance['id']) {
+                    $item->local_balance = $balance['localBalance'];
+                    $item->external_balance = $balance['externalBalance'];
+                    $item->difference = $this->balanceDifference($item);
+                    if ($item->difference != 0) {
+                        $invalidItems[] = $item;
+                    }
+                }
+            }
+        }
+
+        if (count($invalidItems) > 0) {
+            $invalid = json_encode($invalidItems);
+            throw new Exception("Error en las diferencias {$invalid}", 400);
+        }
+        foreach ($items as $item) {
+            $item->save();
+        }
+
+        return $this->getAccountProcessById($companyId, $process);
+    }
 
     public function getAccountProcessById($companyId, $process)
     {
         $ItemstableName = $this->getReconciliationItemTableName($companyId);
 
-
         $items = Account::join($ItemstableName, 'accounts.id', $ItemstableName . '.id')
             ->join('banks', 'banks.id', 'accounts.bank_id')
-            ->where('company_id', $companyId)
             ->where('process', $process)
             ->orderBy('start_date', 'DESC')
             ->orderBy('account_id', 'DESC')
+            ->select(
+                $ItemstableName . '.id as id',
+                $ItemstableName . ".process",
+                $ItemstableName . ".start_date",
+                $ItemstableName . ".end_date",
+                $ItemstableName . ".external_debit",
+                $ItemstableName . ".external_credit",
+                $ItemstableName . ".local_debit",
+                $ItemstableName . ".local_credit",
+                $ItemstableName . ".external_balance",
+                $ItemstableName . ".local_balance",
+                $ItemstableName . ".difference",
+                "accounts.id as account_id",
+                "accounts.bank_id",
+                "accounts.local_account",
+                "accounts.bank_account",
+                "banks.name",
+                "banks.nit",
+                "banks.currency",
+            )
             ->get();
         return $items;
     }
@@ -51,7 +140,7 @@ class ReconciliationService
         return $items;
     }
 
-    public function getReconciliationAccount($companyId)
+    public function getReconciliationAccounts($companyId)
     {
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
         $accounts = Account::where('company_id', $companyId)
@@ -63,12 +152,11 @@ class ReconciliationService
 
     public function IniReconciliation($date, $file, $user, $companyId)
     {
-        //TODO: BEGIN-COMMIT TX
+        DB::beginTransaction();
+
         //TODO: TOMAR EL ULTIMO DIA DEL MES
         $endDate = Carbon::createFromFormat('Y-m-d', $date);
         $startDate = Carbon::createFromFormat('Y-m-d', $date)->subDay();
-
-        $this->createTablesIfExists($companyId);
 
         //ID to group reconciliation under ad ID
         $process = Str::random(9);
@@ -83,18 +171,14 @@ class ReconciliationService
 
         $balance =  $this->getProcessBalance($process, $companyId);
 
-        $this->setReconciliationBalance($balance, $companyId);
+        $this->setIniReconciliationBalance($balance, $companyId);
 
-        $itemsTableName = $this->getReconciliationItemTableName($companyId);
-        $reconciliattionItems = (new ReconciliationItem($itemsTableName))
-            ->where('process', $process)
-            ->with('account')
-            ->get();
+        DB::commit();
 
-        return $reconciliattionItems;
+        return $this->getAccountProcessById($companyId, $process);
     }
 
-    public function setReconciliationBalance($balance, $companyId)
+    public function setIniReconciliationBalance($balance, $companyId)
     {
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
 
@@ -430,8 +514,8 @@ class ReconciliationService
         $spreadsheet = $reader->load($filePath);
         $spreadsheet->setActiveSheetIndex($sheet);
         $worksheet = $spreadsheet->getActiveSheet();
-        // TODO: Fix logic or fix file, start in one column
-        $startRow = $sheet == 0 ? 3 : 2;
+
+        $startRow = 2;
 
         $data = [];
 
@@ -506,11 +590,21 @@ class ReconciliationService
         return [$externalBalance, $localBalance, $accountId, $companyId];
     }
 
-    public function localDifference(ReconciliationItem $itemsTable, $lastLocalBalance, $localBalance)
+    public function localDifference(ReconciliationItem $itemsTable)
     {
-        $calcValue = $lastLocalBalance + $itemsTable->debit_local - $itemsTable->credit_local;
-        $diference = $calcValue - $localBalance;
+        $diference = $itemsTable->external_balance +
+            $itemsTable->debit_local -
+            $itemsTable->external_credit +
+            $itemsTable->external_debit -
+            $itemsTable->local_debit -
+            $itemsTable->local_balance;
+
+
         return $diference;
+
+        // $calcValue = $lastLocalBalance + $itemsTable->debit_local - $itemsTable->credit_local;
+        // $diference = $calcValue - $localBalance;
+        // return $diference;
     }
 
     public function getLastAccountBalance($companyId, $accountId)
@@ -538,15 +632,20 @@ class ReconciliationService
     }
 
     // HELPERS
+    public function balanceSum(ReconciliationItem $item)
+    {
+        return $item->external_balance +
+            $item->external_debit -
+            $item->external_credit -
+            $item->local_credit +
+            $item->local_debit;
+    }
 
     public function balanceDifference(ReconciliationItem $item)
     {
-        return $item->external_balance +
-            $item->local_debit -
-            $item->external_credit +
-            $item->external_debit -
-            $item->local_debit -
-            $item->local_balance;
+        $sum = $this->balanceSum($item);
+        $difference = $sum - $item->local_balance;
+        return str_replace(',', '', number_format($difference, 2));
     }
 
     public function listTableForeignKeys($table)

@@ -1,7 +1,12 @@
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatTable, MatTableDataSource } from '@angular/material';
-import { ReconciliationItem } from 'src/app/Interfaces/reconciliation.interface';
+import { title } from 'process';
+
+import { ReconciliationBalanceUpload, ReconciliationItem } from 'src/app/Interfaces/reconciliation.interface';
+import { ReconciliationService } from 'src/app/services/reconciliation.service';
+import Swal from 'sweetalert2';
+import { ReconciliationHelper } from '../../helpers/reconciliation.helpers';
 
 @Component({
   selector: 'app-set-balance',
@@ -10,6 +15,7 @@ import { ReconciliationItem } from 'src/app/Interfaces/reconciliation.interface'
 })
 export class SetBalanceComponent implements OnInit {
 
+  @Output() updateBalance = new EventEmitter
   @Input() 
   set accountsResume(items: ReconciliationItem[]){
     this._reconciliationItems = items;
@@ -33,11 +39,12 @@ export class SetBalanceComponent implements OnInit {
     'localCredit',
     'localDebit',
     'localBalance',
+    'sum',
     'difference',
   ];
 
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private reconciliationService: ReconciliationService) {
     
    }
 
@@ -48,17 +55,17 @@ export class SetBalanceComponent implements OnInit {
   setForm(items: ReconciliationItem[]){
     
     items.forEach(element => {
-      element.difference = this.balanceDifference(element);
+      element.difference = ReconciliationHelper.balanceDifference(element);
       this.balanceForm.addControl(element.localAccount, this.fb.group({
-        localBalance: ['', Validators.required],
-        externalBalance: ['', Validators.required], 
+        localBalance: [element.localBalance , Validators.required],
+        externalBalance: [element.externalBalance, Validators.required], 
       }));
-    });
-
-    console.log(this.balanceForm);
-    
+    });    
   }
 
+  getBalanceSum(item: ReconciliationItem): number {
+    return ReconciliationHelper.getBalanceSum(item);
+  }
   balanceChange( type: string, item: ReconciliationItem): void {
     
     if(type === 'external'){
@@ -67,27 +74,45 @@ export class SetBalanceComponent implements OnInit {
     if( type === 'local'){
       item.localBalance = this.balanceForm.get(item.localAccount).value.localBalance;
     }
-    item.difference = this.balanceDifference(item);
+    item.difference = ReconciliationHelper.balanceDifference(item);
 
   }
   
-  balanceDifference(item: ReconciliationItem): number {
-
-    const difference = Number(item.externalBalance) + 
-      Number(item.localDebit) - 
-      Number(item.externalCredit) + 
-      Number(item.externalDebit) - 
-      Number(item.localDebit) - 
-      Number(item.localBalance);
-
-    console.log(difference);
-    return difference;
-
-  }
-
   onSubmit($event: Event): void {
     $event.stopPropagation;
-    console.log(this.balanceForm);
+    
+    const invalidItems = this._reconciliationItems.reduce<ReconciliationItem[]>((acc, curr) => 
+      ReconciliationHelper.balanceDifference(curr) !== 0 ? [...acc, curr ] : acc, 
+      []);
+    console.log(invalidItems);
+    if(invalidItems.length > 0){
+      Swal.fire({title: 'Error',text: 'Las diferencias deben ser cero (0)'});
+      return;
+    }
+    
+    const process = this._reconciliationItems[0].process;
+    
+    const data = this._reconciliationItems.map<ReconciliationBalanceUpload>( (item) => {
+      return {
+        id: item.id,
+        localAccount: item.localAccount,
+        localBalance: item.localBalance,
+        externalBalance: item.externalBalance,
+      };
+    })
+    console.log(data);
+    this.reconciliationService.uploadBalance(process, data).subscribe(
+      (response) => {
+        
+        this._reconciliationItems = response;
+        this.dataSource.data = response;
+        this.setForm(response);
+      },
+      (err) => {
+        console.error(err);
+      }
+    );
   }
+
 }
 

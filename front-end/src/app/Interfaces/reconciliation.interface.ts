@@ -67,3 +67,33 @@ export interface ReonciliationBalance {
 export interface ReconciliationIniUploadResponse extends GenericResponse {
     data: ReonciliationBalance[]
 }
+
+export interface ReconciliationBalanceUpload {
+    localAccount: string;
+    localBalance: number;
+    externalBalance: number;
+}
+
+export interface ReconciliationResume {
+    accountId: number
+    bankId: number
+    bankAccount: string
+    localAccount: string
+    name: string
+    process: string
+    startDate: string
+    endDate: string
+    externalDebit: string
+    externalCredit: string
+    localDebit: string
+    localCredit: string
+    externalBalance: string
+    localBalance: string
+    difference: string
+    type: string
+  }
+
+export interface ReconciliationResumeResponse extends GenericResponse {
+    data: ReconciliationResume[];
+}
+  

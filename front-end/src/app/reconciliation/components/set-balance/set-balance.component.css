@@ -81,3 +81,7 @@ td.mat-cell {
   font-size: 11px !important;
   text-align: center;
 }
+
+.mat-input-element{
+  text-align: right ;
+}

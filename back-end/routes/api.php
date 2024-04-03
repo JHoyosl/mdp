@@ -49,7 +49,7 @@ Route::resource('accounts', 'Account\AccountController', ['except' => 'create', 
 Route::resource('mapFiles', 'MapFile\MapFileController', ['except' => 'create', 'edit']);
 Route::resource('usersCompanies', 'User\UserCompanyController');
 
-//CONCILIAR ROUTES
+//RECONCILIATION ROUTES
 Route::resource('reconciliation', 'Reconciliation\ReconciliationController')->only(
 	[
 		'index',
@@ -62,15 +62,18 @@ Route::resource('reconciliation', 'Reconciliation\ReconciliationController')->on
 		'uploadConciliarContable',
 		'iniReconciliation',
 		'getAccountProcess',
-		'getReconciliationAccount'
+		'getReconciliationAccounts',
+		'getAccountResume'
 	]
 );
 
+Route::get('reconciliation/getAccountResume', 'Reconciliation\ReconciliationController@getAccountResume');
 Route::get('reconciliation/getAccountProcess', 'Reconciliation\ReconciliationController@getAccountProcess');
 Route::get('reconciliation/getAccountProcessById/{process}', 'Reconciliation\ReconciliationController@getAccountProcessById');
-Route::get('reconciliation/getReconciliationAccount', 'Reconciliation\ReconciliationController@getReconciliationAccount');
+Route::get('reconciliation/getReconciliationAccounts', 'Reconciliation\ReconciliationController@getReconciliationAccounts');
 
 Route::post('reconciliation/iniReconciliation', 'Reconciliation\ReconciliationController@iniReconciliation');
+Route::post('reconciliation/setBalance', 'Reconciliation\ReconciliationController@setBalance');
 
 
 // TODO: OLD ROUTES REMOVE

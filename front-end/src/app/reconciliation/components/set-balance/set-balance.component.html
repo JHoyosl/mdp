@@ -52,7 +52,6 @@
                 type="number"
                 (change)="balanceChange('external', element)"
                 formControlName="externalBalance"
-                value=""
               >
             </mat-form-field>
           </div> 
@@ -74,6 +73,12 @@
       <td class="right-align currency" mat-cell *matCellDef="let element"> {{ element.localDebit | currency }} </td>
     </ng-container>
 
+    <!-- local debit -->
+    <ng-container matColumnDef="sum">
+      <th mat-header-cell *matHeaderCellDef> Sumatoria </th>
+      <td class="right-align currency" mat-cell *matCellDef="let element"> {{ getBalanceSum(element) | currency }} </td>
+    </ng-container>
+
     <!-- local balance -->
     <ng-container matColumnDef="localBalance">
       <th mat-header-cell *matHeaderCellDef> Saldo Contable </th>
@@ -86,7 +91,6 @@
               type="number"
               (change)="balanceChange('local', element)"
               formControlName="localBalance"
-              value=""
             >
           </mat-form-field>
         </div> 
@@ -102,7 +106,7 @@
     <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
     <tr mat-row *matRowDef="let row; columns: columnsToDisplay;"></tr>
   </table>
-  <div class="d-flex justify-content-start m-4">
+  <div class="d-flex justify-content-start m-4" *ngIf="_reconciliationItems.length > 0">
     <button type="submit" mat-raised-button color="primary" class="mr-4">Guardar</button>
     <button type="button" mat-stroked-button color="primary">Cancelar</button>
   </div>

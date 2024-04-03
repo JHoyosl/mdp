@@ -1,10 +1,11 @@
-import { ReconciliationItem, ReonciliationBalance } from "../Interfaces/reconciliation.interface";
+import { ReconciliationItem, ReconciliationResume, ReonciliationBalance } from '../Interfaces/reconciliation.interface';
 
 export class ReconciliationModel{
 
   static AccountProcessToInterface(object:any): ReconciliationItem{
     return {
         id: object.id,
+        accountId: object.account_id,
         bankId: object.bank_id,
         companyId: object.company_id,
         accType: object.acc_type,
@@ -14,7 +15,6 @@ export class ReconciliationModel{
         deletedAt: object.deleted_at,
         createdAt: object.created_at,
         updatedAt: object.updated_at,
-        accountId: object.account_id,
         process: object.process,
         startDate: object.start_date,
         endDate: object.end_date,
@@ -59,4 +59,26 @@ export class ReconciliationModel{
       account: object.account,
     }
   }  
+
+  static ReconciliationResumeToInterfac( object: any ): ReconciliationResume {
+
+    return {
+      accountId: object.accountId,
+      bankId: object.bank_id,
+      bankAccount: object.bank_account,
+      localAccount: object.local_account,
+      name: object.name,
+      process: object.process,
+      startDate: object.start_date,
+      endDate: object.end_date,
+      externalDebit: object.external_debit,
+      externalCredit: object.external_credit,
+      localDebit: object.local_debit,
+      localCredit: object.local_credit,
+      externalBalance: object.external_balance,
+      localBalance: object.local_balance,
+      difference: object.difference,
+      type: object.type,
+    }
+  }
 }
