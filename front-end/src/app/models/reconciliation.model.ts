@@ -11,7 +11,6 @@ export class ReconciliationModel{
         accType: object.acc_type,
         bankAccount: object.bank_account,
         localAccount: object.local_account,
-        mapId: object.map_id,
         deletedAt: object.deleted_at,
         createdAt: object.created_at,
         updatedAt: object.updated_at,
@@ -28,11 +27,8 @@ export class ReconciliationModel{
         status: object.status,
         step: object.step,
         type: object.type,
-        codComp: object.cod_comp,
         name: object.name,
         nit: object.nit,
-        currency: object.currency,
-        portal: object.portal,
     }
   }
 
@@ -79,6 +75,8 @@ export class ReconciliationModel{
       localBalance: object.local_balance,
       difference: object.difference,
       type: object.type,
+      status: object.status,
+      step: object.step,
     }
   }
 }

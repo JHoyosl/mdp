@@ -9,6 +9,7 @@ import { ReconciliationService } from 'src/app/services/reconciliation.service';
 })
 export class ReconciliationProcessComponent implements OnInit {
 
+  isInitial = false;
   isLinear = false;
   process: string = null;
   constructor( 

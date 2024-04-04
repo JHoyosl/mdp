@@ -1,42 +1,49 @@
 
-  <form class="form-horizontal justify-content-md-center" [formGroup]="uploadFile" (submit)="onSbmit()">
-    <div class="d-flex flex-row justify-content-center">
-      <div class="form-group p-2">
-        <mat-form-field class="full-width-input">
-          <input matInput 
-            formControlName="date"
-            [matDatepicker]="fromPicker" 
-            placeholder="Último día de mes"
-          >
-          <mat-hint>DD/MM/AAAA</mat-hint>
-          <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
-          <mat-datepicker #fromPicker></mat-datepicker>
-        </mat-form-field>
-      </div>
-      
-      <div class="form-group p-2">
-        <input type="file" #fileInput style="display: none;" (change)="onFileChange($event)" >
-        <mat-form-field 
-          class="full-width-input"
-          (click)="fileInput.click()" >
-          <mat-label>Archivo</mat-label>
-          <input matInput 
-            value="{{  fileName }}"
-            placeholder="Archivo"
-            disabled
-          >
-          <mat-icon matSuffix 
-            style="cursor: pointer"
-          >cloud_upload</mat-icon>
-          <mat-hint>Información de Tercero</mat-hint>
-        </mat-form-field>
-      </div>
-      <div class="form-group p-2">
-        <button type="submit" mat-raised-button color="primary" class="mr-4">Cargar</button>
-    </div>   
-    </div>   
-    <app-set-balance
-      [accountsResume]="accountsResume"
-    ></app-set-balance>
-  </form>
-  
+<div class="card">
+  <div class="card-body">
+    <h3 class="card-title">Inicializar Cuentas</h3>
+    <h6 class="card-subtitle">Cuadre Inicial</h6>
+    <form class="form-horizontal justify-content-md-center" [formGroup]="uploadFile" (submit)="onSbmit()">
+      <div class="d-flex flex-row justify-content-center">
+        <div class="form-group p-2">
+          <mat-form-field class="full-width-input">
+            <input matInput 
+              formControlName="date"
+              [matDatepicker]="fromPicker" 
+              placeholder="Último día de mes"
+            >
+            <mat-hint>DD/MM/AAAA</mat-hint>
+            <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+            <mat-datepicker #fromPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-group p-2">
+          <input type="file" #fileInput style="display: none;" (change)="onFileChange($event)" >
+          <mat-form-field 
+            class="full-width-input"
+            (click)="fileInput.click()" >
+            <mat-label>Archivo</mat-label>
+            <input matInput 
+              value="{{  fileName }}"
+              placeholder="Archivo"
+              disabled
+            >
+            <mat-icon matSuffix 
+              style="cursor: pointer"
+            >cloud_upload</mat-icon>
+            <mat-hint>Información de Tercero</mat-hint>
+          </mat-form-field>
+        </div>
+        <div class="form-group p-2">
+          <button type="submit" mat-raised-button color="primary" class="mr-4">Cargar</button>
+      </div>   
+      </div>   
+      <app-set-balance
+        (updateBalance)="updateBalance($event)"
+        (cancelBalance)="cancelBalance()"
+        [accountsResume]="accountsResume"
+      ></app-set-balance>
+    </form>
+  </div> 
+</div>

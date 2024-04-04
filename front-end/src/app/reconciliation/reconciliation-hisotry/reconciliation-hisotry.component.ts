@@ -1,6 +1,7 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, MatTableDataSource } from '@angular/material';
+import { Router } from '@angular/router';
 import { ReconciliationItem } from 'src/app/Interfaces/reconciliation.interface';
 import { ReconciliationService } from 'src/app/services/reconciliation.service';
 
@@ -45,7 +46,9 @@ export class ReconciliationHisotryComponent implements OnInit {
   ];
   
 
-  constructor(private reconciliationService: ReconciliationService) { }
+  constructor(private reconciliationService: ReconciliationService,
+      private router: Router
+    ) { }
 
   ngOnInit() {
     this.getAccountProcess();
@@ -79,8 +82,12 @@ export class ReconciliationHisotryComponent implements OnInit {
     );
   }
 
-  goToProcess(event: Event, element:any){
+  goToProcess(event: Event, element:ReconciliationItem){
     event.stopPropagation();
-    console.log(element);
+    if(element[0].type = 'INIT'){
+      this.router.navigate([`/conciliar/iniAcc/${element[0].process}`]);
+    }else{
+      this.router.navigate([`/conciliar/process/${element[0].process}`]);
+    }
   }
 }

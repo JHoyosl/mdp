@@ -14,7 +14,6 @@ import { ComponentsModule } from '../shared/components/components.module';
 import { AccountResumeComponent } from './components/account-resume/account-resume.component';
 import { MatButtonModule, MatCardModule, MatCheckboxModule, MatDatepickerModule, MatFormFieldModule, MatIconModule, MatInputModule, MatNativeDateModule, MatPaginatorModule, MatStepperModule, MatTableModule, MatTabsModule } from '@angular/material';
 import { ReconciliationComponent } from './reconciliation.component';
-import { InitializeAccountComponent } from './initialize-account/initialize-account.component';
 import { ReconciliationHisotryComponent } from './reconciliation-hisotry/reconciliation-hisotry.component';
 import { ReconciliationProcessComponent } from './reconciliation-process/reconciliation-process.component';
 import { BeginProcessComponent } from './components/begin-process/begin-process.component';
@@ -29,7 +28,6 @@ import { SetBalanceComponent } from './components/set-balance/set-balance.compon
     AccountBalanceTableComponent,
     AccountResumeComponent,
     ReconciliationComponent,
-    InitializeAccountComponent,
     ReconciliationHisotryComponent,
     ReconciliationProcessComponent,
     BeginProcessComponent,

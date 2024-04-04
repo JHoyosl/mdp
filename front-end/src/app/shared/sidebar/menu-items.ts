@@ -69,6 +69,14 @@ export const ROUTES: RouteInfo[] = [
         submenu: []
       },
       {
+        path: '/conciliar/history',
+        title: 'Historico',
+        icon: '',
+        class: '',
+        extralink: false,
+        submenu: []
+      },
+      {
         path: '/conciliar/conciliarTxType',
         title: 'Tipos de Transacción',
         icon: '',

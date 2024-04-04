@@ -11,12 +11,15 @@ class ReconciliationItem extends Model
 
     const OPEN_STATUS = 'OPEN';
     const CLOSE_STATUS = 'CLOSE';
+    const DONE_STATUS = 'DONE';
+
 
     const TYPE_PARTIAL = 'PARTIAL';
     const TYPE_CLOSE = 'CLOSE';
     const TYPE_INIT = 'INIT';
 
     const STEP_UPLOADED = 'UPLOADED';
+    const STEP_DONE = 'DONE';
 
     protected $table = "conciliar_items";
     protected $dates = ['deleted_at'];

@@ -3,48 +3,7 @@
   <div class="card-body">
     <h3 class="card-title">Conciliaciones</h3>
     <h6 class="card-subtitle">Conciliación de Cuentas</h6>
-      <mat-tab-group  [(selectedIndex)]="selectedIndex">
-        <mat-tab label="Cuentas" >
-          <ng-template matTabContent >
-            <mat-card>
-              <mat-card-header>
-                <mat-card-title>Resumen de Cuentas</mat-card-title>
-                <mat-card-subtitle>Ultima conciliación</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                
-                <app-account-resume></app-account-resume>
-              </mat-card-content>
-              <mat-card-actions>
-                <button mat-button>LIKE</button>
-                <button mat-button>SHARE</button>
-              </mat-card-actions>
-            </mat-card>      
-          </ng-template>
-        </mat-tab>
-        <mat-tab label="Historico">
-          <ng-template matTabContent >
-            <mat-card>
-              <mat-card-header>
-                <mat-card-title>Historico de conciliaciones</mat-card-title>
-                <mat-card-subtitle>Procesos realizados</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <app-reconciliation-hisotry></app-reconciliation-hisotry>
-              </mat-card-content>
-              <mat-card-actions>
-                <button mat-button>LIKE</button>
-                <button mat-button>SHARE</button>
-              </mat-card-actions>
-            </mat-card>      
-          </ng-template>
-        </mat-tab>
-        <mat-tab label="Editar" disabled>  
-          <ng-template matTabContent >
-           
-          </ng-template>
-        </mat-tab>
-      </mat-tab-group>
+      <app-account-resume></app-account-resume>
   </div>
 </div>
 

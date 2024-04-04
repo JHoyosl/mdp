@@ -8,7 +8,6 @@ export interface ReconciliationItem{
     accType: string;
     bankAccount: string;
     localAccount: string;
-    mapId: number;
     deletedAt: string;
     createdAt: string;
     updatedAt: string;
@@ -26,11 +25,8 @@ export interface ReconciliationItem{
     status: string;
     step: string;
     type: string;
-    codComp: string;
     name: string;
     nit: string;
-    currency: string;
-    portal: string;
 }
 
 export interface ReconciliationItemResponse extends GenericResponse{
@@ -75,23 +71,26 @@ export interface ReconciliationBalanceUpload {
 }
 
 export interface ReconciliationResume {
-    accountId: number
-    bankId: number
-    bankAccount: string
-    localAccount: string
-    name: string
-    process: string
-    startDate: string
-    endDate: string
-    externalDebit: string
-    externalCredit: string
-    localDebit: string
-    localCredit: string
-    externalBalance: string
-    localBalance: string
-    difference: string
-    type: string
+    accountId: number;
+    bankId: number;
+    bankAccount: string;
+    localAccount: string;
+    name: string;
+    process: string;
+    startDate: string;
+    endDate: string;
+    externalDebit: string;
+    externalCredit: string;
+    localDebit: string;
+    localCredit: string;
+    externalBalance: string;
+    localBalance: string;
+    difference: string;
+    type: string;
+    status: string;
+    step: string;
   }
+
 
 export interface ReconciliationResumeResponse extends GenericResponse {
     data: ReconciliationResume[];

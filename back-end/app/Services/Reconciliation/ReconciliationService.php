@@ -48,6 +48,8 @@ class ReconciliationService
                 'items.local_balance',
                 'items.difference',
                 'items.type',
+                'items.status',
+                'items.step',
             )
             ->get();
 
@@ -74,6 +76,8 @@ class ReconciliationService
                     $item->local_balance = $balance['localBalance'];
                     $item->external_balance = $balance['externalBalance'];
                     $item->difference = $this->balanceDifference($item);
+                    $item->step =  ReconciliationItem::STEP_DONE;
+                    $item->status =  ReconciliationItem::CLOSE_STATUS;
                     if ($item->difference != 0) {
                         $invalidItems[] = $item;
                     }
@@ -113,6 +117,9 @@ class ReconciliationService
                 $ItemstableName . ".external_balance",
                 $ItemstableName . ".local_balance",
                 $ItemstableName . ".difference",
+                $ItemstableName . ".status",
+                $ItemstableName . ".step",
+                $ItemstableName . ".type",
                 "accounts.id as account_id",
                 "accounts.bank_id",
                 "accounts.local_account",

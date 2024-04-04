@@ -1,3 +1,4 @@
+import { animate, state, style, transition, trigger } from '@angular/animations';
 import { Component, OnInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material';
 import { ReconciliationResume } from 'src/app/Interfaces/reconciliation.interface';
@@ -8,7 +9,14 @@ import { SelectionModel } from '@angular/cdk/collections';
 @Component({
   selector: 'app-account-resume',
   templateUrl: './account-resume.component.html',
-  styleUrls: ['./account-resume.component.css']
+  styleUrls: ['./account-resume.component.css'],
+  animations: [
+    trigger('detailExpand', [
+      state('collapsed', style({height: '0px', minHeight: '0'})),
+      state('expanded', style({height: '*'})),
+      transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
+    ]),
+  ],
 })
 export class AccountResumeComponent implements OnInit {
 
@@ -17,10 +25,16 @@ export class AccountResumeComponent implements OnInit {
 
   columnsToDisplay: string[] = [
     'select',
-    'type',
-    'name',
     'dates',
+    'name',
     'bankAccount',
+    'process',
+    'type',
+    'step',
+    'status',
+  ];
+
+  subColumnsToDisplay: string[] = [
     'externalDebit',
     'externalCredit',
     'externalBalance',
@@ -40,13 +54,6 @@ export class AccountResumeComponent implements OnInit {
     this.getResume();
   }
 
-  toggleAll(): void {
-
-    this.isAllSelected() ? 
-      this.selection.clear() :
-      this.dataSource.data.forEach( row => this.selection.select(row));
-  }
-
   getResume(): void {
     this.reconciliationService.getAccountResume().subscribe(
       (response) => {
@@ -64,7 +71,11 @@ export class AccountResumeComponent implements OnInit {
     return ReconciliationHelper.balanceDifference(item);
   }
 
-
+  toggleAll(): void {
+    this.isAllSelected() ? 
+      this.selection.clear() :
+      this.dataSource.data.forEach( row => this.selection.select(row));
+  }
 
   isAllSelected(): boolean {
     return this.dataSource.data.length === this.selection.selected.length;

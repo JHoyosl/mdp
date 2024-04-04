@@ -15,15 +15,18 @@ import { ReconciliationHelper } from '../../helpers/reconciliation.helpers';
 })
 export class SetBalanceComponent implements OnInit {
 
-  @Output() updateBalance = new EventEmitter
+  @Output() updateBalance = new EventEmitter<boolean>();
+  @Output() cancelBalance = new EventEmitter<boolean>();
   @Input() 
   set accountsResume(items: ReconciliationItem[]){
     this._reconciliationItems = items;
     this.dataSource.data = items;
     this.setForm(items);
+
   }
   
   @ViewChild(MatTable) table: MatTable<any>;
+  
   
   _reconciliationItems: ReconciliationItem[];
   balanceForm: FormGroup = new FormGroup({});
@@ -66,8 +69,8 @@ export class SetBalanceComponent implements OnInit {
   getBalanceSum(item: ReconciliationItem): number {
     return ReconciliationHelper.getBalanceSum(item);
   }
+
   balanceChange( type: string, item: ReconciliationItem): void {
-    
     if(type === 'external'){
       item.externalBalance = this.balanceForm.get(item.localAccount).value.externalBalance;
     }
@@ -78,6 +81,10 @@ export class SetBalanceComponent implements OnInit {
 
   }
   
+
+  cancel(){
+    this.cancelBalance.emit(true);
+  }
   onSubmit($event: Event): void {
     $event.stopPropagation;
     
@@ -100,15 +107,20 @@ export class SetBalanceComponent implements OnInit {
         externalBalance: item.externalBalance,
       };
     })
-    console.log(data);
+    Swal.fire({
+      title: 'Procesando',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      imageUrl: 'assets/images/2.gif',
+
+    });
     this.reconciliationService.uploadBalance(process, data).subscribe(
       (response) => {
-        
-        this._reconciliationItems = response;
-        this.dataSource.data = response;
-        this.setForm(response);
+        Swal.close();
+        this.updateBalance.emit(true);
       },
       (err) => {
+        Swal.close();
         console.error(err);
       }
     );

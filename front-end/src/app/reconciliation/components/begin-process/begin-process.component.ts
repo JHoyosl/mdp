@@ -1,10 +1,11 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ReconciliationIniUpload, ReconciliationItem, ReonciliationBalance } from 'src/app/Interfaces/reconciliation.interface';
 import { ReconciliationService } from 'src/app/services/reconciliation.service';
 import * as dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { Location } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-reconciliation-begin-process',
@@ -13,11 +14,9 @@ import { Location } from '@angular/common';
 })
 export class BeginProcessComponent implements OnInit {
 
-  @Input()
-  set process(process: string){
-    this._process = process;
-    // this.getReconciliationAccount();
-  }
+  @Output() balanceSet = new EventEmitter<boolean>();
+  @Output() balanceType = new EventEmitter<string>();
+
 
   accountsResume: ReconciliationItem[] = [];
 
@@ -30,6 +29,8 @@ export class BeginProcessComponent implements OnInit {
       private reconciliaitionService: ReconciliationService, 
       private fb: FormBuilder,
       private location: Location,
+      private router: Router,
+      private activatedRouter: ActivatedRoute
     ){
       this.uploadFile = this.fb.group({
         date: ['', [Validators.required]],
@@ -38,30 +39,39 @@ export class BeginProcessComponent implements OnInit {
    }
 
   ngOnInit() {   
-    this.getBalanceByProcess();
+    this._process = this.activatedRouter.snapshot.params['process'];
+    if(this._process){
+      this.getBalanceByProcess(this._process);
+    }
   }
 
-  getBalanceByProcess(): void {
-    this.reconciliaitionService.getProcessById('yH39y6Q8b').subscribe(
+  getBalanceByProcess(process: string): void {
+    Swal.fire({
+      title: 'Procesando',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      imageUrl: 'assets/images/2.gif',
+
+    });
+    this.reconciliaitionService.getProcessById(process).subscribe(
       (response) => {
+        Swal.close();
         this.accountsResume = response;
       },
       (err) => {
+        Swal.close();
         console.error(err);
       }
     );
   }
 
-  getReconciliationAccount(){
-    this.reconciliaitionService.getReconciliationAccount().subscribe(
-      (response) => {
-        console.log(response);
-
-      },
-      (err) => {
-        console.error(err);
-      }
-    );
+  updateBalance(event: boolean){
+    if(event){
+      this.getBalanceByProcess(this._process);
+    }
+  }
+  cancelBalance(){
+    this.router.navigate([`/conciliar/history`]);
   }
 
   onFileChange(event: Event): void {
@@ -93,11 +103,8 @@ export class BeginProcessComponent implements OnInit {
     this.reconciliaitionService.uploadIni(data).subscribe(
       (response) => {
         Swal.close();
-        
+        this.location.go(`/conciliar/process/${response[0].process}`);
         this.accountsResume = response;
-        if(response.length > 0){
-          this.location.go(`/conciliar/process/${response[0].process}`);
-        }
       },
       (err) => {
         Swal.close();
