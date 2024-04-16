@@ -167,6 +167,34 @@ class ReconciliationController extends ApiController
     {
     }
 
+    public function deleteProcess(Request  $request)
+    {
+        return $this->reconciliationService->deleteProcess($request->process, $this->companyId);
+
+        return "Hola";
+    }
+
+    public function startNewProcess(Request $request)
+    {
+        $validated = $request->validate([
+            'date' => 'required',
+            'accounts' => 'required'
+        ]);
+
+        $accounts = json_decode($request->accounts, true);
+
+        if (!$accounts) {
+            return $this->errorResponse('Invalid Json', 400);
+        }
+
+        return $this->reconciliationService->newProcess(
+            $request->date,
+            $accounts,
+            $this->companyId,
+            $this->user
+        );
+    }
+
     public function getAccountResume()
     {
 

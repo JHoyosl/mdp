@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Models\Account;
 use App\Models\LocalTxType;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Sheet;
 use App\Models\ExternalTxType;
 use App\Models\ReconciliationItem;
 use Illuminate\Support\Facades\DB;
@@ -15,10 +16,353 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\ReconciliationLocalValues;
 use Illuminate\Database\Schema\Blueprint;
 use App\Models\ReconciliationExternalValues;
-use Maatwebsite\Excel\Sheet;
+use App\Services\Account\AccountingService;
+use App\Services\ThirdParties\ThirdPartiesService;
 
 class ReconciliationService
 {
+    private ThirdPartiesService $thirdPartiesService;
+    private AccountingService $accountingService;
+
+    function __construct(
+        ThirdPartiesService $thirdPartiesService,
+        AccountingService $accountingService
+    ) {
+        $this->thirdPartiesService = $thirdPartiesService;
+        $this->accountingService = $accountingService;
+    }
+
+    public function IniReconciliation($date, $file, $user, $companyId)
+    {
+        DB::beginTransaction();
+
+        //TODO: TOMAR EL ULTIMO DIA DEL MES
+        $endDate = Carbon::createFromFormat('Y-m-d', $date);
+        $startDate = Carbon::createFromFormat('Y-m-d', $date)->subDay();
+
+        //ID to group reconciliation under ad ID
+        $process = Str::random(9);
+
+        $filePath = $this->saveIniReconciliationFile($file, $companyId);
+
+        $externalInfo = $this->fileToArray($filePath);
+        $localInfo = $this->fileToArray($filePath, 1);
+
+        $this->insertLocalIni($localInfo, $companyId, $startDate, $endDate, $process);
+        $this->insertExternalIni($externalInfo, $user, $companyId, $startDate, $endDate, $process);
+
+        $balance =  $this->getProcessBalance($process, $companyId);
+
+        $this->setReconciliationBalance($balance, $companyId);
+
+        DB::commit();
+
+        return $this->getAccountProcessById($companyId, $process);
+    }
+
+    //TODO:  ORGANIZAR  LA LOGICA DEL DELETE
+    public function deleteProcess($process, $companyId)
+    {
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
+        $localValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
+        $externalValuesTableName = $this->getReconciliationExternalValuesTableName($companyId);
+
+        $itemsTable = new ReconciliationItem($itemsTableName);
+        $localValuesTable = new ReconciliationLocalValues($localValuesTableName);
+        $externalValuesTable = new ReconciliationExternalValues($localValuesTableName);
+
+        $itemsBuilder = $itemsTable->where('process', $process);
+        $ids = $itemsBuilder->get()->map(function ($item) {
+            return $item->id;
+        });
+        return $ids;
+        DB::raw('SET FOREIGN_KEY_CHECKS = 0');
+        $itemsBuilder->delete();
+        $localValuesTable->whereIn('item_id', $ids)->delete();
+        $externalValuesTable->whereIn('item_id', $ids)->delete();
+        DB::raw('SET FOREIGN_KEY_CHECKS = 1');
+        // $externalValuesTable->
+        return $process;
+    }
+
+    public function newProcess($date, $accounts, $companyId, $user)
+    {
+
+        $items = $this->getReconciliationItems($companyId, $accounts);
+
+        $this->checkThirdPartiesInfo($items, $companyId, $date);
+        $this->checkAccountingInfo($companyId, $date);
+
+        $items = $this->createReconciliationItem($items, $date);
+
+        $items = $this->getInfoToReconciliate($companyId, $items, $date);
+
+        DB::beginTransaction();
+
+        $this->insertInfoToReconciliate($companyId,  $items);
+
+        $balance = $this->getProcessBalance($items[0]->newProcess->process, $companyId);
+
+        $this->setReconciliationBalance($balance, $companyId);
+        return $this->getAccountProcessById($companyId, $items[0]->newProcess->process);
+
+        DB::commit();
+    }
+
+    public function insertInfoToReconciliate($companyId, $items)
+    {
+        foreach ($items as $item) {
+            $tableName = $this->getReconciliationItemTableName($companyId);
+            $itemsTable =  new ReconciliationLocalValues($tableName);
+
+            $newProcess = $itemsTable->insertGetId($item->newProcess);
+            $item->newProcess = $itemsTable->where('id', $newProcess)->first();
+
+            foreach ($item->accountingInfo as $row) {
+                $accountingInfo[] = [
+                    'item_id' => $item->newProcess->id,
+                    'matched' => 0,
+                    'matched_id' => null,
+                    'tx_type_id' => $row->tx_type_id,
+                    'tx_type_name' => $row->tx_type_name,
+                    'fecha_movimiento' => $row->fecha_movimiento,
+                    'descripcion' => $row->descripcion,
+                    'local_account' => $row->local_account,
+                    'cuenta_externa' => $row->cuenta_externa,
+                    'referencia_1' => $row->referencia_1,
+                    'referencia_2' => $row->referencia_2,
+                    'referencia_3' => $row->referencia_3,
+                    'otra_referencia' => $row->otra_referencia,
+                    'saldo_actual' => $row->saldo_actual,
+                    'valor_debito' => $row->valor_debito,
+                    'saldo_anterior' => $row->saldo_anterior,
+                    'valor_credito' => $row->valor_credito,
+                    'codigo_usuario' => $row->codigo_usuario,
+                    'nombre_agencia' => $row->nombre_agencia,
+                    'valor_debito_credito' => $row->valor_debito_credito,
+                    'nombre_centro_costos' => $row->nombre_centro_costos,
+                    'codigo_centro_costo' => $row->codigo_centro_costo,
+                    'numero_comprobante' => $row->numero_comprobante,
+                    'nombre_usuario' => $row->nombre_usuario,
+                    'nombre_cuenta_contable' => $row->nombre_cuenta_contable,
+                    'numero_cuenta_contable' => $row->numero_cuenta_contable,
+                    'nombre_tercero' => $row->nombre_tercero,
+                    'identificacion_tercero' => $row->identificacion_tercero,
+                    'fecha_ingreso' => $row->fecha_ingreso,
+                    'fecha_origen' => $row->fecha_origen,
+                    'oficina_origen' => $row->oficina_origen,
+                    'oficina_destino' => $row->oficina_destino,
+                    'numero_lote' => $row->numero_lote,
+                    'consecutivo_lote' => $row->consecutivo_lote,
+                    'tipo_registro' => $row->tipo_registro,
+                    'ambiente_origen' => $row->ambiente_origen,
+                    'beneficiario' => $row->beneficiario,
+                    'created_at' => Carbon::now(),
+                ];
+            }
+
+            foreach ($item->thirdPartyInfo as $row) {
+                $thirdPartyInfo[] = [
+                    'item_id' => $item->newProcess->id,
+                    'matched' => $row->matched,
+                    'matched_id' => $row->matched_id,
+                    'tx_type_id' => $row->tx_type_id,
+                    'tx_type_name' => $row->tx_type_nametx_type_name,
+                    'descripcion' => $row->descripcion,
+                    'local_account' => $item->local_account,
+                    'operador' => $row->operador,
+                    'valor_credito' => $row->valor_credito,
+                    'valor_debito' => $row->valor_debito,
+                    'valor_debito_credito' => $row->valor_debito_credito,
+                    'fecha_movimiento' => $row->fecha_movimiento,
+                    'fecha_archivo' => $row->fecha_archivo,
+                    'codigo_tx' => $row->codigo_tx,
+                    'referencia_1' => $row->referencia_1,
+                    'referencia_2' => $row->referencia_2,
+                    'referencia_3' => $row->referencia_3,
+                    'nombre_titular' => $row->nombre_titular,
+                    'identificacion_titular' => $row->identificacion_titular,
+                    'numero_cuenta' => $row->numero_cuenta,
+                    'nombre_transaccion' => $row->nombre_transaccion,
+                    'consecutivo_registro' => $row->consecutivo_registro,
+                    'nombre_oficina' => $row->nombre_oficina,
+                    'codigo_oficina' => $row->codigo_oficina,
+                    'canal' => $row->canal,
+                    'nombre_proveedor' => $row->nombre_proveedor,
+                    'id_proveedor' => $row->id_proveedor,
+                    'banco_destino' => $row->banco_destino,
+                    'fecha_rechazo' => $row->fecha_rechazo,
+                    'motivo_rechazo' => $row->motivo_rechazo,
+                    'ciudad' => $row->ciudad,
+                    'tipo_cuenta' => $row->tipo_cuenta,
+                    'numero_documento' => $row->numero_documento,
+                    'codigo_oficina' => $row->codigo_oficina,
+                ];
+            }
+        }
+
+        $tableName = $this->getReconciliationLocalValuesTableName($companyId);
+        $localValuesTable =  new ReconciliationLocalValues($tableName);
+        $localValuesTable->where('item_id', $items[0]->newProcess->id)->delete();
+        $localValuesTable->insert($accountingInfo);
+
+        $tableName = $this->getReconciliationExternalValuesTableName($companyId);
+        $externalValuesTable =  new ReconciliationExternalValues($tableName);
+        $externalValuesTable->where('item_id', $items[0]->newProcess->id)->delete();
+        $externalValuesTable->insert($thirdPartyInfo);
+    }
+
+    public function createReconciliationItem($items, $endDate, $type = ReconciliationItem::TYPE_PARTIAL)
+    {
+        //ID to group reconciliation under ad ID
+        $process = Str::random(9);
+        $now = Carbon::now()->toDateString();
+        foreach ($items as $item) {
+            $startDate = Carbon::parse($item->end_date)->addDay()->toDateString();
+
+            $newData = [
+                'account_id' => $item->id,
+                'process' => $process,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'external_debit' => 0,
+                'external_debit' => 0,
+                'external_debit' => 0,
+                'external_credit' => 0,
+                'local_debit' => 0,
+                'local_credit' => 0,
+                'external_balance' => 0,
+                'local_balance' => 0,
+                'difference' => 0,
+                'status' => ReconciliationItem::OPEN_STATUS,
+                'step' => ReconciliationItem::STEP_SET_BALANCE,
+                'type' => $type,
+                'created_at' => $now,
+                'updated_at' => $now
+            ];
+            $item['newProcess'] = $newData;
+        }
+        return $items;
+    }
+
+    public  function getInfoToReconciliate($companyId, $items, $date)
+    {
+        foreach ($items  as $item) {
+            $accountingInfo = $this->accountingService
+                ->getAccInfoToReconciliate($companyId, $item->local_account, $item->end_date, $date);
+            $item['accountingInfo'] = $accountingInfo;
+
+            $thirdPartyInfo = $this->thirdPartiesService
+                ->getAccInfoToReconciliate($item->account_id, $item->end_date, $date);
+            $item['thirdPartyInfo'] = $thirdPartyInfo;
+        }
+        return  $items;
+    }
+
+    public function getThirdPartiesIdsToReconciliate($companyId, $items, $date)
+    {
+        $thirdPartiesHeaderIds = [];
+
+        foreach ($items as $value) {
+            $headers = $this->thirdPartiesService->getThirdPartyHeadersByDate($companyId, $value->account_id, $date);
+            $ids = [];
+            foreach ($headers as $value) {
+                $ids[] = $value->id;
+            }
+            $thirdPartiesHeaderIds[$value->account_id] = array_unique($ids);
+        }
+
+        return $thirdPartiesHeaderIds;
+    }
+
+    public function getAccHeadersIdsToReconciliate($companyId, $items, $date)
+    {
+        $accHeadersIds = [];
+        foreach ($items as $value) {
+            $headers = $this->accountingService->getAccHeadersByDate($companyId, $date);
+            foreach ($headers as $header) {
+                $accHeadersIds[] = $header->id;
+            }
+        }
+
+        return array_unique($accHeadersIds);
+    }
+
+    public function getReconciliationItems($companyId, $accounts)
+    {
+
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
+        $itemsTable = new ReconciliationItem($itemsTableName);
+        $items = [];
+        $invalidItems = [];
+        foreach ($accounts as $value) {
+
+            $item = $itemsTable->where($itemsTableName . '.id', $value)
+                ->join('accounts', $itemsTableName . '.account_id', 'accounts.id')
+                ->orderBy($itemsTableName . '.created_at')
+                ->first();
+            if ($item->step != ReconciliationItem::STEP_DONE) {
+                $invalidItems[] = [
+                    'bankAccount' => $item->bank_account,
+                    'localAccount' => $item->local_account,
+                    'step' => $item->step,
+                    'error' => 'Step should be  done'
+                ];
+                continue;
+            }
+
+            $items[] = $item;
+        }
+        if (count($invalidItems) > 0) {
+            throw new Exception(json_encode($invalidItems), 400);
+        }
+
+        return $items;
+    }
+
+    public function checkAccountingInfo($companyId, $date)
+    {
+        $carbonDate = Carbon::parse($date);
+        $accHeader = $this->accountingService->getLastHeader($companyId);
+        if (!$accHeader) {
+            throw new  Exception('No existe información contable');
+        }
+        $endDate = Carbon::parse($accHeader->end_date);
+        if (!$carbonDate->lte($endDate)) {
+            throw new  Exception('No existe información contable para la fecha .' . $date);
+        }
+    }
+
+    public function checkThirdPartiesInfo($items, $companyId, $date)
+    {
+        $carbonDate = Carbon::parse($date);
+        $invalidDates = [];
+        foreach ($items as $item) {
+            $header = $this->thirdPartiesService->getLastHeaderByAccount($item->account_id, $companyId);
+            if (!$header) {
+                $invalidDates[] = [
+                    'endDate' => null,
+                    'bankAccount' => $item->bank_account,
+                    'localAccount' => $item->local_account,
+                    'error' => 'No data for account'
+                ];
+                continue;
+            }
+            $endDate = Carbon::parse($header->end_date);
+            if (!$carbonDate->lte($endDate)) {
+                $invalidDates[] = [
+                    'endDate' => $header->end_date,
+                    'bankAccount' => $item->bank_account,
+                    'localAccount' => $item->local_account,
+                    'error' => 'No data for dates'
+                ];
+            }
+        }
+
+        if (count($invalidDates) > 0) {
+            throw new Exception(json_encode($invalidDates), 400);
+        }
+    }
 
     public function getAccountResume($companyId)
     {
@@ -100,7 +444,7 @@ class ReconciliationService
     {
         $ItemstableName = $this->getReconciliationItemTableName($companyId);
 
-        $items = Account::join($ItemstableName, 'accounts.id', $ItemstableName . '.id')
+        $items = Account::join($ItemstableName, 'accounts.id', $ItemstableName . '.account_id')
             ->join('banks', 'banks.id', 'accounts.bank_id')
             ->where('process', $process)
             ->orderBy('start_date', 'DESC')
@@ -134,10 +478,18 @@ class ReconciliationService
 
     public function getAccountProcess($companyId)
     {
+
         $ItemstableName = $this->getReconciliationItemTableName($companyId);
         if (!Schema::hasTable($ItemstableName)) {
             return [];
         }
+        $itemTable = new ReconciliationItem($ItemstableName);
+        return $itemTable->join('accounts', $ItemstableName . '.account_id', 'accounts.id')
+            ->join('banks', 'banks.id', 'accounts.bank_id')
+            ->where('company_id', $companyId)
+            ->orderBy('start_date', 'DESC')
+            ->orderBy('account_id', 'DESC')
+            ->get();
         $items = Account::join($ItemstableName, 'accounts.id', $ItemstableName . '.id')
             ->join('banks', 'banks.id', 'accounts.bank_id')
             ->where('company_id', $companyId)
@@ -157,35 +509,9 @@ class ReconciliationService
         return $accounts;
     }
 
-    public function IniReconciliation($date, $file, $user, $companyId)
-    {
-        DB::beginTransaction();
 
-        //TODO: TOMAR EL ULTIMO DIA DEL MES
-        $endDate = Carbon::createFromFormat('Y-m-d', $date);
-        $startDate = Carbon::createFromFormat('Y-m-d', $date)->subDay();
 
-        //ID to group reconciliation under ad ID
-        $process = Str::random(9);
-
-        $filePath = $this->saveIniReconciliationFile($file, $companyId);
-
-        $externalInfo = $this->fileToArray($filePath);
-        $localInfo = $this->fileToArray($filePath, 1);
-
-        $this->insertLocalIni($localInfo, $companyId, $startDate, $endDate, $process);
-        $this->insertExternalIni($externalInfo, $user, $companyId, $startDate, $endDate, $process);
-
-        $balance =  $this->getProcessBalance($process, $companyId);
-
-        $this->setIniReconciliationBalance($balance, $companyId);
-
-        DB::commit();
-
-        return $this->getAccountProcessById($companyId, $process);
-    }
-
-    public function setIniReconciliationBalance($balance, $companyId)
+    public function setReconciliationBalance($balance, $companyId)
     {
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
 
@@ -241,15 +567,16 @@ class ReconciliationService
             ->get();
 
         $balance = [];
+
         foreach ($eBalance as $external) {
             foreach ($lBalance as $local) {
                 if ($external->local_account == $local->local_account) {
                     $balance[] = [
                         'item_id' => $external->item_id,
-                        'localCredit' => $local->localCredit,
-                        'localDebit' => $local->localDebit,
-                        'externalCredit' => $external->externalCredit,
-                        'externalDebit' => $external->externalDebit,
+                        'localCredit' => $local->localCredit ?? 0,
+                        'localDebit' => $local->localDebit ?? 0,
+                        'externalCredit' => $external->externalCredit ?? 0,
+                        'externalDebit' => $external->externalDebit ?? 0,
                     ];
                 }
             }
@@ -303,7 +630,7 @@ class ReconciliationService
         }
     }
 
-    public function createReconciliationItem($account, $companyId, $startDate, $endDate, $process)
+    public function createInitReconciliationItem($account, $companyId, $startDate, $endDate, $process)
     {
         $tableName = $this->getReconciliationItemTableName($companyId);
 
@@ -363,7 +690,7 @@ class ReconciliationService
             ->with('banks')
             ->first();
 
-        $itemId = $this->createReconciliationItem($account, $companyId, $startDate, $endDate, $process);
+        $itemId = $this->createInitReconciliationItem($account, $companyId, $startDate, $endDate, $process);
         $itemsIdList[] = $itemId;
 
         if (!$account) {
@@ -383,7 +710,7 @@ class ReconciliationService
                 if (!$account) {
                     throw new Exception(`No existe la cuenta {$accountNumber}`);
                 }
-                $itemId = $this->createReconciliationItem($account, $companyId, $startDate, $endDate, $process);
+                $itemId = $this->createInitReconciliationItem($account, $companyId, $startDate, $endDate, $process);
                 $itemsIdList[] = $itemId;
             }
 
@@ -440,7 +767,7 @@ class ReconciliationService
             ->with('banks')
             ->first();
 
-        $itemId = $this->createReconciliationItem($account, $companyId, $startDate, $endDate, $process);
+        $itemId = $this->createInitReconciliationItem($account, $companyId, $startDate, $endDate, $process);
         $itemsIdList[] = $itemId;
 
         if (!$account) {
@@ -460,7 +787,7 @@ class ReconciliationService
                 if (!$account) {
                     throw new Exception(`No existe la cuenta {$accountNumber}`);
                 }
-                $itemId = $this->createReconciliationItem($account, $companyId, $startDate, $endDate, $process);
+                $itemId = $this->createInitReconciliationItem($account, $companyId, $startDate, $endDate, $process);
                 $itemsIdList[] = $itemId;
             }
 
@@ -639,6 +966,35 @@ class ReconciliationService
     }
 
     // HELPERS
+
+    public function setAccountingProcessItem($accountingInfo)
+    {
+    }
+
+    public function getAccountingMaxDate($companyId)
+    {
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
+        $table = new ReconciliationItem($itemsTableName);
+        $info = $table->orderBy('end_date', 'DESC')->first();
+        return $info->end_date;
+    }
+
+    public function  getMaxDate($items)
+    {
+        $maxDate = null;
+        foreach ($items as $item) {
+            if (!$maxDate) {
+                $maxDate = Carbon::parse($item->end_date);
+                continue;
+            }
+            $date = carbon::parse($item->end_date);
+            if ($date->gt($maxDate)) {
+                $maxDate = $date;
+            }
+        }
+        return  $maxDate;
+    }
+
     public function balanceSum(ReconciliationItem $item)
     {
         return $item->external_balance +
@@ -679,6 +1035,16 @@ class ReconciliationService
     public function getLocalTxTypeTableName($companyId): string
     {
         return 'reconciliation_local_tx_types_' . $companyId;
+    }
+
+    public function getThirdPartyItemsTableName($companyId)
+    {
+        return 'third_parties_items_' . $companyId;
+    }
+
+    public function getAccountingItemsTableName($companyId)
+    {
+        return 'accounting_items_' . $companyId;
     }
 
     public function saveIniReconciliationFile($file, $companyId)

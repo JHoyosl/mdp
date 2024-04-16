@@ -45,7 +45,7 @@ export const reconciliationRoutes: Routes = [
           }
     },
     {
-      path: 'process/:id',
+      path: 'process/:process',
       component: ReconciliationProcessComponent,
       data: {
         title: 'Processo Conciliar',

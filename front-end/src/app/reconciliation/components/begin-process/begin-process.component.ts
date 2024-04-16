@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ReconciliationIniUpload, ReconciliationItem, ReonciliationBalance } from 'src/app/Interfaces/reconciliation.interface';
-import { ReconciliationService } from 'src/app/services/reconciliation.service';
+import { ReconciliationService } from 'src/app/services/reconciliation/reconciliation.service';
 import * as dayjs from 'dayjs';
 import Swal from 'sweetalert2';
 import { Location } from '@angular/common';
@@ -67,7 +67,8 @@ export class BeginProcessComponent implements OnInit {
 
   updateBalance(event: boolean){
     if(event){
-      this.getBalanceByProcess(this._process);
+      this._process = this.activatedRouter.snapshot.params['process'];
+      this.router.navigate([`/conciliar`]);
     }
   }
   cancelBalance(){
@@ -103,7 +104,7 @@ export class BeginProcessComponent implements OnInit {
     this.reconciliaitionService.uploadIni(data).subscribe(
       (response) => {
         Swal.close();
-        this.location.go(`/conciliar/process/${response[0].process}`);
+        this.location.go(`/conciliar/initAcc/${response[0].process}`);
         this.accountsResume = response;
       },
       (err) => {

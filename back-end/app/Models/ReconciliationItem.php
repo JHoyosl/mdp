@@ -19,6 +19,7 @@ class ReconciliationItem extends Model
     const TYPE_INIT = 'INIT';
 
     const STEP_UPLOADED = 'UPLOADED';
+    const STEP_SET_BALANCE = 'SET_BALANCE';
     const STEP_DONE = 'DONE';
 
     protected $table = "conciliar_items";

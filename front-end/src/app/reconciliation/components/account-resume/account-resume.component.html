@@ -1,3 +1,20 @@
+<div class="d-flex justify-content-end" *ngIf="showButtons">
+
+  <div class="d-flex justify-content-end mb-1">
+      <button *ngIf="accounts.length > 0" 
+        type="button" mat-raised-button 
+        color="primary" 
+        class="mr-4"
+        [routerLink]="['/conciliar/process']"
+      >Nueva Conciliación</button>
+    <button mat-raised-button 
+      [routerLink]="['/conciliar/initAcc']" 
+      type="button" 
+      color="primary" 
+    >Inicializar Cuentas</button>
+  </div>
+</div>
+
 <table mat-table
   [dataSource]="dataSource" multiTemplateDataRows
   class="mat-elevation-z8">
@@ -5,12 +22,14 @@
   <ng-container matColumnDef="select">
     <th mat-header-cell *matHeaderCellDef> 
       <mat-checkbox
-        (change)="toggleAll()"
+        (change)="toggleAll($event)"
         [checked]="selection.hasValue() && isAllSelected()"
       ></mat-checkbox>
     </th>
     <td mat-cell *matCellDef="let element"> 
       <mat-checkbox
+      (click)="$event.stopPropagation()"
+      (change)=" $event ? selection.toggle(element) : null"
       [checked]="selection.isSelected(element)"
       ></mat-checkbox>
     </td>
@@ -55,7 +74,7 @@
   </ng-container>
 
   <ng-container matColumnDef="process">
-    <th mat-header-cell *matHeaderCellDef> Paso </th>
+    <th mat-header-cell *matHeaderCellDef> Proceso </th>
     <td mat-cell *matCellDef="let element"> {{element.process}} </td>
   </ng-container>
   <!-- detail Info -->
@@ -122,32 +141,3 @@
   </tr>
   <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row" style="padding: 0;"></tr>
 </table>
-<div class="d-flex justify-content-start m-4">
-
-  <div class="d-flex justify-content-end mb-4">
-      <button *ngIf="accounts.length > 0" 
-        type="button" mat-raised-button 
-        color="primary" 
-        class="mr-4"
-      >Iniciar Proceso</button>
-    <button mat-raised-button 
-      [routerLink]="['/conciliar/process']" 
-      type="button" 
-      color="primary" 
-      class="mr-4"
-    >Inicializar Cuentas</button>
-  </div>
-  
-</div>
-
-<!-- 
-  EN HISTORICCO permitir ir al proccesso q se selecciones
-  
-  EN LA INICIAL GUARDAR saldos y cambiar estado del processo a consolidado, 
-    regresar a la interfaz de Resumen de cuenta
-
-  EN CUENTAS permitir selecccionar varias cuentas y enviar a un nuevo proceso,
-    validar que las cuentas estén en estado válido para iniciar el proceso
-    si por lo menos una una no cumple impedirlo.
-  
- -->

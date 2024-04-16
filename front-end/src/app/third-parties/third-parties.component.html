@@ -4,14 +4,15 @@
       <mat-form-field class="float-right">
         <mat-label>Seleccionar Cuenta</mat-label>
         <mat-select (selectionChange)="changeSelectedAccount($event.value)"
-          [(value)]="selectedValue">
+          [value]="selectedValue">
           <mat-option *ngFor="let account of accountList" [value]="account.id">
             {{account.banks.name }} - {{ account.local_account}}/{{ account.bank_account}}
           </mat-option>
         </mat-select>
       </mat-form-field>  
-      <h3 class="card-title">Información de Terceros</h3>
-      <h6 class="card-subtitle">Gestion de la información de Terceros</h6>
+      <h3 class="card-title">Información de Terceros </h3> 
+      <h6 class="card-subtitle">Gestion de la información de Terceros </h6>
+      <h6 *ngIf="selectedAccount" class="card-subtitle">{{selectedAccount?.banks.name }}:{{ selectedAccount?.local_account}}-{{ selectedAccount?.bank_account}}</h6>
         <mat-tab-group  [(selectedIndex)]="selectedIndex">
           <mat-tab label="Historial" >
             <ng-template matTabContent >

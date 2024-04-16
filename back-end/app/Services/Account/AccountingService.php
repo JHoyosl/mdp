@@ -23,6 +23,37 @@ class AccountingService
     {
     }
 
+    public function getAccInfoToReconciliate($companyId, $localAccount, $startDate, $endDate)
+    {
+        $tableName  = $this->getAccountinItemsTableName($companyId);
+        $tableAccItems = new AccountingItems($tableName);
+        $info  = $tableAccItems
+            ->where('local_account', $localAccount)
+            ->whereBetween('fecha_movimiento', [$startDate, $endDate])
+            ->get();
+
+        return $info;
+    }
+
+    public function getAccHeadersByDate($companyId, $date)
+    {
+        $header  = HeaderAccountingInfo::where('company_id', $companyId)
+            ->where('start_date', '<=', $date)
+            ->orderBy('end_date', 'ASC')
+            ->get();
+
+        return $header;
+    }
+
+    public function getLastHeader($companyId)
+    {
+        $header  = HeaderAccountingInfo::where('company_id', $companyId)
+            ->orderBy('end_date', 'ASC')
+            ->first();
+
+        return $header;
+    }
+
     public function index($companyId)
     {
 

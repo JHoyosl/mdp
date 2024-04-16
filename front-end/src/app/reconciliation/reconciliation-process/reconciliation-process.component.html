@@ -1,8 +1,8 @@
 
 <mat-horizontal-stepper [linear]="isLinear" #stepper>
   <mat-step [stepControl]="firstFormGroup">
-    <ng-container *ngIf="isInitial">
-      
+    <ng-container>
+      <app-balance-accounts></app-balance-accounts>
     </ng-container>
   </mat-step>
   <mat-step [stepControl]="secondFormGroup">

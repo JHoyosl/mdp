@@ -1,0 +1,34 @@
+
+<div class="card">
+  <div class="card-body">
+    <h3 class="card-title">Cuadrar Cuentas</h3>
+    <h6 class="card-subtitle">Fechas y Saldos</h6>
+    <div class="d-flex">
+      <form class="form-horizontal justify-content-md-center" 
+        [formGroup]="dateForm" 
+        (submit)="onSubmitDate($event)">
+        <div class="d-flex flex-row justify-content-center">
+          <div class="form-group p-2">
+            <mat-form-field class="full-width-input">
+              <input matInput 
+                formControlName="date"
+                [matDatepicker]="fromPicker" 
+                placeholder="Conciliar a la fecha"
+              >
+              <mat-hint>DD/MM/AAAA</mat-hint>
+              <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+              <mat-datepicker #fromPicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+          <div class="form-group p-2">
+            <button type="submit" mat-raised-button color="primary" class="mr-4">Iniciar</button>
+          </div>   
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="p-2" style="overflow: auto;">
+    <app-account-resume (selectAccount)="onSelectAccount($event)" [showSelect]="true"></app-account-resume>
+  </div>
+
+</div>

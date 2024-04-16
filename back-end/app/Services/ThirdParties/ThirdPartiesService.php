@@ -12,11 +12,48 @@ use App\Models\ThirdPartiesItems;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\HeaderThirdPartiesInfo;
+use App\Traits\DatesTrait;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
+
 class ThirdPartiesService
 {
+    use DatesTrait;
+
+    public function getAccInfoToReconciliate($accountId, $startDate, $endDate)
+    {
+
+
+        $tableName = $this->getThirdPartiesItemsTableName($accountId);
+        $itemsTable = new ThirdPartiesItems($tableName);
+
+        $items  = $itemsTable
+            ->whereBetween('fecha_movimiento', [$startDate, $endDate])
+            ->get();
+
+        return $items;
+    }
+
+    public function getThirdPartyHeadersByDate($companyId,  $accountId, $date)
+    {
+        $headerInfo = HeaderThirdPartiesInfo::where('company_id', $companyId)
+            ->where('account_id', $accountId)
+            ->where('start_date', '<=', $date)
+            ->orderBy('end_date', 'ASC')
+            ->get();
+        return $headerInfo;
+    }
+
+    public function getLastHeaderByAccount($accountId, $companyId)
+    {
+        $headerInfo = HeaderThirdPartiesInfo::where('company_id', $companyId)
+            ->where('account_id', $accountId)
+            ->orderBy('end_date', 'ASC')
+            ->first();
+        return $headerInfo;
+    }
+
     public function getAccountHeaderInfo($companyId, $accountId)
     {
         $headerInfo = HeaderThirdPartiesInfo::where('company_id', $companyId)
@@ -198,6 +235,7 @@ class ThirdPartiesService
 
     public function mapInfo($account, $header, $file, $startDate, $endDate)
     {
+
         $mapFile = MapFile::find($account->map_id);
 
         $map =  json_decode($mapFile->map, true);
@@ -220,7 +258,7 @@ class ThirdPartiesService
         foreach ($worksheet->getRowIterator($startRow) as $rowKey => $row) {
 
             $cellIterator = $row->getCellIterator();
-            $cellIterator->setIterateOnlyExistingCells(true);
+            // $cellIterator->setIterateOnlyExistingCells(true);
             $mappedRow = [];
 
             // Init  in -1 to start adding before conditions return
@@ -235,7 +273,16 @@ class ThirdPartiesService
                 $mappedRow[$indexMap[$fileColumn]] = $cell->getValue();
 
                 if (in_array($indexMap[$fileColumn], ["VALOR CRÉDITO", "VALOR DEBITO", "VALOR (DEBITO/CREDITO)"])) {
-                    $mappedRow[$indexMap[$fileColumn]] = $this->currencyToDecimal($mappedRow[$indexMap[$fileColumn]], $separator);
+
+                    $value = $mappedRow[$indexMap[$fileColumn]];
+                    if ($separator == ',') {
+                        $value = $this->currencyToDecimal($value, $separator);
+                    }
+                    if ($value > 0) {
+                        $mappedRow['VALOR CRÉDITO'] =  $value;
+                    } else {
+                        $mappedRow['VALOR DEBITO'] =  abs($value);
+                    }
                 }
             }
 
@@ -243,7 +290,6 @@ class ThirdPartiesService
             $tmpInsertCell  = $this->cellToInsertExterno($mappedRow, $header->id, $startDate, $endDate);
 
             $txInfo = $this->getTxInfo($tmpInsertCell, $account->bank_id);
-
 
             if ($txInfo[0]) {
                 $tmpInsertCell['tx_type_id'] = $txInfo[1]['id'];
@@ -269,13 +315,17 @@ class ThirdPartiesService
 
         $moveDate = $insertCell["FECHA DEL MOVIMIENTO"];
 
-        // Check if date is in range
-        $carbonCompare = new Carbon($insertCell["FECHA DEL MOVIMIENTO"]);
+        // TODO: Tomar del mapeo el formato, pasar la logica a untrait
+        if (strlen($moveDate) == 8) {
+            $moveDate = substr_replace(substr_replace($moveDate, '-', 6, 0), '-', 4, 0);
+        }
+        // $carbonCompare = new Carbon($insertCell["FECHA DEL MOVIMIENTO"]);
+        $carbonCompare = Carbon::parse($moveDate);
 
-        if ($carbonCompare->gte($carbonEnd)) {
+        if ($carbonCompare->gt($carbonEnd)) {
             throw new Exception("Fecha de movimiento mayor del rango en {$moveDate} - " . json_encode($insertCell), 400);
         }
-        if ($carbonCompare->lte($carbonStart)) {
+        if ($carbonCompare->lt($carbonStart)) {
             throw new Exception("Fecha de movimiento menor de rango en {$moveDate} - " . json_encode($insertCell), 400);
         }
 
@@ -370,12 +420,12 @@ class ThirdPartiesService
         if ($separator == ".") {
             $value = str_replace(",", "", $value);
             $value = str_replace(".", ".", $value);
-            return  $value;
+            return  floatval($value);
         }
         $value = str_replace(".", "", $value);
         $value = str_replace(",", ".", $value);
 
-        return  $value;
+        return  floatval($value);
     }
 
     public function getThirdPartiesItemsTableName(String $accountId)

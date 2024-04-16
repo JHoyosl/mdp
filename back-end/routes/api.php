@@ -63,7 +63,8 @@ Route::resource('reconciliation', 'Reconciliation\ReconciliationController')->on
 		'iniReconciliation',
 		'getAccountProcess',
 		'getReconciliationAccounts',
-		'getAccountResume'
+		'getAccountResume',
+		'newProcess'
 	]
 );
 
@@ -74,6 +75,8 @@ Route::get('reconciliation/getReconciliationAccounts', 'Reconciliation\Reconcili
 
 Route::post('reconciliation/iniReconciliation', 'Reconciliation\ReconciliationController@iniReconciliation');
 Route::post('reconciliation/setBalance', 'Reconciliation\ReconciliationController@setBalance');
+Route::post('reconciliation/startNewProcess', 'Reconciliation\ReconciliationController@startNewProcess');
+Route::post('reconciliation/deleteProceess/{process}', 'Reconciliation\ReconciliationController@deleteProcess');
 
 
 // TODO: OLD ROUTES REMOVE

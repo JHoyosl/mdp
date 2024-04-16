@@ -2,9 +2,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { ReconciliationBalanceUpload, ReconciliationIniUpload, ReconciliationIniUploadResponse, ReconciliationItem, ReconciliationResume, ReconciliationResumeResponse, ReonciliationBalance } from '../Interfaces/reconciliation.interface';
-import { GenericResponse } from '../Interfaces/shared.interfaces';
-import { ReconciliationModel } from '../models/reconciliation.model';
+import { ReconciliationBalanceUpload, ReconciliationIniUpload, ReconciliationIniUploadResponse, ReconciliationItem, ReconciliationResume, ReconciliationResumeResponse, ReonciliationBalance } from '../../Interfaces/reconciliation.interface';
+import { GenericResponse } from '../../Interfaces/shared.interfaces';
+import { ReconciliationModel } from '../../models/reconciliation.model';
 import { map } from 'rxjs/operators';
 
 @Injectable({
@@ -63,10 +63,17 @@ export class ReconciliationService {
   }
 
   uploadBalance(process, data: ReconciliationBalanceUpload[]):Observable<any>{
-    const body = new HttpParams()
+    const params = new HttpParams()
       .append('balance', JSON.stringify(data))
       .append('process', process)
     
-    return this.httpClient.post<GenericResponse>(`${this.baseUrl}/setBalance`, body);
+    return this.httpClient.post<GenericResponse>(`${this.baseUrl}/setBalance`, params);
+  }
+
+  startNewProcess(date: string, ids: number[]): Observable<any>{
+    const params = new HttpParams()
+      .append('date', date)
+      .append('accounts', JSON.stringify(ids));
+    return this.httpClient.post<any>(`${this.baseUrl}/startNewProcess`, params);
   }
 }

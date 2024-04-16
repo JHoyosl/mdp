@@ -18,6 +18,7 @@ import { ReconciliationHisotryComponent } from './reconciliation-hisotry/reconci
 import { ReconciliationProcessComponent } from './reconciliation-process/reconciliation-process.component';
 import { BeginProcessComponent } from './components/begin-process/begin-process.component';
 import { SetBalanceComponent } from './components/set-balance/set-balance.component';
+import { BalanceAccountsComponent } from './components/balance-accounts/balance-accounts.component';
 
 
 @NgModule({
@@ -32,6 +33,7 @@ import { SetBalanceComponent } from './components/set-balance/set-balance.compon
     ReconciliationProcessComponent,
     BeginProcessComponent,
     SetBalanceComponent,
+    BalanceAccountsComponent,
   ],
   imports: [
     CommonModule,

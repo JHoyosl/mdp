@@ -4,7 +4,7 @@ import { MatTable, MatTableDataSource } from '@angular/material';
 import { title } from 'process';
 
 import { ReconciliationBalanceUpload, ReconciliationItem } from 'src/app/Interfaces/reconciliation.interface';
-import { ReconciliationService } from 'src/app/services/reconciliation.service';
+import { ReconciliationService } from 'src/app/services/reconciliation/reconciliation.service';
 import Swal from 'sweetalert2';
 import { ReconciliationHelper } from '../../helpers/reconciliation.helpers';
 

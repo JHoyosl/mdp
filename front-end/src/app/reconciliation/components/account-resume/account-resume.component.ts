@@ -1,10 +1,16 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { MatTableDataSource } from '@angular/material';
 import { ReconciliationResume } from 'src/app/Interfaces/reconciliation.interface';
-import { ReconciliationService } from 'src/app/services/reconciliation.service';
+import { ReconciliationService } from 'src/app/services/reconciliation/reconciliation.service';
 import { ReconciliationHelper } from '../../helpers/reconciliation.helpers';
 import { SelectionModel } from '@angular/cdk/collections';
+import Swal from 'sweetalert2';
+import { ToastrService } from 'ngx-toastr';
+import { ReconciliationProcessService } from 'src/app/services/reconciliation/reconciliation-process.service';
+import { Router } from '@angular/router';
+import { tap } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-account-resume',
@@ -18,16 +24,20 @@ import { SelectionModel } from '@angular/cdk/collections';
     ]),
   ],
 })
-export class AccountResumeComponent implements OnInit {
+export class AccountResumeComponent implements OnInit, OnDestroy {
+
+  @Input() showSelect = false;
+  @Input() showButtons = false;
+
+  getAccountSub: Subscription;
 
   accounts: ReconciliationResume[] = [];
   showIniButton = false;
 
   columnsToDisplay: string[] = [
-    'select',
-    'dates',
     'name',
     'bankAccount',
+    'dates',
     'process',
     'type',
     'step',
@@ -48,20 +58,44 @@ export class AccountResumeComponent implements OnInit {
   dataSource = new MatTableDataSource<ReconciliationResume>(null);
   selection = new SelectionModel<ReconciliationResume>(true, []);
   
-  constructor(private reconciliationService: ReconciliationService) { }
+  constructor(
+    private reconciliationService: ReconciliationService, 
+    private toastr: ToastrService,
+    private reconciliationProcess :ReconciliationProcessService,
+    private router: Router
+  ) { 
+     this.getAccountSub = this.selection.changed.subscribe(
+        el => this.reconciliationProcess.setAccounts(this.selection.selected));
+
+  }
 
   ngOnInit() {
+    if(this.showSelect){
+      this.columnsToDisplay = ['select', ...this.columnsToDisplay];
+    }
+    
     this.getResume();
   }
 
   getResume(): void {
+    Swal.fire({
+      title: 'Procesando',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      imageUrl: 'assets/images/2.gif',
+
+    });
     this.reconciliationService.getAccountResume().subscribe(
       (response) => {
-        console.log(response);
+        Swal.close();
         this.accounts = response;
         this.dataSource.data = this.accounts;
+        if(this.accounts.length === 0){
+          this.toastr.info('No hay cuentas inicializadas');
+        }
       },
       (err) => {
+        Swal.close();
         console.error(err);
       }
     );
@@ -71,7 +105,7 @@ export class AccountResumeComponent implements OnInit {
     return ReconciliationHelper.balanceDifference(item);
   }
 
-  toggleAll(): void {
+  toggleAll(event: Event): void {
     this.isAllSelected() ? 
       this.selection.clear() :
       this.dataSource.data.forEach( row => this.selection.select(row));
@@ -80,4 +114,9 @@ export class AccountResumeComponent implements OnInit {
   isAllSelected(): boolean {
     return this.dataSource.data.length === this.selection.selected.length;
   }
+
+  ngOnDestroy(): void {
+    this.getAccountSub.unsubscribe();
+  }
+  
 }

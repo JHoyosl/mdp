@@ -3,7 +3,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, MatTableDataSource } from '@angular/material';
 import { Router } from '@angular/router';
 import { ReconciliationItem } from 'src/app/Interfaces/reconciliation.interface';
-import { ReconciliationService } from 'src/app/services/reconciliation.service';
+import { ReconciliationService } from 'src/app/services/reconciliation/reconciliation.service';
 
 @Component({
   selector: 'app-reconciliation-hisotry',
@@ -35,7 +35,6 @@ export class ReconciliationHisotryComponent implements OnInit {
   ];
 
   subColumnsToDisplay: string[] = [
-    'dates',
     'name',
     'bankAccount',
     'externalDebit',
@@ -84,8 +83,8 @@ export class ReconciliationHisotryComponent implements OnInit {
 
   goToProcess(event: Event, element:ReconciliationItem){
     event.stopPropagation();
-    if(element[0].type = 'INIT'){
-      this.router.navigate([`/conciliar/iniAcc/${element[0].process}`]);
+    if(element[0].type === 'INIT'){
+      this.router.navigate([`/conciliar/initAcc/${element[0].process}`]);
     }else{
       this.router.navigate([`/conciliar/process/${element[0].process}`]);
     }
