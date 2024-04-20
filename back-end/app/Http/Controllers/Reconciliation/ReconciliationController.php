@@ -187,12 +187,17 @@ class ReconciliationController extends ApiController
             return $this->errorResponse('Invalid Json', 400);
         }
 
-        return $this->reconciliationService->newProcess(
-            $request->date,
-            $accounts,
-            $this->companyId,
-            $this->user
-        );
+        try {
+            $items = $this->reconciliationService->newProcess(
+                $request->date,
+                $accounts,
+                $this->companyId,
+                $this->user
+            );
+            return $this->showAll($items);
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage(), $e->getCode());
+        }
     }
 
     public function getAccountResume()
@@ -753,7 +758,9 @@ class ReconciliationController extends ApiController
             $table->decimal('debit_local', 24, 2);
             $table->decimal('credit_local', 24, 2);
             $table->decimal('balance_externo', 24, 2);
+            $table->decimal('prev_externo', 24, 2)->default(0);
             $table->decimal('balance_local', 24, 2);
+            $table->decimal('prev_local', 24, 2)->default(0);
             $table->decimal('total', 24, 2);
             $table->string('file_path')->nullable();
             $table->string('file_name')->nullable();

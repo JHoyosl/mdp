@@ -10,6 +10,7 @@ class ReconciliationLocalValues extends Model
     protected $table = "conciliar_values";
     protected $dates = ['deleted_at'];
 
+
     public function __construct($tableName)
     {
 
@@ -32,4 +33,9 @@ class ReconciliationLocalValues extends Model
         'oficina_destino', 'numero_lote', 'consecutivo_lote', 'tipo_registro',
         'ambiente_origen', 'beneficiario'
     ];
+
+    function externalValues()
+    {
+        return $this->belongsToMany(ReconciliationExternalValues::class, $this->pivotTable, 'local_value', 'external_value');
+    }
 }

@@ -34,15 +34,8 @@ export class ReconciliationService {
   }
 
   getProcessById(process: string): Observable<ReconciliationItem[]>{
-    return this.httpClient.get<GenericResponse>(`${this.baseUrl}/getAccountProcessById/${process}`)
-      .pipe( 
-        map((response) => 
-          {
-            console.log(response);
-            return response.data.map((item) => 
-            ReconciliationModel.AccountProcessToInterface(item))
-          }
-        ));
+    return this.httpClient.get<GenericResponse>(`${this.baseUrl}/getAccountProcessById/${process}`).pipe( 
+      map((response) => response.data.map((item) => ReconciliationModel.AccountProcessToInterface(item))));
   }
 
   getAccountProcessById(process: string){
@@ -70,10 +63,15 @@ export class ReconciliationService {
     return this.httpClient.post<GenericResponse>(`${this.baseUrl}/setBalance`, params);
   }
 
-  startNewProcess(date: string, ids: number[]): Observable<any>{
+  startNewProcess(date: string, ids: number[]): Observable<ReconciliationItem[]>{
     const params = new HttpParams()
       .append('date', date)
       .append('accounts', JSON.stringify(ids));
-    return this.httpClient.post<any>(`${this.baseUrl}/startNewProcess`, params);
+
+    return this.httpClient.post<GenericResponse>(`${this.baseUrl}/startNewProcess`, params).pipe(
+      map((response) => {
+        return response.data.map((v) => ReconciliationModel.AccountProcessToInterface(v))
+      })
+    );
   }
 }

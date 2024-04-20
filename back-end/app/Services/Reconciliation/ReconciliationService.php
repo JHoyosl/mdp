@@ -7,7 +7,6 @@ use Carbon\Carbon;
 use App\Models\Account;
 use App\Models\LocalTxType;
 use Illuminate\Support\Str;
-use Maatwebsite\Excel\Sheet;
 use App\Models\ExternalTxType;
 use App\Models\ReconciliationItem;
 use Illuminate\Support\Facades\DB;
@@ -121,8 +120,6 @@ class ReconciliationService
             foreach ($item->accountingInfo as $row) {
                 $accountingInfo[] = [
                     'item_id' => $item->newProcess->id,
-                    'matched' => 0,
-                    'matched_id' => null,
                     'tx_type_id' => $row->tx_type_id,
                     'tx_type_name' => $row->tx_type_name,
                     'fecha_movimiento' => $row->fecha_movimiento,
@@ -164,8 +161,6 @@ class ReconciliationService
             foreach ($item->thirdPartyInfo as $row) {
                 $thirdPartyInfo[] = [
                     'item_id' => $item->newProcess->id,
-                    'matched' => $row->matched,
-                    'matched_id' => $row->matched_id,
                     'tx_type_id' => $row->tx_type_id,
                     'tx_type_name' => $row->tx_type_nametx_type_name,
                     'descripcion' => $row->descripcion,
@@ -232,7 +227,9 @@ class ReconciliationService
                 'local_debit' => 0,
                 'local_credit' => 0,
                 'external_balance' => 0,
+                'prev_external_balance' => $item->external_balance,
                 'local_balance' => 0,
+                'prev_local_balance' => $item->local_balance,
                 'difference' => 0,
                 'status' => ReconciliationItem::OPEN_STATUS,
                 'step' => ReconciliationItem::STEP_SET_BALANCE,
@@ -583,51 +580,6 @@ class ReconciliationService
         }
 
         return $balance;
-    }
-
-    public function createTablesIfExists($companyId)
-    {
-
-        $ItemstableName = $this->getReconciliationItemTableName($companyId);
-        if (!Schema::hasTable($ItemstableName)) {
-            $this->createTableReconciliationItems($ItemstableName);
-        }
-
-        $externalValuesTableName = $this->getReconciliationExternalValuesTableName($companyId);
-        if (!Schema::hasTable($externalValuesTableName)) {
-            $this->createTableReconciliationExternalValues($externalValuesTableName, $companyId);
-        }
-
-        $localValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
-        if (!Schema::hasTable($localValuesTableName)) {
-            $this->createTableReconciliationLocalValues($localValuesTableName, $companyId);
-        }
-
-        try {
-            Schema::table($externalValuesTableName, (function (Blueprint $table) use ($ItemstableName, $localValuesTableName) {
-                $table->foreign('item_id')->references('id')->on($ItemstableName);
-                $table->foreign('matched_id')->references('id')->on($localValuesTableName);
-            }));
-
-            Schema::table($localValuesTableName, (function (Blueprint $table) use ($ItemstableName, $externalValuesTableName) {
-                $table->foreign('item_id')->references('id')->on($ItemstableName);
-                $table->foreign('matched_id')->references('id')->on($externalValuesTableName);
-            }));
-        } catch (Exception $e) {
-            if (!str_contains($e->getMessage(), 'Duplicate foreign key')) {
-                throw new Exception($e->getMessage());
-            }
-        }
-        try {
-            Schema::table($localValuesTableName, (function (Blueprint $table) use ($ItemstableName, $externalValuesTableName) {
-                $table->foreign('item_id')->references('id')->on($ItemstableName);
-                $table->foreign('matched_id')->references('id')->on($externalValuesTableName);
-            }));
-        } catch (Exception $e) {
-            if (!str_contains($e->getMessage(), 'Duplicate foreign key')) {
-                throw new Exception($e->getMessage());
-            }
-        }
     }
 
     public function createInitReconciliationItem($account, $companyId, $startDate, $endDate, $process)
@@ -1032,6 +984,10 @@ class ReconciliationService
     {
         return 'reconciliation_external_values_' . $companyId;
     }
+    public function getReconciliationPivotTableName($companyId): string
+    {
+        return 'reconciliation_pivot_' . $companyId;
+    }
     public function getLocalTxTypeTableName($companyId): string
     {
         return 'reconciliation_local_tx_types_' . $companyId;
@@ -1058,6 +1014,54 @@ class ReconciliationService
     }
 
     // TABLE CREATION
+    public function createTablesIfExists($companyId)
+    {
+        $ItemstableName = $this->getReconciliationItemTableName($companyId);
+        $externalValuesTableName = $this->getReconciliationExternalValuesTableName($companyId);
+        $localValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
+        $reconciliationPivot =  $this->getReconciliationPivotTableName($companyId);
+
+        if (!Schema::hasTable($ItemstableName)) {
+            $this->createTableReconciliationItems($ItemstableName);
+        }
+        // external values
+        if (!Schema::hasTable($externalValuesTableName)) {
+            $this->createTableReconciliationExternalValues($externalValuesTableName, $ItemstableName);
+        }
+        //local values
+        if (!Schema::hasTable($localValuesTableName)) {
+            $this->createTableReconciliationLocalValues($localValuesTableName, $ItemstableName);
+        }
+        //pivot table
+        if (!Schema::hasTable($reconciliationPivot)) {
+            $this->createTableReconciliationPivot($reconciliationPivot);
+        }
+
+        // try {
+        //     Schema::table($externalValuesTableName, (function (Blueprint $table) use ($ItemstableName, $localValuesTableName) {
+        //         $table->foreign('item_id')->references('id')->on($ItemstableName);
+        //     }));
+
+        //     Schema::table($localValuesTableName, (function (Blueprint $table) use ($ItemstableName, $externalValuesTableName) {
+        //         $table->foreign('item_id')->references('id')->on($ItemstableName);
+        //     }));
+        // } catch (Exception $e) {
+        //     if (!str_contains($e->getMessage(), 'Duplicate foreign key')) {
+        //         throw new Exception($e->getMessage());
+        //     }
+        // }
+        // try {
+        //     Schema::table($localValuesTableName, (function (Blueprint $table) use ($ItemstableName, $externalValuesTableName) {
+        //         $table->foreign('item_id')->references('id')->on($ItemstableName);
+        //         $table->foreign('matched_id')->references('id')->on($externalValuesTableName);
+        //     }));
+        // } catch (Exception $e) {
+        //     if (!str_contains($e->getMessage(), 'Duplicate foreign key')) {
+        //         throw new Exception($e->getMessage());
+        //     }
+        // }
+    }
+
     public function createTableReconciliationItems(String $tableName)
     {
 
@@ -1072,7 +1076,9 @@ class ReconciliationService
             $table->decimal('local_debit', 24, 2);
             $table->decimal('local_credit', 24, 2);
             $table->decimal('external_balance', 24, 2);
+            $table->decimal('prev_external_balance', 24, 2)->default(0);
             $table->decimal('local_balance', 24, 2);
+            $table->decimal('prev_local_balance', 24, 2)->default(0);
             $table->decimal('difference', 24, 2);
             $table->string('status')->default(ReconciliationItem::OPEN_STATUS);
             $table->string('step')->default(ReconciliationItem::STEP_UPLOADED);
@@ -1085,17 +1091,12 @@ class ReconciliationService
         });
     }
 
-    public function createTableReconciliationExternalValues($tableName, $companyId)
+    public function createTableReconciliationExternalValues($tableName, $itemsTableName)
     {
-        Schema::create($tableName, (function ($table) use ($companyId) {
-
-            $itemsTableName = $this->getReconciliationItemTableName($companyId);
-            $localValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
+        Schema::create($tableName, (function (Blueprint $table) use ($itemsTableName) {
 
             $table->bigIncrements('id');
             $table->integer('item_id')->unsigned()->nullable();
-            $table->boolean('matched')->default(false);
-            $table->bigInteger('matched_id')->unsigned()->nullable();
             $table->integer('tx_type_id')->unsigned();
             $table->string('tx_type_name')->nullable();
             $table->string('descripcion')->comment = 'transaccion/descripcion';
@@ -1128,18 +1129,17 @@ class ReconciliationService
             $table->string('numero_documento')->nullable();
 
             $table->timestamps();
+            $table->foreign('item_id')->references('id')->on($itemsTableName)->onDelete('cascade');
         }));
     }
 
-    public function createTableReconciliationLocalValues($tableName, $companyId)
+    public function createTableReconciliationLocalValues($tableName, $itemsTableName)
     {
 
-        Schema::create($tableName, (function ($table) use ($companyId) {
+        Schema::create($tableName, (function (Blueprint $table) use ($itemsTableName) {
 
             $table->bigIncrements('id');
             $table->integer('item_id')->unsigned()->nullable();
-            $table->boolean('matched')->default(false);
-            $table->bigInteger('matched_id')->unsigned()->nullable();
             $table->integer('tx_type_id')->unsigned()->nullable();
             $table->string('tx_type_name')->nullable();
             $table->dateTime('fecha_movimiento');
@@ -1176,6 +1176,18 @@ class ReconciliationService
             $table->string('beneficiario')->nullable();
 
             $table->timestamps();
+
+            $table->foreign('item_id')->references('id')->on($itemsTableName)->onDelete('cascade');
         }));
+    }
+
+    public function createTableReconciliationPivot($pivotTableName)
+    {
+
+        Schema::create($pivotTableName, function (Blueprint $table) {
+            $table->foreignId('external_value');
+            $table->foreignId('local_value');
+            $table->primary(['external_value', 'local_value']);
+        });
     }
 }

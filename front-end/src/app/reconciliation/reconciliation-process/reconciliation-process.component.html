@@ -1,12 +1,12 @@
 
-<mat-horizontal-stepper [linear]="isLinear" #stepper>
+<mat-horizontal-stepper [linear]="isLinear" [selectedIndex]="stepperIndex" #stepper>
   <mat-step [stepControl]="firstFormGroup">
     <ng-container>
       <app-balance-accounts></app-balance-accounts>
     </ng-container>
   </mat-step>
   <mat-step [stepControl]="secondFormGroup">
-    step 2
+    <app-set-balance [accountsResume]="items" ></app-set-balance>
   </mat-step>
   <mat-step>
     <ng-template matStepLabel>Done</ng-template>

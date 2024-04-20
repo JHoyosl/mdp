@@ -1,5 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { ReconciliationItem } from 'src/app/Interfaces/reconciliation.interface';
 import { ReconciliationProcessService } from 'src/app/services/reconciliation/reconciliation-process.service';
 import { ReconciliationService } from 'src/app/services/reconciliation/reconciliation.service';
 
@@ -8,11 +11,14 @@ import { ReconciliationService } from 'src/app/services/reconciliation/reconcili
   templateUrl: './reconciliation-process.component.html',
   styleUrls: ['./reconciliation-process.component.css']
 })
-export class ReconciliationProcessComponent implements OnInit {
+export class ReconciliationProcessComponent implements OnInit, OnDestroy {
 
+  stepperIndex = -1;
   isInitial = false;
   isLinear = false;
   process: string = null;
+  subscriptions: Subscription[] = [];
+  items: ReconciliationItem[] = [];
   constructor( 
     private activatedroute: ActivatedRoute,
     private reconciliationService: ReconciliationService,
@@ -22,6 +28,18 @@ export class ReconciliationProcessComponent implements OnInit {
   }
 
   ngOnInit() {
+    // if change && process then set step
+    const process = this.reconciliationProcess.process$
+      .subscribe((process) => process &&  this.setStep(process));
+
+    //if process on URL set process
+    const params = this.activatedroute.snapshot.params;
+    params.process 
+      ? this.reconciliationProcess.setProcess(params.process)
+      : this.stepperIndex = 0
+  
+    
+
     if(this.activatedroute.snapshot.params['process']){
       console.log('get process & set accounts');
       return;
@@ -38,7 +56,7 @@ export class ReconciliationProcessComponent implements OnInit {
   //  this.getCurrentProcess(this.process);
   }
 
-  getCurrentProcess(process){
+  setCurrentProcess(process:string){
     // if(process){
     //   this.reconciliationService.getProcessById(process).subscribe(
     //     (response) => {
@@ -48,4 +66,22 @@ export class ReconciliationProcessComponent implements OnInit {
     // }
   }
 
+  setStep(process: string){
+    console.log(process);
+    this.items = this.reconciliationProcess.reconciliationItems;
+    if(!this.items){
+      this.reconciliationService.getProcessById(process).subscribe(
+        (items)=> {
+          this.reconciliationProcess.setReconciliationItems(items);
+          this.items = items;
+        }
+      );
+    }
+   
+    this.stepperIndex = 1;
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+  }
 }

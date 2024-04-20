@@ -11,11 +11,13 @@ class ReconciliationExternalValues extends Model
 
     protected $table = "conciliar_values";
     protected $dates = ['deleted_at'];
+    protected $pivotTable = null;
 
-    public function __construct($tableName)
+    public function __construct($tableName, $pivotTable = null)
     {
 
         $this->table = $tableName;
+        $this->pivotTable = $pivotTable;
     }
     /**
      * The attributes that are mass assignable.
@@ -34,4 +36,9 @@ class ReconciliationExternalValues extends Model
         'ciudad', 'tipo_cuenta', 'numero_documento'
 
     ];
+
+    function localValues()
+    {
+        return $this->belongsToMany(ReconciliationExternalValues::class, $this->pivotTable, 'external_value', 'local_value');
+    }
 }
