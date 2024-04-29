@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ReconciliationItem } from 'src/app/Interfaces/reconciliation.interface';
 import { ReconciliationProcessService } from 'src/app/services/reconciliation/reconciliation-process.service';
@@ -19,6 +19,7 @@ export class ReconciliationProcessComponent implements OnInit, OnDestroy {
   process: string = null;
   subscriptions: Subscription[] = [];
   items: ReconciliationItem[] = [];
+  step$: Observable<string>;
   constructor( 
     private activatedroute: ActivatedRoute,
     private reconciliationService: ReconciliationService,
@@ -29,6 +30,25 @@ export class ReconciliationProcessComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // if change && process then set step
+    this.reconciliationProcess.step$.subscribe((step) => {
+      switch (step) {
+        case 'SET_BALANCE':
+          this.stepperIndex = 1;
+          break;
+        case 'MANUAL':
+          this.stepperIndex = 2;
+          break;
+        default:
+          this.stepperIndex = 1;
+          break;
+      }
+    });
+    const item = this.reconciliationProcess.items$.subscribe(
+      (item) => { 
+        console.log(item);
+        this.items = item;
+      });
+
     const process = this.reconciliationProcess.process$
       .subscribe((process) => process &&  this.setStep(process));
 
@@ -67,18 +87,14 @@ export class ReconciliationProcessComponent implements OnInit, OnDestroy {
   }
 
   setStep(process: string){
-    console.log(process);
-    this.items = this.reconciliationProcess.reconciliationItems;
+    // this.items = this.reconciliationProcess.reconciliationItems;
     if(!this.items){
       this.reconciliationService.getProcessById(process).subscribe(
         (items)=> {
           this.reconciliationProcess.setReconciliationItems(items);
-          this.items = items;
         }
       );
     }
-   
-    this.stepperIndex = 1;
   }
 
   ngOnDestroy(): void {

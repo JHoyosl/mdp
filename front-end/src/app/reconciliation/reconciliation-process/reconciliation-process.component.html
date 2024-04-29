@@ -6,14 +6,14 @@
     </ng-container>
   </mat-step>
   <mat-step [stepControl]="secondFormGroup">
-    <app-set-balance [accountsResume]="items" ></app-set-balance>
+    <app-reconciliation-balance 
+      [reconciliationItem]="items"
+    ></app-reconciliation-balance>
+    <!-- <app-set-balance [accountsResume]="items" ></app-set-balance> -->
   </mat-step>
   <mat-step>
     <ng-template matStepLabel>Done</ng-template>
     You are now done.
-    <div>
-      <button mat-button matStepperPrevious>Back</button>
-      <button mat-button (click)="stepper.reset()">Reset</button>
-    </div>
+  
   </mat-step>
 </mat-horizontal-stepper>

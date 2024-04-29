@@ -22,7 +22,7 @@ class ReconciliationLocalValues extends Model
      * @var array
      */
     protected $fillable = [
-        'item_id', 'matched', 'matched_id', 'tx_type_id', 'tx_type_name',
+        'item_id', 'tx_type_id', 'tx_type_name', 'fecha_movimiento',
         'descripcion', 'local_account', 'cuenta_externa', 'referencia_1',
         'referencia_2', 'referencia_3', 'otra_referencia', 'saldo_actual',
         'valor_debito', 'saldo_anterior', 'valor_credito', 'codigo_usuario',

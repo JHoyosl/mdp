@@ -25,7 +25,7 @@ class ReconciliationExternalValues extends Model
      * @var array
      */
     protected $fillable = [
-        'item_id', 'matched', 'matched_id', 'tx_type_id', 'tx_type_name',
+        'item_id', 'tx_type_id', 'tx_type_name',
         'descripcion', 'local_account', 'cuenta_externa', 'operador', 'valor_credito',
         'valor_debito', 'valor_debito_credito', 'fecha_movimiento',
         'fecha_archivo', 'codigo_tx', 'referencia_1', 'referencia_2',

@@ -10,11 +10,15 @@ import { ReconciliationItem, ReconciliationResume } from 'src/app/Interfaces/rec
 export class ReconciliationProcessService {
 
   private accounts: ReconciliationResume[] = [];
-  private items: ReconciliationItem[];
+
+  private items = new BehaviorSubject<ReconciliationItem[]>(null);
+  items$: Observable<ReconciliationItem[]> = this.items.asObservable();
 
   private process = new BehaviorSubject<string>('');
   process$: Observable<string> = this.process.asObservable();
   
+  private step = new BehaviorSubject<string>('');
+  step$: Observable<string> = this.step.asObservable();
 
   constructor(private router: Router) { }
 
@@ -29,14 +33,14 @@ export class ReconciliationProcessService {
   }
 
   setReconciliationItems(items: ReconciliationItem[]){
-    this.items = items;
+    this.items.next(items);
+    this.step.next(items[0].step);
   }
 
-  get reconciliationItems(): ReconciliationItem[]{
-    if(this.items){
-      return this.items;
-    }
-  }
+  // get reconciliationItems(): ReconciliationItem[]{
+  //   return this.items;
+    
+  // }
 
   //todo: improve this
   get getAccounts(): ReconciliationResume[]{

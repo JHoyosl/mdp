@@ -80,7 +80,7 @@ class AccountingService
             );
 
             $mapped = $this->getInsertConciliarLocal($file, $company->map_id, $startDate, $endDate, $newHeader->id);
-
+            return $mapped;
             $newHeader->rows = count($mapped);
             $newHeader->save();
 

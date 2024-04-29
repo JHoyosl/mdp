@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
+use App\Services\Reconciliation\ReconciliationService;
 use App\Services\ThirdParties\ThirdPartiesService;
 
 
@@ -15,9 +16,10 @@ class ThirdPartiesController extends ApiController
 
     private $user;
     private $companyId;
-    private  ThirdPartiesService $thirdPartiesService;
+    private ThirdPartiesService $thirdPartiesService;
+    private ReconciliationService $reconciliationService;
 
-    public function __construct(ThirdPartiesService $thirdPartiesService)
+    public function __construct(ThirdPartiesService $thirdPartiesService, ReconciliationService $reconciliationService)
     {
         $this->middleware('auth:api')->except([]);
         $this->middleware(function ($request, $next) {
@@ -27,6 +29,7 @@ class ThirdPartiesController extends ApiController
         });
 
         $this->thirdPartiesService = $thirdPartiesService;
+        $this->reconciliationService = $reconciliationService;
     }
 
     public function index()
@@ -46,6 +49,7 @@ class ThirdPartiesController extends ApiController
 
     public function deleteLastUpload(Request $request)
     {
+
         $validated = $request->validate([
             "headerId" => "required|exists:header_third_parties_info,id",
             "startDate" => "required",
@@ -53,19 +57,29 @@ class ThirdPartiesController extends ApiController
             "accountId" => "required|exists:accounts,id",
         ]);
 
+        if (!!$this->reconciliationService->hasReconciliationBefore($request->accountId, $request->endDate, $this->companyId)) {
+            return $this->errorResponse('Existe una conciliación, asociada a este archivo, Debe reversar la coniliación', 400);
+        }
+
         try {
 
             $response = $this->thirdPartiesService->deletelastHeaderInfo(
                 $request->headerId,
                 $request->accountId,
                 $request->startDate,
-                $request->endDate
+                $request->endDate,
+                $this->companyId
             );
             return $this->showMessage($response);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
     }
+
+
+    //// TODO: REVISAR PORQUE NO SE ESTA GUARDANDO LA REFERENCIA 1 EN CARGUE Y AL MOVERLO A RECONCILIACION
+
+
 
     public function uploadAccountInfo(Request $request)
     {

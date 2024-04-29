@@ -106,7 +106,7 @@
     <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
     <tr mat-row *matRowDef="let row; columns: columnsToDisplay;"></tr>
   </table>
-  <div class="d-flex justify-content-start m-4" *ngIf="_reconciliationItems.length > 0">
+  <div class="d-flex justify-content-start m-4" *ngIf="displayButtons()">
     <button *ngIf="_reconciliationItems[0].status !== 'CLOSE'"
       type="submit" 
       mat-raised-button 

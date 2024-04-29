@@ -64,7 +64,7 @@ class AccountingController extends ApiController
                     $request->endDate,
                     $company
                 );
-
+            return $data;
             return $this->showOne($data);
         } catch (\Exception $e) {
 

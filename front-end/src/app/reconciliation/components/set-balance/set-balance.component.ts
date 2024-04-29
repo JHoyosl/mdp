@@ -16,6 +16,8 @@ export class SetBalanceComponent implements OnInit {
 
   @Output() updateBalance = new EventEmitter<boolean>();
   @Output() cancelBalance = new EventEmitter<boolean>();
+
+  @Input() showButtons = true;
   @Input() 
   set accountsResume(items: ReconciliationItem[]){
     this._reconciliationItems = items;
@@ -52,6 +54,13 @@ export class SetBalanceComponent implements OnInit {
 
   ngOnInit() {
     console.log(this.accountsResume);
+  }
+
+  displayButtons(){
+    if(this.showButtons){
+      return this._reconciliationItems.length > 0;
+    }
+    return false;
   }
 
   setForm(items: ReconciliationItem[]){

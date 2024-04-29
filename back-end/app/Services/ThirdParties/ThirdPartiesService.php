@@ -88,7 +88,7 @@ class ThirdPartiesService
         return $items;
     }
 
-    public function deletelastHeaderInfo($headerId, $accountId, $startDate, $endDate)
+    public function deletelastHeaderInfo($headerId, $accountId, $startDate, $endDate, $companyId)
     {
 
         $lastHeader = HeaderThirdPartiesInfo::where('account_id', $accountId)
@@ -133,7 +133,7 @@ class ThirdPartiesService
     public function uploadAccountInfo($user, $accountId, $companyId, $file, $startDate, $endDate)
     {
         // ini_set('memory_limit', '-1');
-
+        return "hola";
         $this->dateValidation($accountId, $startDate);
 
         DB::beginTransaction();

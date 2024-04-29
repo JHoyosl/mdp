@@ -53,6 +53,7 @@ Route::resource('usersCompanies', 'User\UserCompanyController');
 Route::resource('reconciliation', 'Reconciliation\ReconciliationController')->only(
 	[
 		'index',
+		'destroy',
 		'uploadIniFile',
 		'setIniProcess',
 		'isIniConciliar',
@@ -64,7 +65,8 @@ Route::resource('reconciliation', 'Reconciliation\ReconciliationController')->on
 		'getAccountProcess',
 		'getReconciliationAccounts',
 		'getAccountResume',
-		'newProcess'
+		'newProcess',
+		'autoReconciliation'
 	]
 );
 
@@ -72,11 +74,13 @@ Route::get('reconciliation/getAccountResume', 'Reconciliation\ReconciliationCont
 Route::get('reconciliation/getAccountProcess', 'Reconciliation\ReconciliationController@getAccountProcess');
 Route::get('reconciliation/getAccountProcessById/{process}', 'Reconciliation\ReconciliationController@getAccountProcessById');
 Route::get('reconciliation/getReconciliationAccounts', 'Reconciliation\ReconciliationController@getReconciliationAccounts');
+Route::get('reconciliation/hasReconciliationBefore', 'Reconciliation\ReconciliationController@hasReconciliationBefore');
 
 Route::post('reconciliation/iniReconciliation', 'Reconciliation\ReconciliationController@iniReconciliation');
 Route::post('reconciliation/setBalance', 'Reconciliation\ReconciliationController@setBalance');
 Route::post('reconciliation/startNewProcess', 'Reconciliation\ReconciliationController@startNewProcess');
 Route::post('reconciliation/deleteProceess/{process}', 'Reconciliation\ReconciliationController@deleteProcess');
+Route::post('reconciliation/autoReconciliation/{process}', 'Reconciliation\ReconciliationController@autoReconciliation');
 
 
 // TODO: OLD ROUTES REMOVE

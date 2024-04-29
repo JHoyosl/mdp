@@ -16,6 +16,7 @@ use App\Models\ConciliarLocalValues;
 use App\Models\ReconciliationHeader;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
+use App\Models\ReconciliationItem;
 use Illuminate\Support\Facades\Session;
 
 use Illuminate\Support\Facades\Storage;
@@ -165,6 +166,20 @@ class ReconciliationController extends ApiController
      */
     public function destroy($id)
     {
+        try {
+
+            $this->reconciliationService->delete($id, $this->companyId);
+        } catch (Exception $e) {
+            $this->errorResponse($e->getMessage(), 400);
+        }
+
+        return $this->showMessage('Success', 200);
+    }
+
+    public function autoReconciliation(Request $request)
+    {
+
+        return $this->reconciliationService->autoProcess($request->process, $this->companyId);
     }
 
     public function deleteProcess(Request  $request)
@@ -259,11 +274,31 @@ class ReconciliationController extends ApiController
         if (!$balanceInfo) {
             return $this->errorResponse('Invalid Json', 400);
         }
+
+        $step = $this->reconciliationService->getProcessStep($request->process, $this->companyId);
         try {
-            return $this->reconciliationService->setBalance($this->companyId, $balanceInfo, $request->process);
+            switch ($step) {
+                case ReconciliationItem::STEP_UPLOADED:
+                    return $this->reconciliationService->setInitBalance($this->companyId, $balanceInfo, $request->process);
+                case ReconciliationItem::STEP_SET_BALANCE:
+                    return $this->reconciliationService->setBalance($this->companyId, $balanceInfo, $request->process);
+                default:
+                    return $this->errorResponse('NO STEP FOUND', 400);
+            }
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
+    }
+
+    public function hasReconciliationBefore(Request $request)
+    {
+
+        $validated = $request->validate([
+            'endDate' => 'required',
+            'accountId' => 'required'
+        ]);
+        $item = $this->reconciliationService->hasReconciliationBefore($request->accountId, $request->endDate, $this->companyId);
+        return $item;
     }
     // TODO: OLD REMOVE
 

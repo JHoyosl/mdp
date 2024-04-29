@@ -19,6 +19,7 @@ import { ReconciliationProcessComponent } from './reconciliation-process/reconci
 import { BeginProcessComponent } from './components/begin-process/begin-process.component';
 import { SetBalanceComponent } from './components/set-balance/set-balance.component';
 import { BalanceAccountsComponent } from './components/balance-accounts/balance-accounts.component';
+import { ReconciliationBalanceComponent } from './components/reconciliation-balance/reconciliation-balance.component';
 
 
 @NgModule({
@@ -34,6 +35,7 @@ import { BalanceAccountsComponent } from './components/balance-accounts/balance-
     BeginProcessComponent,
     SetBalanceComponent,
     BalanceAccountsComponent,
+    ReconciliationBalanceComponent,
   ],
   imports: [
     CommonModule,

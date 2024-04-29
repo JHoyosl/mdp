@@ -20,7 +20,9 @@ export interface ReconciliationItem{
     localDebit: number;
     localCredit: number;
     externalBalance: number;
+    prevExternalBalance: number;
     localBalance: number;
+    prevLocalBalance: number;
     difference: number;
     status: string;
     step: string;
@@ -49,7 +51,9 @@ export interface ReonciliationBalance {
     localDebit: string;
     localCredit: string;
     externalBalance: string;
+    prevExternalBalance: string;
     localBalance: string;
+    prevLocalBalance: string;
     difference: string;
     status: string;
     step: string;
@@ -96,3 +100,22 @@ export interface ReconciliationResumeResponse extends GenericResponse {
     data: ReconciliationResume[];
 }
   
+export interface DetailInfo {
+    type: string;
+    prevBalance: number;
+    credit: number;
+    debit: number;
+    balanceSum: number;
+    newBalance: number;
+    difference: number;
+} 
+
+export interface DetailedBalance {
+    itemId: number;
+    bank: string;
+    localAccount: string;
+    externalAccount: string;
+    startDate: string;
+    endDate: string;
+    detailInfo: DetailInfo[];
+}

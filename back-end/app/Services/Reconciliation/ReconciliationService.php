@@ -84,6 +84,84 @@ class ReconciliationService
         return $process;
     }
 
+    public function autoProcess($process, $companyId)
+    {
+        $pitvotTableName = $this->getReconciliationPivotTableName($companyId);
+        $itemTableName = $this->getReconciliationItemTableName($companyId);
+        $itemTable = new ReconciliationItem($itemTableName);
+        $items = $itemTable->where('process', $process)->with('account')->get();
+
+        $acccounts = $items->map(function ($value) {
+            return $value->account->local_account;
+        });
+
+        $externalTableName = $this->getReconciliationExternalValuesTableName($companyId);
+        $externalTable = new ReconciliationExternalValues($externalTableName);
+        $localTableName = $this->getReconciliationLocalValuesTableName($companyId);
+        $localTable = new ReconciliationLocalValues($localTableName);
+
+        $pivot = DB::table($pitvotTableName)->select('local_value')->get()->toArray();
+        $ids = [];
+        foreach ($pivot as $value) {
+            $ids[] = $value->local_value;
+        }
+        $ids = array_unique($ids);
+
+        $matched1 = $localTable->leftJoin($externalTableName, function ($join) use ($localTableName, $externalTableName) {
+            $join->on($localTableName . '.fecha_movimiento', $externalTableName . '.fecha_movimiento');
+            $join->on($localTableName . '.local_account', $externalTableName . '.local_account');
+            $join->on($localTableName . '.valor_debito', $externalTableName . '.valor_credito');
+            $join->on($localTableName . '.valor_credito', $externalTableName . '.valor_debito');
+        })
+            ->select(
+                $localTableName . '.id as localId',
+                $externalTableName . '.id as externalId',
+                $localTableName . '.fecha_movimiento',
+                $localTableName . '.local_account as cuenta_libros',
+                $localTableName . '.cuenta_externa as cuenta_bancos',
+                $localTableName . '.valor_debito as deb_libros',
+                $externalTableName . '.valor_credito as cred_bancos',
+                $localTableName . '.valor_credito as cred_libros',
+                $externalTableName . '.valor_debito as deb_bancos',
+                $localTableName . '.referencia_1 as lReferencia_1',
+                $externalTableName . '.referencia_1 as eReferencia_1',
+                $externalTableName . '.referencia_2 as eReferencia_2',
+                $externalTableName . '.referencia_3 as eReferencia_3',
+            )
+            ->whereIn($localTableName . '.local_account', $acccounts)
+            ->whereNotIn('localId', $ids)
+            ->whereNotNull($externalTableName . '.local_account')
+            ->get();
+
+        $ref1_1 = $this->queryByRef('referencia_1', 'referencia_1', $localTable, $externalTableName, $localTableName);
+        $ref1_2 = $this->queryByRef('referencia_1', 'referencia_2', $localTable, $externalTableName, $localTableName);
+        $ref1_3 = $this->queryByRef('referencia_1', 'referencia_3', $localTable, $externalTableName, $localTableName);
+        $ref2_1 = $this->queryByRef('referencia_2', 'referencia_1', $localTable, $externalTableName, $localTableName);
+        $ref2_2 = $this->queryByRef('referencia_2', 'referencia_2', $localTable, $externalTableName, $localTableName);
+        $ref2_3 = $this->queryByRef('referencia_2', 'referencia_3', $localTable, $externalTableName, $localTableName);
+        $ref3_1 = $this->queryByRef('referencia_3', 'referencia_1', $localTable, $externalTableName, $localTableName);
+        $ref3_2 = $this->queryByRef('referencia_3', 'referencia_2', $localTable, $externalTableName, $localTableName);
+        $ref3_3 = $this->queryByRef('referencia_3', 'referencia_3', $localTable, $externalTableName, $localTableName);
+
+        $merged = array_merge(
+            $ref1_1->toArray(),
+            $ref1_2->toArray(),
+            $ref1_3->toArray(),
+            $ref2_1->toArray(),
+            $ref2_2->toArray(),
+            $ref2_3->toArray(),
+            $ref3_1->toArray(),
+            $ref3_2->toArray(),
+            $ref3_3->toArray(),
+            $matched1->toArray()
+        );
+        //fecha, numero de cuenta, valord debito, valor credito, 
+        return $merged;
+        // $data = $localTable->where('matched')
+
+        return $items;
+    }
+
     public function newProcess($date, $accounts, $companyId, $user)
     {
 
@@ -103,9 +181,9 @@ class ReconciliationService
         $balance = $this->getProcessBalance($items[0]->newProcess->process, $companyId);
 
         $this->setReconciliationBalance($balance, $companyId);
-        return $this->getAccountProcessById($companyId, $items[0]->newProcess->process);
-
         DB::commit();
+
+        return $this->getAccountProcessById($companyId, $items[0]->newProcess->process);
     }
 
     public function insertInfoToReconciliate($companyId, $items)
@@ -409,6 +487,50 @@ class ReconciliationService
         $items = $itemsTable->where($tableName . '.process', $process)
             ->whereIn('id', $itemsIds)
             ->get();
+        $invalidItems = [];
+        foreach ($items as $item) {
+            foreach ($balanceInfo as $balance) {
+                if ($item->id == $balance['id']) {
+                    $item->external_balance = $balance['externalBalance'];
+                    $item->local_balance = $balance['localBalance'];
+
+                    $externalDifference = $item->prev_external_balance +
+                        $item->external_credit - $item->external_debit - $item->external_balance;
+                    $localDifference = $item->prev_local_balance +
+                        $item->local_debit - $item->local_credit - $item->local_balance;
+                    $difference = abs(number_format($externalDifference, 2)) + abs(number_format($localDifference, 2));
+
+                    $item->difference = $difference;
+                    $item->step =  ReconciliationItem::STEP_MANUAL;
+                    if ($item->difference != 0) {
+                        $invalidItems[] = $item;
+                    }
+                }
+            }
+        }
+        if (count($invalidItems) > 0) {
+            $invalid = json_encode($invalidItems);
+            throw new Exception("Error en las diferencias {$invalid}", 400);
+        }
+        foreach ($items as $item) {
+            $item->save();
+        }
+
+        return $this->getAccountProcessById($companyId, $process);
+    }
+
+    public function setInitBalance($companyId, $balanceInfo, $process)
+    {
+        $tableName = $this->getReconciliationItemTableName($companyId);
+        $itemsIds = [];
+        foreach ($balanceInfo as $value) {
+            $itemsIds[] = $value['id'];
+        }
+
+        $itemsTable = new ReconciliationItem($tableName);
+        $items = $itemsTable->where($tableName . '.process', $process)
+            ->whereIn('id', $itemsIds)
+            ->get();
 
         $invalidItems = [];
         foreach ($items as $item) {
@@ -456,7 +578,9 @@ class ReconciliationService
                 $ItemstableName . ".local_debit",
                 $ItemstableName . ".local_credit",
                 $ItemstableName . ".external_balance",
+                $ItemstableName . ".prev_external_balance",
                 $ItemstableName . ".local_balance",
+                $ItemstableName . ".prev_local_balance",
                 $ItemstableName . ".difference",
                 $ItemstableName . ".status",
                 $ItemstableName . ".step",
@@ -505,8 +629,6 @@ class ReconciliationService
 
         return $accounts;
     }
-
-
 
     public function setReconciliationBalance($balance, $companyId)
     {
@@ -917,7 +1039,85 @@ class ReconciliationService
         ];
     }
 
+    public function delete($process, $companyId)
+    {
+        $itemTableName = $this->getReconciliationItemTableName($companyId);
+        $externalTableName = $this->getReconciliationExternalValuesTableName($companyId);
+        $localTableName = $this->getReconciliationExternalValuesTableName($companyId);
+
+        $externalTable = new ReconciliationExternalValues($externalTableName);
+        $localTable = new ReconciliationLocalValues($localTableName);
+
+        $items = (new ReconciliationItem($itemTableName))
+            ->where('process', $process)
+            ->get();
+        DB::beginTransaction();
+
+        foreach ($items as $value) {
+            $externalTable->where('item_id', $value->id)->delete();
+            $localTable->where('item_id', $value->id)->delete();
+        }
+        $items = (new ReconciliationItem($itemTableName))
+            ->where('process', $process)
+            ->delete();
+
+        DB::commit();
+        return $items;
+    }
     // HELPERS
+
+    public function hasReconciliationBefore($accountId, $startDate, $companyId)
+    {
+        $itemTableName = $this->getReconciliationItemTableName($companyId);
+        $itemsTable = new ReconciliationItem($itemTableName);
+        $item = $itemsTable
+            ->where('account_id', $accountId)
+            ->where('start_date', '>', $startDate)
+            ->first();
+
+        return $item;
+    }
+
+    public function queryByRef($refLocal, $refExternal, $localTable, $externalTableName, $localTableName)
+    {
+
+        $ref = $localTable->leftJoin($externalTableName, function ($join)
+        use ($refLocal, $refExternal, $localTableName, $externalTableName) {
+
+            $join->on($localTableName . '.fecha_movimiento', $externalTableName . '.fecha_movimiento');
+            $join->on($localTableName . '.local_account', $externalTableName . '.local_account');
+            $join->on($localTableName . '.' . $refLocal, $externalTableName . '.' . $refExternal);
+        })
+            ->select(
+                $localTableName . '.id as localId',
+                $externalTableName . '.id as externalId',
+                $localTableName . '.fecha_movimiento',
+                $localTableName . '.local_account as cuenta_libros',
+                $localTableName . '.cuenta_externa as cuenta_bancos',
+                $localTableName . '.valor_debito as deb_libros',
+                $externalTableName . '.valor_credito as cred_bancos',
+                $localTableName . '.valor_credito as cred_libros',
+                $externalTableName . '.valor_debito as deb_bancos',
+                $localTableName . '.referencia_1 as lReferencia_1',
+                $externalTableName . '.referencia_1 as eReferencia_1',
+                $externalTableName . '.referencia_2 as eReferencia_2',
+                $externalTableName . '.referencia_3 as eReferencia_3',
+
+            )
+            // ->whereNotIn('localId', $ids)
+            ->whereNotNull($externalTableName . '.local_account')
+            ->get();
+
+        return $ref;
+    }
+
+    public function getProcessStep($process, $companyId)
+    {
+        $tableName = $this->getReconciliationItemTableName($companyId);
+        $itemTable = new ReconciliationItem($tableName);
+        $item = $itemTable->where('process', $process)->first();
+        return $item->step;
+    }
 
     public function setAccountingProcessItem($accountingInfo)
     {
