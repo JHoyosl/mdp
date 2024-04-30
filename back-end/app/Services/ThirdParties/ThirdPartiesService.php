@@ -133,7 +133,7 @@ class ThirdPartiesService
     public function uploadAccountInfo($user, $accountId, $companyId, $file, $startDate, $endDate)
     {
         // ini_set('memory_limit', '-1');
-        return "hola";
+
         $this->dateValidation($accountId, $startDate);
 
         DB::beginTransaction();
@@ -237,7 +237,6 @@ class ThirdPartiesService
     {
 
         $mapFile = MapFile::find($account->map_id);
-
         $map =  json_decode($mapFile->map, true);
 
         $indexMap =  [];
@@ -263,7 +262,7 @@ class ThirdPartiesService
 
             // Init  in -1 to start adding before conditions return
             $fileColumn = -1;
-            foreach ($cellIterator as  $calumnKey => $cell) {
+            foreach ($cellIterator as  $columnKey => $cell) {
                 $fileColumn++;
 
                 if (\PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($cell)) {
@@ -275,14 +274,18 @@ class ThirdPartiesService
                 if (in_array($indexMap[$fileColumn], ["VALOR CRÉDITO", "VALOR DEBITO", "VALOR (DEBITO/CREDITO)"])) {
 
                     $value = $mappedRow[$indexMap[$fileColumn]];
-                    if ($separator == ',') {
-                        $value = $this->currencyToDecimal($value, $separator);
+                    $value = str_replace("$", "", $value);
+
+                    $value = $this->currencyToDecimal($value, $separator);
+
+                    if ($indexMap[$fileColumn] == "VALOR (DEBITO/CREDITO)") {
+                        if ($value > 0) {
+                            $mappedRow['VALOR CRÉDITO'] =  $value;
+                        } else {
+                            $mappedRow['VALOR DEBITO'] =  abs($value);
+                        }
                     }
-                    if ($value > 0) {
-                        $mappedRow['VALOR CRÉDITO'] =  $value;
-                    } else {
-                        $mappedRow['VALOR DEBITO'] =  abs($value);
-                    }
+                    $mappedRow[$indexMap[$fileColumn]] = $value;
                 }
             }
 
@@ -300,7 +303,6 @@ class ThirdPartiesService
                 );
                 throw $error;
             }
-
             $mappedInfo[]  = $tmpInsertCell;
         }
 
@@ -419,13 +421,12 @@ class ThirdPartiesService
         $value = str_replace("$", "", $value);
         if ($separator == ".") {
             $value = str_replace(",", "", $value);
-            $value = str_replace(".", ".", $value);
             return  floatval($value);
         }
         $value = str_replace(".", "", $value);
         $value = str_replace(",", ".", $value);
 
-        return  floatval($value);
+        return  $value;
     }
 
     public function getThirdPartiesItemsTableName(String $accountId)

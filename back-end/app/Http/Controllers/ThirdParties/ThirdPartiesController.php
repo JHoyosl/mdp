@@ -76,11 +76,6 @@ class ThirdPartiesController extends ApiController
         }
     }
 
-
-    //// TODO: REVISAR PORQUE NO SE ESTA GUARDANDO LA REFERENCIA 1 EN CARGUE Y AL MOVERLO A RECONCILIACION
-
-
-
     public function uploadAccountInfo(Request $request)
     {
         $validated = $request->validate([

@@ -36,7 +36,7 @@ class Account extends Model
     function map()
     {
 
-        return $this->hasOne(MapFile::class, 'id');
+        return $this->hasOne(MapFile::class, 'id', 'map_id');
     }
 
     function banks()
