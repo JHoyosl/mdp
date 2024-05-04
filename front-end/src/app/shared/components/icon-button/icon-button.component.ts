@@ -9,6 +9,7 @@ export class IconButtonComponent implements OnInit {
 
   @Output() click = new EventEmitter<any>();
   @Input() icon: string = '';
+  @Input() toolTip: string = '';
 
   constructor() { }
 
@@ -18,4 +19,5 @@ export class IconButtonComponent implements OnInit {
   onClick(): void {
     this.click.emit(true);
   }
+
 }

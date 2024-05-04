@@ -8,6 +8,7 @@ use App\Models\HeaderAccountingInfo;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
 use App\Services\Account\AccountingService;
+use App\Services\Reconciliation\ReconciliationService;
 
 
 
@@ -17,8 +18,9 @@ class AccountingController extends ApiController
     private $user;
 
     protected AccountingService $accountingService;
+    private ReconciliationService $reconciliationService;
 
-    public function __construct(AccountingService $accountingService)
+    public function __construct(AccountingService $accountingService, ReconciliationService $reconciliationService)
     {
         $this->middleware('auth:api');
         $this->middleware(function ($request, $next) {
@@ -28,6 +30,7 @@ class AccountingController extends ApiController
         });
 
         $this->accountingService = $accountingService;
+        $this->reconciliationService = $reconciliationService;
     }
 
 
@@ -51,7 +54,6 @@ class AccountingController extends ApiController
         $company =  Company::find($this->user->current_company);
 
         if ($company->map_id == null) {
-
             return $this->errorResponse("No hay un formato asociado", 400);
         }
 
@@ -80,6 +82,11 @@ class AccountingController extends ApiController
             'startDate' => 'required',
             'endDate' => 'required'
         ]);
+
+        if (!!$this->reconciliationService->hasReconciliationBefore($request->startDate, $request->endDate, $this->companyId)) {
+            return $this->errorResponse('Existe una conciliación, asociada a este archivo, Debe reversar la coniliación', 400);
+        }
+
         try {
             $result = $this->accountingService
                 ->canBeDeleted($request->id, $request->startDate, $request->endDate, $this->user->current_company);

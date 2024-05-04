@@ -1066,14 +1066,29 @@ class ReconciliationService
     }
     // HELPERS
 
-    public function hasReconciliationBefore($accountId, $startDate, $companyId)
+    //if accountId != null, looking for account
+    public function hasReconciliationBefore($startDate, $endDate, $companyId, $accountId = NULL)
     {
         $itemTableName = $this->getReconciliationItemTableName($companyId);
         $itemsTable = new ReconciliationItem($itemTableName);
+        if ($accountId !=  NULL) {
+            $item = $itemsTable
+                ->where('account_id', $accountId)
+                ->where('type', '!=', ReconciliationItem::TYPE_INIT)
+                ->where(function ($query) use ($startDate, $endDate) {
+                    $query->whereBetween('start_date', [$startDate, $endDate])
+                        ->orWhereBetween('end_date', [$startDate, $endDate]);
+                })->first();
+
+            return $item;
+        }
+
         $item = $itemsTable
-            ->where('account_id', $accountId)
-            ->where('start_date', '>', $startDate)
-            ->first();
+            ->where('type', '!=', ReconciliationItem::TYPE_INIT)
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                    ->orWhereBetween('end_date', [$startDate, $endDate]);
+            })->first();
 
         return $item;
     }

@@ -34,6 +34,7 @@ export const Approutes: Routes = [
       { path: 'cuadres', loadChildren: './cuadres/cuadres.module#CuadresModule' },
       { path: 'cartera', loadChildren: './cartera/cartera.module#CarteraModule' },
       { path: 'security', loadChildren: './security/security.module#SecurityModule' },
+      { path: 'configuration', loadChildren: './configuration/configuration.module#ConfigurationModule' },
     ]
   },
   {

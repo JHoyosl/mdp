@@ -12,3 +12,7 @@
 .mat-button:active {
     border: none;
 }
+
+mat-icon {
+    font-size: medium;
+  }

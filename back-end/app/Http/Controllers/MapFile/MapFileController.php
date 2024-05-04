@@ -2,44 +2,61 @@
 
 namespace App\Http\Controllers\MapFile;
 
-use Excel;
 use App\Models\MapFile;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
-use App\Imports\ConciliarIniImport;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Config;
 use App\Http\Controllers\ApiController;
+use App\Services\MappingFile\MappingFileService;
+use App\Http\Requests\MapFile\MapFileIndexRequest;
+use App\Http\Requests\MapFile\MappingUploadRequest;
+use App\Http\Resources\MapFile\MapFileIndexCollection;
+use App\Http\Requests\MapFile\MappingFileToArrayRequest;
 
 class MapFileController extends ApiController
 {
 
-    const ARRAY_SEPARATOR = array(',',';','|');
-    public function __construct(){
+    const ARRAY_SEPARATOR = array(',', ';', '|');
+    private $user;
+    private $companyId;
+    private MappingFileService $mappingFileService;
 
-        
-        $this->middleware('auth:api')->only(['index','show','update','store','uploadFile','saveMap',
-            'getMapIndex']);
+    public function __construct(MappingFileService $mappingFileService)
+    {
+        $this->middleware('auth:api')->only(
+            [
+                'index',
+                'show',
+                'update',
+                'store',
+                'getMapIndex',
+                'MappingFileToArray',
+                'uploadMappingFile',
+                'uploadFile',
+                'saveMap',
+            ]
+        );
+
+        $this->middleware(function ($request, $next) {
+            $this->user = Auth::user();
+            $this->companyId = $this->user->current_company;
+            return $next($request);
+        });
+
+        $this->mappingFileService = $mappingFileService;
     }
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(MapFileIndexRequest $request)
     {
 
-        $user = Auth::user();
+        $mapFiles = $this->mappingFileService->index($this->companyId, $request->source);
 
-
-        $mapFiles = MapFile::with('users')
-                ->with('banks') 
-                ->where('company_id', (int)$user->current_company)
-                ->orWhere('type', MapFile::TYPE_CONCILIAR_EXTERNO)
-                ->get();
-
-        return $this->showAll($mapFiles);
+        return $this->showArray(new MapFileIndexCollection($mapFiles), 200);
     }
 
     /**
@@ -93,47 +110,46 @@ class MapFileController extends ApiController
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, MapFile $mapFile)
-    {   
+    {
 
         $rules = [
-            'bank_id'=>'required',
-            'base'=>'required',
-            'description'=>'required',
-            'type'=>'required',
-            'map'=>'required',
+            'bank_id' => 'required',
+            'base' => 'required',
+            'description' => 'required',
+            'type' => 'required',
+            'map' => 'required',
         ];
 
         $request->validate($rules);
 
         $fields = $request->all();
-        
-        if($fields['type'] == MapFile::TYPE_CONCILIAR_EXTERNO && !$fields['bank_id']){
+
+        if ($fields['type'] == MapFile::TYPE_CONCILIAR_EXTERNO && !$fields['bank_id']) {
 
             $error = \Illuminate\Validation\ValidationException::withMessages([
-               'bank_id' => ['El campo bank_id es obligatorio para archivos exgternos'],
+                'bank_id' => ['El campo bank_id es obligatorio para archivos exgternos'],
             ]);
             throw $error;
-
         }
 
-        if($fields['type'] == MapFile::TYPE_CONCILIAR_INTERNO){
+        if ($fields['type'] == MapFile::TYPE_CONCILIAR_INTERNO) {
 
-             $mapFile->bank_id = null;
-        }else{
+            $mapFile->bank_id = null;
+        } else {
 
             $mapFile->bank_id = $fields['bank_id'];
         }
 
-        
+
         $mapFile->description = $fields['description'];
         $mapFile->type = $fields['type'];
         $mapFile->base = $fields['base'];
         $mapFile->map = $fields['map'];
 
 
-        $mapFile->save(); 
+        $mapFile->save();
 
-        return $this->showOne($mapFile); 
+        return $this->showOne($mapFile);
     }
 
     /**
@@ -147,38 +163,28 @@ class MapFileController extends ApiController
         // 
     }
 
-    public function getMapIndex($type){
+    //TODO: MOVER AL GRUPO QUE NO SE ELIMINA, NO ELIMINAR SIN VALIDAR
+    public function getMapIndex(Request $request)
+    {
+        $valiated = $request->validate([
+            'type' => ['required', Rule::in([MapFile::TYPE_EXTERNAL, MapFile::TYPE_INTERNAL])]
+        ]);
 
-        if($type == 'conciliar_externo'){
-
-             $bankMap = DB::Table('map_bank_index')
-                    ->orderBy('description')
-                    ->get();
-
-             return $this->showAll($bankMap);
-
-        }else{
-
-
-            $localMap = DB::Table('map_local_index')
-                    ->orderBy('description')
-                    ->get();
-
-             return $this->showAll($localMap);
-        }
-       
+        $data = $this->mappingFileService->getMapIndex($request->type);
+        return $this->showAll($data);
     }
 
-    public function saveMap(Request $request){
+    public function saveMap(Request $request)
+    {
 
         $user = Auth::user();
 
 
         $rules = [
-            'bank_id'=>'required',
-            'description'=>'required',
-            'type'=>'required',
-            'map'=>'required',
+            'bank_id' => 'required',
+            'description' => 'required',
+            'type' => 'required',
+            'map' => 'required',
         ];
 
 
@@ -188,20 +194,19 @@ class MapFileController extends ApiController
 
         $fields = $request->all();
 
-        
 
-        if($fields['type'] == MapFile::TYPE_CONCILIAR_EXTERNO && !$fields['bank_id']){
+
+        if ($fields['type'] == MapFile::TYPE_CONCILIAR_EXTERNO && !$fields['bank_id']) {
 
             $error = \Illuminate\Validation\ValidationException::withMessages([
-               'bank_id' => ['El campo bank_id es obligatorio para archivos exgternos'],
+                'bank_id' => ['El campo bank_id es obligatorio para archivos exgternos'],
             ]);
             throw $error;
-
         }
 
-        if($fields['type'] == MapFile::TYPE_CONCILIAR_INTERNO){
+        if ($fields['type'] == MapFile::TYPE_CONCILIAR_INTERNO) {
 
-             $fields['bank_id'] = null;
+            $fields['bank_id'] = null;
         }
         $fields['created_by'] = $user->id;
         $fields['header'] = false;
@@ -215,91 +220,105 @@ class MapFileController extends ApiController
         return $this->showOne($mapFile);
     }
 
-    public function uploadFile(Request $request){
+    public function uploadMappingFile(MappingUploadRequest $request)
+    {
+        $this->mappingFileService->uploadMappingFile(
+            $request->type,
+            $request->description,
+            $request->dateFormat,
+            $request->separator,
+            $request->skipTop,
+            $request->skipBottom,
+            $request->file,
+            $request->has('bankId') ? $request->bankId : null
+        );
+        return $request;
+    }
+
+    public function MappingFileToArray(MappingFileToArrayRequest $request)
+    {
+        return $this->mappingFileService->MappingFileToArray($request->file, $request->skipTop);
+        // return $request;
+    }
+
+    public function uploadFile(Request $request)
+    {
 
 
         $user = Auth::user();
 
-        $ext = $request->file->extension()=='txt'?'csv':$request->file->extension();
-            
-        
-        $request->file->storeAs('tmpUpload',$user->id.'mapFile.'.$ext,'local');
+        $ext = $request->file->extension() == 'txt' ? 'csv' : $request->file->extension();
 
 
-        $file = storage_path('app/tmUpload/'.$user->id.'mapFile.'.$ext);
+        $request->file->storeAs('tmpUpload', $user->id . 'mapFile.' . $ext, 'local');
 
-        if($ext == 'csv' || $ext == 'txt'){
+
+        $file = storage_path('app/tmUpload/' . $user->id . 'mapFile.' . $ext);
+
+        if ($ext == 'csv' || $ext == 'txt') {
 
             $content = $this->getFormatSeparator($request->file);
             return $this->showArray($content);
         }
-     
+
         $excel = \Excel::toArray(null, $request->file);
 
-        $tmpArray = [$excel[0][0],$excel[0][1]];
+        $tmpArray = [$excel[0][0], $excel[0][1]];
 
 
         return $this->showArray($tmpArray);
-
     }
 
-    public function formatsExterno($id){
+    public function formatsExterno($id)
+    {
 
-        $formats = MapFile::where('bank_id',$id)
-                    ->orWhere('bank_id',29)
-                    ->get();
+        $formats = MapFile::where('bank_id', $id)
+            ->orWhere('bank_id', 29)
+            ->get();
 
         return $this->showAll($formats);
     }
 
-    public function formatsLocal($id){
+    public function formatsLocal($id)
+    {
 
-        $formats = MapFile::where('company_id',$id)
-                    ->where('type',MapFile::TYPE_CONCILIAR_INTERNO)
-                    ->get();
+        $formats = MapFile::where('company_id', $id)
+            ->where('type', MapFile::TYPE_CONCILIAR_INTERNO)
+            ->get();
 
         return $this->showAll($formats);
     }
 
-    private function getFormatSeparator($file){
+    private function getFormatSeparator($file)
+    {
 
         $content = array();
         if (($gestor = $this->utf8_fopen_read($file)) !== FALSE) {
 
             $tmpArray = MapFileController::ARRAY_SEPARATOR;
-            
-            for($i = 0; $i < count($tmpArray); $i++){
+
+            for ($i = 0; $i < count($tmpArray); $i++) {
                 $content = array();
                 $gestor = $this->utf8_fopen_read($file);
-                for($j = 0; $j < 2; $j++){
-                        
-                    if($gestor){
-                        
+                for ($j = 0; $j < 2; $j++) {
+
+                    if ($gestor) {
+
                         $content[] = fgetcsv($gestor, 0, $tmpArray[$i]);
-                        
                     }
-                    
                 }
 
-                
-                if(is_array($content[0]) && count($content[0]) > 4){
+
+                if (is_array($content[0]) && count($content[0]) > 4) {
 
                     return $content;
                 }
-
-
             }
 
             $error = \Illuminate\Validation\ValidationException::withMessages([
-           'separador' => ['Solo se permiteeen los siguiente separadorees: '.json_encode(MapFileController::ARRAY_SEPARATOR)],
+                'separador' => ['Solo se permiteeen los siguiente separadorees: ' . json_encode(MapFileController::ARRAY_SEPARATOR)],
             ]);
-            throw $error; 
-            }
-
+            throw $error;
+        }
     }
-
-
-
-
-
 }

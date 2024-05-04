@@ -57,7 +57,7 @@ class ThirdPartiesController extends ApiController
             "accountId" => "required|exists:accounts,id",
         ]);
 
-        if (!!$this->reconciliationService->hasReconciliationBefore($request->accountId, $request->endDate, $this->companyId)) {
+        if (!!$this->reconciliationService->hasReconciliationBefore($request->startDate, $request->endDate, $this->companyId, $request->accountId)) {
             return $this->errorResponse('Existe una conciliación, asociada a este archivo, Debe reversar la coniliación', 400);
         }
 
@@ -93,7 +93,7 @@ class ThirdPartiesController extends ApiController
                 $request->startDate,
                 $request->endDate
             );
-            return $header;
+
             return $this->showOne($header);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());

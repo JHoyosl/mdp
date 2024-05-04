@@ -1,3 +1,4 @@
+import { Bank } from '../Interfaces/bank.interface';
 
 export class BankModel{
     
@@ -13,6 +14,20 @@ export class BankModel{
      
     }
     
+    static toInterface( obj: any ): Bank{
+        return {
+            'id': obj.id,
+            'codComp': obj.cod_comp,
+            'name': obj.name,
+            'nit': obj.nit,
+            'currency': obj.currency,
+            'portal': obj.portal,
+            'deletedAt': obj.deleted_at,
+            'createdAt': obj.created_at,
+            'updatedAt': obj.updated_at,
+        }
+    }
+
     setValues( Object: any) {
         
 

@@ -67,6 +67,12 @@ class AccountingService
 
         $this->createTableAccountingItems();
 
+        $accounts = Account::where('company_id', $company->id)->get();
+        $accArray = [];
+        foreach ($accounts as $account) {
+            $accArray[$account->local_account] = $account->bank_account;
+        }
+
         DB::beginTransaction();
 
         try {
@@ -79,8 +85,8 @@ class AccountingService
                 $endDate
             );
 
-            $mapped = $this->getInsertConciliarLocal($file, $company->map_id, $startDate, $endDate, $newHeader->id);
-            return $mapped;
+            $mapped = $this->getInsertConciliarLocal($file, $company->map_id, $startDate, $endDate, $newHeader->id, $accArray);
+
             $newHeader->rows = count($mapped);
             $newHeader->save();
 
@@ -156,7 +162,7 @@ class AccountingService
         return $account;
     }
 
-    public function getInsertConciliarLocal($file, $map_id, $startDate, $endDate, $headerId)
+    public function getInsertConciliarLocal($file, $map_id, $startDate, $endDate, $headerId, $accArray)
     {
         //Garantee miss match date with time
         $carbonStart = Carbon::parse($startDate)->subDay();
@@ -164,90 +170,88 @@ class AccountingService
         $fileArray = $this->fileToArray($file);
 
         $mapModel = MapFile::find($map_id);
-
         $map = json_decode($mapModel->map, true);
 
-
-        $tmpArray = array();
-        $tmpArray[] = null;
-
-        for ($i = 1; $i <= 31; $i++) {
-            $found = false;
-            for ($j = 0; $j < count($map); $j++) {
-
-                if ($i == $map[$j]['mapIndex']) {
-                    $found = true;
-                    $tmpArray[] = (string)$map[$j]['fileColumn'];
-                }
+        $row = [];
+        foreach ($fileArray as $fileKey => $fileValue) {
+            foreach ($map as $value) {
+                $row[$value['value']] = $fileValue[$value['fileColumn']];
             }
-            if (!$found) {
-
-                $tmpArray[] = null;
-            }
-        }
-
-        for ($i = 0; $i < count($fileArray); $i++) {
-            // return [$fileArray[$i][5], $tmpArray[1]];
-            if ($fileArray[$i][$tmpArray[1]] == 0) {
+            if ($row['FECHA DE MOVIMIENTO'] == null) {
                 continue;
             }
-            if ($fileArray[$i][$tmpArray[20]] == null) {
-                continue;
-            }
-            // Check if date is valid
-            if (strtotime($fileArray[$i][$tmpArray[1]]) === false) {
-                throw new Exception("Fecha de movimiento inválida en {$i} - {$fileArray[$i][$tmpArray[1]]}" . json_encode($fileArray[$i][$tmpArray[1]]), 400);
+            if (strtotime($row['FECHA DE MOVIMIENTO']) === false) {
+                throw new Exception("Fecha de movimiento inválida en {$fileKey}" . json_encode($row), 400);
             }
 
-            // Check if date is in range
-            $carbonCompare = Carbon::createFromFormat('Ymd', $fileArray[$i][$tmpArray[1]]);
-            if ($carbonCompare->gte($carbonEnd)) {
-                throw new Exception("Fecha de movimiento mayor del rango en {$i} - " . json_encode($fileArray[$i][$tmpArray[1]]), 400);
-            }
-            if ($carbonCompare->lte($carbonStart)) {
-                throw new Exception("Fecha de movimiento menor de rango en {$i} - " . json_encode($fileArray[$i][$tmpArray[1]]), 400);
-            }
+            $row['CUENTA EXTERNA'] = array_key_exists($row['NUMERO CUENTA CONTABLE'], $accArray)
+                ? $accArray[$row['NUMERO CUENTA CONTABLE']]
+                : $row['NUMERO CUENTA CONTABLE'];
 
-            $mapped[] =  [
-                'header_id' => $headerId,     //1
-                'matched' => 0,     //1
-                'item_id' => 0,     //2
-                'tx_type_id' => null,       //3
-                'tx_type_name' => null,     //4
-                'cuenta_externa' => $tmpArray[3] == null ? '' : $fileArray[$i][$tmpArray[3]],
-                'fecha_movimiento' => $tmpArray[1] == null ? null : $fileArray[$i][$tmpArray[1]],
-                'descripcion' => $tmpArray[2] == null ? null : $fileArray[$i][$tmpArray[2]],
-                'referencia_1' => $tmpArray[4] == null ? null : $fileArray[$i][$tmpArray[4]],
-                'saldo_actual' => $tmpArray[8] == null ? null : $fileArray[$i][$tmpArray[8]],
-                'oficina_destino' => $tmpArray[26] == null ? null : $fileArray[$i][$tmpArray[26]],
-                'nombre_agencia' => $tmpArray[13] == null ? null : $fileArray[$i][$tmpArray[13]],
-                'nombre_centro_costos' => $tmpArray[15] == null ? null : $fileArray[$i][$tmpArray[15]],
-                'codigo_centro_costo' => $tmpArray[16] == null ? null : $fileArray[$i][$tmpArray[16]],
-                'numero_comprobante' => $tmpArray[17] == null ? null : $fileArray[$i][$tmpArray[17]],
-                'nombre_usuario' => $tmpArray[18] == null ? null : $fileArray[$i][$tmpArray[18]],
-                'valor_debito_credito' => $tmpArray[14] == null ? null : $fileArray[$i][$tmpArray[14]],
-                'saldo_anterior' => $tmpArray[10] == null ? null : $fileArray[$i][$tmpArray[10]],
-                'nombre_cuenta_contable' => $tmpArray[19] == null ? null : $fileArray[$i][$tmpArray[19]],
-                'referencia_2' => $tmpArray[5] == null ? null : $fileArray[$i][$tmpArray[5]],
-                'referencia_3' => $tmpArray[6] == null ? null : $fileArray[$i][$tmpArray[6]],
-                'nombre_tercero' => $tmpArray[16] == null ? null : $fileArray[$i][$tmpArray[16]],
-                'identificacion_tercero' => $tmpArray[21] == null ? null : $fileArray[$i][$tmpArray[21]],
-                'valor_credito' => $tmpArray[11] == null ? null : $fileArray[$i][$tmpArray[11]],
-                'valor_debito' => $tmpArray[9] == null ? null : $fileArray[$i][$tmpArray[9]],
-                'codigo_usuario' => $tmpArray[12] == null ? null : $fileArray[$i][$tmpArray[12]],
-                'fecha_ingreso' => $tmpArray[23] == null ? null : $fileArray[$i][$tmpArray[23]],
-                'fecha_origen' => $tmpArray[24] == null ? null : $fileArray[$i][$tmpArray[24]],
-                'local_account' => $tmpArray[20] == null ? null : $fileArray[$i][$tmpArray[20]],
-                'numero_lote' => $tmpArray[27] == null ? null : $fileArray[$i][$tmpArray[27]],
-                'consecutivo_lote' => $tmpArray[28] == null ? null : $fileArray[$i][$tmpArray[28]],
-                'tipo_registro' => $tmpArray[29] == null ? null : $fileArray[$i][$tmpArray[29]],
-                'ambiente_origen' => $tmpArray[30] == null ? null : $fileArray[$i][$tmpArray[30]],
-                'otra_referencia' => $tmpArray[7] == null ? null : $fileArray[$i][$tmpArray[7]],
-                'beneficiario' => $tmpArray[31] == null ? null : $fileArray[$i][$tmpArray[31]],
-            ];
+            $mapped[] = $this->rowToInsert($row, $headerId, $carbonStart, $carbonEnd, $fileKey);
         }
         return $mapped;
     }
+
+    private function getExternalAccountNumber($localAccount)
+    {
+        $account = Account::where('local_account', $localAccount)->first();
+        if ($account) {
+            return $account->bankbank_account;
+        }
+        return $localAccount;
+    }
+
+    private function rowToInsert($row, $headerId, $startDate, $endDate, $fileKey)
+    {
+        $carbonCompare = Carbon::createFromFormat('Ymd', $row['FECHA DE MOVIMIENTO']);
+        if ($carbonCompare->gte($endDate)) {
+            throw new Exception("Fecha de movimiento mayor del rango en {$fileKey}" . json_encode($row), 400);
+        }
+        if ($carbonCompare->lte($startDate)) {
+            throw new Exception("Fecha de movimiento menor de rango en {$fileKey} - " . json_encode($row), 400);
+        }
+        $row['FECHA DE MOVIMIENTO'] = $carbonCompare->format('Y-m-d');
+
+        return  [
+            'header_id' => $headerId,
+            'matched' => 0,
+            'item_id' => 0,
+            'tx_type_id' => null,
+            'tx_type_name' => null,
+            'cuenta_externa' => array_key_exists('CUENTA EXTERNA', $row) ? $row['CUENTA EXTERNA'] : null,
+            'fecha_movimiento' => array_key_exists('FECHA DE MOVIMIENTO', $row) ? $row['FECHA DE MOVIMIENTO'] : null,
+            'descripcion' => array_key_exists('DESCRIPCION', $row) ? $row['DESCRIPCION'] : null,
+            'referencia_1' => array_key_exists('REFERENCIA 1', $row) ? $row['REFERENCIA 1'] : null,
+            'saldo_actual' => array_key_exists('SALDO ACTUAL', $row) ? $row['SALDO ACTUAL'] : null,
+            'oficina_destino' => array_key_exists('OFICINA DESTINO', $row) ? $row['OFICINA DESTINO'] : null,
+            'nombre_agencia' => array_key_exists('NOMBRE AGENCIA', $row) ? $row['NOMBRE AGENCIA'] : null,
+            'nombre_centro_costos' => array_key_exists('NOMBRE CENTRO DE COSTOS', $row) ? $row['NOMBRE CENTRO DE COSTOS'] : null,
+            'codigo_centro_costo' => array_key_exists('CODIGO CENTRO DE COSTOS', $row) ? $row['CODIGO CENTRO DE COSTOS'] : null,
+            'numero_comprobante' => array_key_exists('NUMERO DE COMPROBANTE', $row) ? $row['NUMERO DE COMPROBANTE'] : null,
+            'nombre_usuario' => array_key_exists('NOMBRE DE USUARIO', $row) ? $row['NOMBRE DE USUARIO'] : null,
+            'valor_debito_credito' => array_key_exists('VALOR (Debito/Credito)', $row) ? $row['VALOR (Debito/Credito)'] : null,
+            'saldo_anterior' => array_key_exists('SALDO ANTERIOR', $row) ? $row['SALDO ANTERIOR'] : null,
+            'nombre_cuenta_contable' => array_key_exists('NOMBRE CUENTA CONTABLE', $row) ? $row['NOMBRE CUENTA CONTABLE'] : null,
+            'referencia_2' => array_key_exists('REFERENCIA 2', $row) ? $row['REFERENCIA 2'] : null,
+            'referencia_3' => array_key_exists('REFERENCIA 3', $row) ? $row['REFERENCIA 3'] : null,
+            'nombre_tercero' => array_key_exists('NOMBRE DE TERCERO', $row) ? $row['NOMBRE DE TERCERO'] : null,
+            'identificacion_tercero' => array_key_exists('IDENTIFICACION DE TERCERO', $row) ? $row['IDENTIFICACION DE TERCERO'] : null,
+            'valor_credito' => array_key_exists('VALOR CREDITO', $row) ? $row['VALOR CREDITO'] : null,
+            'valor_debito' => array_key_exists('VALOR DEBITO', $row) ? $row['VALOR DEBITO'] : null,
+            'codigo_usuario' => array_key_exists('CODIGO USUARIO', $row) ? $row['CODIGO USUARIO'] : null,
+            'fecha_ingreso' => array_key_exists('FECHA INGRESO', $row) ? $row['FECHA INGRESO'] : null,
+            'fecha_origen' => array_key_exists('FECHA ORIGEN', $row) ? $row['FECHA ORIGEN'] : null,
+            'local_account' => array_key_exists('NUMERO CUENTA CONTABLE', $row) ? $row['NUMERO CUENTA CONTABLE'] : null,
+            'numero_lote' => array_key_exists('NUMERO LOTE', $row) ? $row['NUMERO LOTE'] : null,
+            'consecutivo_lote' => array_key_exists('CONSECUTIVO LOTE', $row) ? $row['CONSECUTIVO LOTE'] : null,
+            'tipo_registro' => array_key_exists('TIPO DE REGISTRO', $row) ? $row['TIPO DE REGISTRO'] : null,
+            'ambiente_origen' => array_key_exists('AMBIENTE ORIGEN', $row) ? $row['AMBIENTE ORIGEN'] : null,
+            'otra_referencia' => array_key_exists('OTRA REFERENCIA', $row) ? $row['OTRA REFERENCIA'] : null,
+            'beneficiario' => array_key_exists('BENEFICIARIO', $row) ? $row['BENEFICIARIO'] : null,
+        ];
+    }
+
 
     private function fileToArray($file)
     {

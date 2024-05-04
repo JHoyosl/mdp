@@ -1,0 +1,35 @@
+<table mat-table [dataSource]="data" class="mat-elevation-z8" style="margin-top:4px">
+  
+  <ng-container matColumnDef="bank">
+    <th mat-header-cell *matHeaderCellDef>Banco</th>
+    <td mat-cell *matCellDef = " let element">{{element?.bank?.name || 'Contable'}}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="createdBy">
+    <th mat-header-cell *matHeaderCellDef>Creado</th>
+    <td mat-cell *matCellDef = " let element">{{element.createdBy.names}} {{ element.createdBy.lastNames }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="description">
+    <th mat-header-cell *matHeaderCellDef>Descripción</th>
+    <td mat-cell *matCellDef = " let element">{{element.description}}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="separator">
+    <th mat-header-cell *matHeaderCellDef>Signo Decimal</th>
+    <td mat-cell *matCellDef = " let element">{{ signToText(element.separator) }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="Actions">
+    <th mat-header-cell *matHeaderCellDef> Acciones </th>
+    <td mat-cell *matCellDef="let element"> 
+      <app-icon-button 
+        toolTip="editar"
+        icon="edit"
+      ></app-icon-button>           
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>

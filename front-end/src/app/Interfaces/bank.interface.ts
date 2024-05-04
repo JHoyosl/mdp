@@ -7,8 +7,8 @@ name: string
 nit: string
 currency: string
 portal: string
-deletedAt: string
-createdAt: string
-updatedAt: string
+deletedAt?: string
+createdAt?: string
+updatedAt?: string
 }
   

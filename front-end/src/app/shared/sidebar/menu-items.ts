@@ -162,6 +162,23 @@ export const ROUTES: RouteInfo[] = [
     extralink: false,
     submenu: [
       {
+        path: '',
+        title: 'Archivos',
+        icon: '',
+        class: 'has-arrow',
+        extralink: false,
+        submenu: [
+          {
+            path: '/configuration/file-mapping',
+            title: 'Mapeo',
+            icon: '',
+            class: '',
+            extralink: false,
+            submenu: []
+          },
+        ]
+      },
+      {
         path: '/banks',
         title: 'Bancos',
         icon: '',

@@ -46,8 +46,15 @@ Route::resource('companies', 'Company\CompanyController', ['except' => 'create',
 Route::resource('locations', 'Location\LocationController', ['except' => 'create', 'edit']);
 Route::resource('banks', 'Bank\BankController', ['except' => 'create', 'edit']);
 Route::resource('accounts', 'Account\AccountController', ['except' => 'create', 'edit']);
-Route::resource('mapFiles', 'MapFile\MapFileController', ['except' => 'create', 'edit']);
 Route::resource('usersCompanies', 'User\UserCompanyController');
+
+// MAPING FILES ROUTES
+Route::get('mappingFiles/getMapIndex', 'MapFile\MapFileController@getMapIndex');
+Route::post('mappingFiles/uploadMappingFile', 'MapFile\MapFileController@uploadMappingFile');
+Route::post('mappingFiles/MappingFileToArray', 'MapFile\MapFileController@MappingFileToArray');
+
+Route::resource('mappingFiles', 'MapFile\MapFileController');
+// MAPING FILES ROUTES
 
 //RECONCILIATION ROUTES
 Route::resource('reconciliation', 'Reconciliation\ReconciliationController')->only(

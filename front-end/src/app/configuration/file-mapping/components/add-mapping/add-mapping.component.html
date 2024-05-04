@@ -1,0 +1,116 @@
+<div class="container">
+  <div class="row">
+    <div class="col-4" style="padding: 2px;">
+      <mat-card style="margin-top: 10px; text-align: center;">
+        <h4 class="card-title">Infrmación Contable</h4>
+        <h6 class="card-subtitle">Cargar Información Contable</h6>
+        <form [formGroup]="formMapping" (submit)="submitFile()">
+          <!-- type -->
+          <mat-form-field>
+            <mat-label>Tipo</mat-label>
+            <mat-select formControlName="type">
+              <mat-option value="internal"> Interno</mat-option>
+              <mat-option value="external"> Externo</mat-option>
+            </mat-select>
+          </mat-form-field>  
+          <!-- banks -->
+          <mat-form-field *ngIf="showBank">
+            <mat-label>Banco</mat-label>
+            <mat-select formControlName="bank">
+              <mat-option *ngFor="let bank of bankList" 
+                [value]="bank.id"
+              >{{ bank.name }}</mat-option>
+            </mat-select>
+          </mat-form-field>  
+          <!-- description -->
+          <mat-form-field>
+            <mat-label>Descripción</mat-label>
+            <input matInput 
+              formControlName="description"
+              placeholder="Descripción"
+            >
+          </mat-form-field>
+          <!-- separator -->
+          <mat-form-field>
+            <mat-label>Separador Decimal</mat-label>
+            <mat-select formControlName="separator">
+              <mat-option value=","> Coma (,)</mat-option>
+              <mat-option value="."> Punto (.)</mat-option>
+            </mat-select>
+          </mat-form-field>  
+          <!-- date format -->
+          <mat-form-field>
+            <mat-label>Formato de Fecha</mat-label>
+            <mat-select formControlName="dateFormat">
+              <mat-option *ngFor="let format of mappingDateFormat"
+                [value]="format"> {{ format }}</mat-option>
+
+            </mat-select>
+          </mat-form-field>  
+          <!-- omitir inicio -->
+          <mat-form-field>
+            <mat-label>Omitir las primeras filas</mat-label>
+            <input matInput 
+              type = "number"
+              formControlName="skipTop"
+              placeholder="Descripción"
+            >
+          </mat-form-field>
+          <!-- omitir fin -->
+          <mat-form-field>
+            <mat-label>Omitir las ultimas filas</mat-label>
+            <input matInput 
+              type = "number"
+              formControlName="skipBottom"
+              placeholder="Descripción"
+            >
+          </mat-form-field>
+          <!-- archivos -->
+          <mat-form-field 
+            class="full-width-input"
+            (click)="openFileUpload($event)">
+            <mat-label>Archivo</mat-label>
+            <input matInput 
+              value="{{  fileName }}"
+              placeholder="Archivo"
+              disabled
+            >
+            <mat-icon matSuffix 
+              style="cursor: pointer"
+            >cloud_upload</mat-icon>
+            <mat-hint>Archivo base</mat-hint>
+          </mat-form-field>
+          <input type="file" #fileInput style="display: none;" (change)="onFileChange($event)">
+          <div class="flex d-flex mt-4 justify-content-around">
+            <button mat-raised-button 
+              type="submit" 
+              color="primary" 
+              class="mr-2"
+            >Cargar</button>
+            <button mat-raised-button 
+              type="button" 
+            >Cancelar</button>
+          </div>
+        </form>
+      </mat-card>
+    </div>
+    <div class="col-8">
+      <mat-card style="margin-top: 10px; width: 100%;">
+        <h4 class="card-title">Mapeo</h4>
+        <h6 class="card-subtitle">Relación de campos</h6>
+        <div class="row">
+          <div class="col-6">
+            <mat-card>
+              <h6 class="card-subtitle">Información Base</h6>
+            </mat-card>
+          </div>
+          <div class="col-6">
+            <mat-card>
+              <h6 class="card-subtitle">Dominio MDP</h6>
+            </mat-card>
+          </div>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+</div>
