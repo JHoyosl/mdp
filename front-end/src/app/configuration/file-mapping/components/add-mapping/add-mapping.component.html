@@ -4,7 +4,7 @@
       <mat-card style="margin-top: 10px; text-align: center;">
         <h4 class="card-title">Infrmación Contable</h4>
         <h6 class="card-subtitle">Cargar Información Contable</h6>
-        <form [formGroup]="formMapping" (submit)="submitFile()">
+        <form [formGroup]="formFileMapping" (submit)="submitFile()">
           <!-- type -->
           <mat-form-field>
             <mat-label>Tipo</mat-label>
@@ -28,7 +28,7 @@
             <input matInput 
               formControlName="description"
               placeholder="Descripción"
-            >
+          >
           </mat-form-field>
           <!-- separator -->
           <mat-form-field>
@@ -82,35 +82,57 @@
           </mat-form-field>
           <input type="file" #fileInput style="display: none;" (change)="onFileChange($event)">
           <div class="flex d-flex mt-4 justify-content-around">
-            <button mat-raised-button 
+            <button mat-raised-button [disabled]="disabledButtons"
               type="submit" 
               color="primary" 
               class="mr-2"
             >Cargar</button>
-            <button mat-raised-button 
+            <button mat-raised-button [disabled]="disabledButtons"
               type="button" 
+              (click)="backStep()"
             >Cancelar</button>
           </div>
         </form>
       </mat-card>
     </div>
     <div class="col-8">
-      <mat-card style="margin-top: 10px; width: 100%;">
-        <h4 class="card-title">Mapeo</h4>
-        <h6 class="card-subtitle">Relación de campos</h6>
-        <div class="row">
-          <div class="col-6">
-            <mat-card>
-              <h6 class="card-subtitle">Información Base</h6>
-            </mat-card>
+      <form [formGroup]="formMapping">
+        <mat-card style="margin-top: 10px; width: 100%;">
+          <h4 class="card-title">Relación de campos</h4>
+          <div class="row" *ngFor="let item of mappingArray; index as i">
+            <div class="col-6">
+              <mat-form-field>
+                <mat-label>{{ item.description }}</mat-label>
+                <input matInput disabled
+                  value="{{ item.value }}"
+                  placeholder="{{ item.description }}">
+              </mat-form-field>
+            </div>
+            <div class="col-6">
+              <mat-form-field>
+                <mat-label></mat-label>
+                <mat-select formControlName="{{i}}">
+                  <mat-option value="null"></mat-option>
+                  <mat-option *ngFor="let item of mappingIndex"  [value]="item.id"> {{item.description}}</mat-option>
+                </mat-select>
+              </mat-form-field>  
+            </div>
           </div>
-          <div class="col-6">
-            <mat-card>
-              <h6 class="card-subtitle">Dominio MDP</h6>
-            </mat-card>
+          <div class="flex d-flex mt-4 justify-content-around">
+            <button mat-raised-button [disabled]="!disabledButtons"
+              type="button"
+              (click)="submitMapping()" 
+              color="primary" 
+              class="mr-2"
+            >Guardar</button>
+            <button mat-raised-button [disabled]="!disabledButtons"
+              type="button" 
+              (click)="cancelMapping()"
+            >Cancelar</button>
           </div>
-        </div>
-      </mat-card>
+        </mat-card>
+        
+      </form>
     </div>
   </div>
 </div>

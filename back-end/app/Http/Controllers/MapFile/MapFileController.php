@@ -13,6 +13,7 @@ use App\Http\Requests\MapFile\MapFileIndexRequest;
 use App\Http\Requests\MapFile\MappingUploadRequest;
 use App\Http\Resources\MapFile\MapFileIndexCollection;
 use App\Http\Requests\MapFile\MappingFileToArrayRequest;
+use Exception;
 
 class MapFileController extends ApiController
 {
@@ -60,24 +61,34 @@ class MapFileController extends ApiController
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(MappingUploadRequest $request)
     {
-        //
+        $type = $request->type == MapFile::TYPE_EXTERNAL
+            ? MapFile::TYPE_CONCILIAR_EXTERNO
+            : MapFile::TYPE_CONCILIAR_INTERNO;
+        try {
+            $mapFile = $this->mappingFileService->storeMapping(
+                $this->user->id,
+                $type,
+                $request->description,
+                $request->dateFormat,
+                $request->separator,
+                $request->skipTop,
+                $request->skipBottom,
+                $request->map,
+                $request->base,
+                $this->companyId,
+                $type ==  MapFile::TYPE_CONCILIAR_EXTERNO ? $request->bankId : null
+            );
+            return $this->showOne($mapFile, 200);
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage(), $e->getCode());
+        }
     }
 
     /**
@@ -87,17 +98,6 @@ class MapFileController extends ApiController
      * @return \Illuminate\Http\Response
      */
     public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
     {
         //
     }
@@ -199,7 +199,7 @@ class MapFileController extends ApiController
         if ($fields['type'] == MapFile::TYPE_CONCILIAR_EXTERNO && !$fields['bank_id']) {
 
             $error = \Illuminate\Validation\ValidationException::withMessages([
-                'bank_id' => ['El campo bank_id es obligatorio para archivos exgternos'],
+                'bank_id' => ['El campo bank_id es obligatorio para archivos externos'],
             ]);
             throw $error;
         }
@@ -220,25 +220,11 @@ class MapFileController extends ApiController
         return $this->showOne($mapFile);
     }
 
-    public function uploadMappingFile(MappingUploadRequest $request)
-    {
-        $this->mappingFileService->uploadMappingFile(
-            $request->type,
-            $request->description,
-            $request->dateFormat,
-            $request->separator,
-            $request->skipTop,
-            $request->skipBottom,
-            $request->file,
-            $request->has('bankId') ? $request->bankId : null
-        );
-        return $request;
-    }
-
     public function MappingFileToArray(MappingFileToArrayRequest $request)
     {
-        return $this->mappingFileService->MappingFileToArray($request->file, $request->skipTop);
-        // return $request;
+        $data = $this->mappingFileService->MappingFileToArray($request->file, $request->skipTop);
+
+        return $this->showMessage($data, 200);
     }
 
     public function uploadFile(Request $request)

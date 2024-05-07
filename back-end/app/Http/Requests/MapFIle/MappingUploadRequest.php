@@ -31,9 +31,10 @@ class MappingUploadRequest extends FormRequest
             'description' => ['required'],
             'dateFormat' => ['required'],
             'separator' => ['required'],
-            'separator' => ['required'],
             'skipBottom' => ['required'],
-            'file' => ['required', 'mimes:xls,xlsx,csv'],
+            'skipTop' => ['required'],
+            'map' => ['required'],
+            'base' => ['required'],
         ];
     }
 
@@ -47,6 +48,8 @@ class MappingUploadRequest extends FormRequest
             'separator.required' => ':attribute is required',
             'skipTop.required' => ':attribute is required',
             'skipBottom.required' => ':attribute is required',
+            'map.required' => ':attribute is required',
+            'base.required' => ':attribute is required',
             'file.required' => ':attribute is required',
 
         ];
@@ -62,6 +65,8 @@ class MappingUploadRequest extends FormRequest
             'separator' => 'Separador',
             'skipTop' => 'Omitir al inicio',
             'skipBottom' => 'Omitir al final',
+            'map' => 'Mappeo',
+            'base' => 'base',
             'file' => 'Archivo',
         ];
     }

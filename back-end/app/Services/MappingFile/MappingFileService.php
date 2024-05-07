@@ -82,8 +82,28 @@ class MappingFileService
     }
   }
 
-  public function uploadMappingFile($type, $description, $dateFormat, $separator, $skipTop, $skipBottom, $file, $bankId = null)
+  public function storeMapping($userId, $type, $description, $dateFormat, $separator, $skipTop, $skipBottom, $map, $base, $companyId, $bankId = null)
   {
-    return;
+
+    $mapInfo = [
+      'bank_id' => $bankId,
+      'company_id' => $companyId,
+      'header' => 0,
+      'description' => $description,
+      'created_by' => $userId,
+      'type' => $type,
+      'map' => $map,
+      'base' => $base,
+      'date_format' => $dateFormat,
+      'separator' => $separator,
+      'skip_top' => $skipTop,
+      'skip_bottom' => $skipBottom,
+      'extension' => 'extension',
+    ];
+
+    $mapFile = MapFile::create($mapInfo);
+
+    return $mapFile;
+    return [$type, $description, $dateFormat, $separator, $skipTop, $skipBottom, $map, $base, $bankId];
   }
 }

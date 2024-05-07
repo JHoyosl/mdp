@@ -24,9 +24,15 @@
     <th mat-header-cell *matHeaderCellDef> Acciones </th>
     <td mat-cell *matCellDef="let element"> 
       <app-icon-button 
+        (click)="edit(element)"
         toolTip="editar"
         icon="edit"
-      ></app-icon-button>           
+      ></app-icon-button> 
+      <app-icon-button 
+        (click)="openDetail(element)"
+        toolTip="Detalle"
+        icon="open_in_new"
+      ></app-icon-button> 
     </td>
   </ng-container>
 

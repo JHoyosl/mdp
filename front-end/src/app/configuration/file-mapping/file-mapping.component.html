@@ -8,21 +8,61 @@
         <mat-tab label="Configuraciones" >
           <ng-template matTabContent >
             <app-list-mapping
-              type="accounting"
+              (action)="setAction($event)"
+              type="all"
               [data]="mappingInfo"
             ></app-list-mapping>
           </ng-template>
         </mat-tab>
         <mat-tab label="Cargue">
-          <app-add-mapping></app-add-mapping>
+          <app-add-mapping *ngIf="selectedIndex == 1"
+            (mappingResult)="mappingResult($event)"
+          ></app-add-mapping>
         </mat-tab>
         <mat-tab label="Editar" disabled>  
           <ng-template matTabContent >
+            <app-detail-mapping [mapping]="detailMapping"></app-detail-mapping>
           </ng-template>
         </mat-tab>
       </mat-tab-group>
   </div>
 </div>
+<ng-template #detailModal let-modal class="modal-lg">
+  <div class="modal-header ">
+      <h4 class="modal-title">{{modalInfo.title}}</h4>
+      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+      </button>
+  </div>
+  <div class="modal-body card">
+      <div class="row card-body">
+        <mat-card style="margin-top: 10px; width: 100%;">
+          <h4 class="card-title">Relación de campos</h4>
+          <div class="row" *ngFor="let item of detailMap">
+            <div class="col-6">
+              <mat-form-field>
+                <mat-label>{{ item.header }}</mat-label>
+                <input matInput disabled
+                  value="{{ item.value }}"
+                  placeholder="{{ item.description }}">
+              </mat-form-field>
+            </div>
+            <div class="col-6">
+              <mat-form-field>
+                <mat-label>Valor maestro</mat-label>
+                <input matInput disabled
+                  value="{{ getIndexName(item.mapIndex) }}"
+                  placeholder="{{ item.description }}">
+              </mat-form-field>
+            </div>
+          </div>
+        </mat-card>
+      </div>
+  </div>
+  <div class="modal-footer">
+      <button type="button" class="btn btn-light" (click)="modal.close('Close click')">Close</button>
+  </div>
+</ng-template>
 
 
 

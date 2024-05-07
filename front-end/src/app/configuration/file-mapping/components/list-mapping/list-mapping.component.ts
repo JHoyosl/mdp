@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MappingFileIndex } from 'src/app/Interfaces/mapping-file.interface';
 
 @Component({
@@ -8,6 +8,8 @@ import { MappingFileIndex } from 'src/app/Interfaces/mapping-file.interface';
 })
 export class ListMappingComponent implements OnInit {
 
+  @Output() action = new EventEmitter<{type: string, map: MappingFileIndex}>();
+  
   @Input() type: 'thirdParty' | 'accounting';
   @Input() data: MappingFileIndex;
 
@@ -34,6 +36,15 @@ export class ListMappingComponent implements OnInit {
       default:
           return '';
     }
+  }
+
+  edit(map: MappingFileIndex){
+
+    this.action.emit({type: 'edit', map })
+  }
+
+  openDetail(map: MappingFileIndex){
+    this.action.emit({type:'detail', map});
   }
 
 }

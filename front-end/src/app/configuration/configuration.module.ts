@@ -8,10 +8,11 @@ import { ComponentsModule } from '../shared/components/components.module';
 import { AddMappingComponent } from './file-mapping/components/add-mapping/add-mapping.component';
 import { ListMappingComponent } from './file-mapping/components/list-mapping/list-mapping.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { DetailMappingComponent } from './file-mapping/components/detail-mapping/detail-mapping.component';
 
 
 @NgModule({
-  declarations: [FileMappingComponent, AddMappingComponent, ListMappingComponent],
+  declarations: [FileMappingComponent, AddMappingComponent, ListMappingComponent, DetailMappingComponent],
   imports: [
     CommonModule,
     ReactiveFormsModule,

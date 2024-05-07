@@ -50,7 +50,6 @@ Route::resource('usersCompanies', 'User\UserCompanyController');
 
 // MAPING FILES ROUTES
 Route::get('mappingFiles/getMapIndex', 'MapFile\MapFileController@getMapIndex');
-Route::post('mappingFiles/uploadMappingFile', 'MapFile\MapFileController@uploadMappingFile');
 Route::post('mappingFiles/MappingFileToArray', 'MapFile\MapFileController@MappingFileToArray');
 
 Route::resource('mappingFiles', 'MapFile\MapFileController');

@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MappingFileIndex } from '../Interfaces/mapping-file.interface';
+import { MappingFileIndex, MappingIndex, StoreMappingRequest } from '../Interfaces/mapping-file.interface';
 import { GenericResponse } from '../Interfaces/shared.interfaces';
 import { map } from 'rxjs/operators';
 
@@ -23,17 +23,40 @@ export class MappingFilesService {
     );
   }
 
-  uploadMappingFile(skipTop, file):Observable<any>{
+  store(data: StoreMappingRequest): Observable<MappingFileIndex>{
+    const body = new FormData();
+    body.append('type', data.type);
+    body.append('bankId', data.bankId);
+    body.append('description', data.description);
+    body.append('dateFormat', data.dateFormat);
+    body.append('separator', data.separator);
+    body.append('skipTop', data.skipTop.toString());
+    body.append('skipBottom', data.skipBottom.toString());
+    body.append('map', JSON.stringify(data.map));
+    body.append('base', JSON.stringify(data.base));
+      
+
+    return this.httpClient.post<GenericResponse>(`${this.baseUrl}`, body).pipe(
+      map((response) => response.data)
+    );
+
+  }
+
+  mappingFileToArray(skipTop, file):Observable<[string[]]>{
     const body = new FormData();
       body.append('file', file)
       body.append('skipTop', skipTop);
-
-    return this.httpClient.post(`${this.baseUrl}/MappingFileToArray`, body);
+    return this.httpClient.post<GenericResponse>(`${this.baseUrl}/MappingFileToArray`, body).pipe(
+      map((response) => response.data)
+    );
   }
 
-  getMapIndex(type): Observable<any>{
+  getMapIndex(type): Observable<MappingIndex[]>{
     const params = new HttpParams().append('type', type);
-
-    return this.httpClient.get(`${this.baseUrl}/getMapIndex`, {params: params});
+    return this.httpClient.get<GenericResponse>(`${this.baseUrl}/getMapIndex`, {params: params}).pipe(
+      map((response) => response.data)
+    )
   }
+
+  
 }

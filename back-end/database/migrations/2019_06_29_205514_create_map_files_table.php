@@ -23,13 +23,16 @@ class CreateMapFilesTable extends Migration
             $table->string('type');
             $table->text('map');
             $table->text('base');
+            $table->integer('skip_top')->default(0);
+            $table->integer('skip_bottom')->default(0);
+            $table->string('separator')->nullable();
+            $table->string('date_format')->nullable();
             $table->softDeletes();
             $table->timestamps();
 
             $table->foreign('bank_id')->references('id')->on('banks');
             $table->foreign('created_by')->references('id')->on('users');
             $table->foreign('company_id')->references('id')->on('companies');
-
         });
     }
 

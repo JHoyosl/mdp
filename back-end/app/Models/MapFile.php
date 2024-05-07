@@ -25,7 +25,6 @@ class MapFile extends Model
      * @var array
      */
     protected $fillable = [
-        'account_id',
         'bank_id',
         'company_id',
         'header',
@@ -34,7 +33,10 @@ class MapFile extends Model
         'type',
         'map',
         'base',
+        'date_format',
         'separator',
+        'skip_top',
+        'skip_bottom',
         'extension',
 
 
