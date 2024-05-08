@@ -9,9 +9,12 @@ export interface MappingFileIndex {
   'createdBy': any,
   'type': string,
   'map': Map[], 
-  'base': [string[]]
+  'base': {description: string, value: string}[];
   'separator': string, 
   'extension': string,
+  'dateFormat': string,
+  'skipTop': number,
+  'skipBottom': number,
 }
 
 export interface Map {
@@ -37,4 +40,38 @@ export interface StoreMappingRequest {
   'skipBottom': number,
   'map': Map[],
   'base': any[],
+}
+
+export interface updateMappingRequest {
+  'id': number,
+  'description': string,
+  'dateFormat': string,
+  'separator': string,
+  'skipTop': number,
+  'skipBottom': number,
+  'map': Map[],
+}
+
+// TODO: FIX INTERFACES
+
+export interface MappedFile {
+  id: number,
+  bank: Bank,
+  company: any,
+  header: number,
+  description: string,
+  createdBy: any,
+  type: string
+  map: Map[]
+  base: Base[]
+  separator: string
+  extension: string
+  skipTop: number
+  skipBottom: number
+  dateFormat: string
+}
+
+export interface Base {
+  description: string
+  value: string
 }

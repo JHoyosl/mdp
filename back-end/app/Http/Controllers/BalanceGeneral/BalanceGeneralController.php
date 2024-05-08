@@ -303,7 +303,7 @@ class BalanceGeneralController extends ApiController
 
                             $responseBalance['OPERATIVO'][] = $row;
                         }
-                        continue;
+                        break;
                     }
 
                     if (trim($row->tipo_saldo) == 'CEROS' && $row->saldo_actual != 0) {
@@ -316,7 +316,7 @@ class BalanceGeneralController extends ApiController
                             $responseBalance['OPERATIVO'][] = $row;
                         }
 
-                        continue;
+                        break;
                     }
 
                     break;
@@ -332,7 +332,7 @@ class BalanceGeneralController extends ApiController
 
                             $responseBalance['OPERATIVO'][] = $row;
                         }
-                        continue;
+                        break;
                     }
 
                     if (trim($row->tipo_saldo) == 'CEROS' && $row->saldo_actual != 0) {
@@ -344,7 +344,7 @@ class BalanceGeneralController extends ApiController
 
                             $responseBalance['OPERATIVO'][] = $row;
                         }
-                        continue;
+                        break;
                     }
                     break;
 

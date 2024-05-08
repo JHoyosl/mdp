@@ -3,7 +3,7 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { Bank } from 'src/app/Interfaces/bank.interface';
 import { MappingFileConstants } from 'src/app/constants/maapingFileConstants';
 import { BankRequestsService } from 'src/app/services/bank/bank-requests.service';
-import { MappingFilesService } from 'src/app/services/mapping-files.service';
+import { MappingFilesService } from 'src/app/services/mappingFiles/mapping-files.service';
 import { ToastrService } from 'ngx-toastr';
 import { zip } from 'rxjs';
 import { MappingIndex, StoreMappingRequest } from 'src/app/Interfaces/mapping-file.interface';

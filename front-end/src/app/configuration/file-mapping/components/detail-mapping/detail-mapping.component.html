@@ -1,3 +1,25 @@
-<p>
-  detail-mapping works!
-</p>
+<div class="modal-body card">
+  <div class="row card-body">
+    <mat-card style="margin-top: 10px; width: 100%;">
+      <h4 class="card-title">Relación de campos</h4>
+      <div class="row" *ngFor="let item of detailMap">
+        <div class="col-6">
+          <mat-form-field>
+            <mat-label>{{ item.header }}</mat-label>
+            <input matInput disabled
+              value="{{ item.value }}"
+              placeholder="{{ item.description }}">
+          </mat-form-field>
+        </div>
+        <div class="col-6">
+          <mat-form-field>
+            <mat-label>Valor maestro</mat-label>
+            <input matInput disabled
+              value="{{ getIndexName(item.mapIndex) }}"
+              placeholder="{{ item.description }}">
+          </mat-form-field>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</div>

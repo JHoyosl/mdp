@@ -10,24 +10,25 @@ class MappingFileService
 {
   public function index($companyId, $type)
   {
-    $sourceType = null;
-    switch ($type) {
-      case 'accounting':
-        $sourceType = MapFile::TYPE_CONCILIAR_INTERNO;
-        break;
-      case 'thirdParty':
-        $sourceType = MapFile::TYPE_CONCILIAR_EXTERNO;
-        break;
+    if ($type == 'accounting') {
+      $mapFiles = MapFile::with('createdBy')
+        ->with('bank')
+        ->with('company')
+        ->where('company_id', $companyId)
+        ->where('type', MapFile::TYPE_CONCILIAR_INTERNO);
     }
 
-    //TODO: VALIDATE IF USER HAS PERMISSIONS
-    $mapFiles = MapFile::with('createdBy')
-      ->with('bank')
-      ->with('company')
-      ->where('company_id', $companyId);
+    if ($type == 'thirdParty') {
+      $mapFiles = MapFile::with('createdBy')
+        ->with('bank')
+        ->with('company')
+        ->where('type', MapFile::TYPE_CONCILIAR_EXTERNO);
+    }
 
-    if ($sourceType) {
-      $mapFiles->where('type', $sourceType);
+    if ($type == 'all') {
+      $mapFiles = MapFile::with('createdBy')
+        ->with('bank')
+        ->with('company');
     }
 
     return $mapFiles->get();
@@ -104,6 +105,18 @@ class MappingFileService
     $mapFile = MapFile::create($mapInfo);
 
     return $mapFile;
-    return [$type, $description, $dateFormat, $separator, $skipTop, $skipBottom, $map, $base, $bankId];
+  }
+
+  public function patchMapping(MapFile $mapping, $description, $dateFormat, $separator,  $skipTop, $skipBottom, $map)
+  {
+    $mapping->description = $description;
+    $mapping->date_format = $dateFormat;
+    $mapping->description = $separator;
+    $mapping->skip_top = $skipTop;
+    $mapping->skip_botton = $skipBottom;
+    $mapping->map = $map;
+
+    $mapping->save();
+    return $mapping;
   }
 }

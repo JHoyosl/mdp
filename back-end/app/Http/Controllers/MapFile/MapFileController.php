@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\MapFile;
 
+use Exception;
 use App\Models\MapFile;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -10,10 +11,10 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
 use App\Services\MappingFile\MappingFileService;
 use App\Http\Requests\MapFile\MapFileIndexRequest;
+use App\Http\Requests\MapFile\PatchMappingRequest;
 use App\Http\Requests\MapFile\MappingUploadRequest;
 use App\Http\Resources\MapFile\MapFileIndexCollection;
 use App\Http\Requests\MapFile\MappingFileToArrayRequest;
-use Exception;
 
 class MapFileController extends ApiController
 {
@@ -31,6 +32,7 @@ class MapFileController extends ApiController
                 'show',
                 'update',
                 'store',
+                'patch',
                 'getMapIndex',
                 'MappingFileToArray',
                 'uploadMappingFile',
@@ -54,9 +56,7 @@ class MapFileController extends ApiController
      */
     public function index(MapFileIndexRequest $request)
     {
-
         $mapFiles = $this->mappingFileService->index($this->companyId, $request->source);
-
         return $this->showArray(new MapFileIndexCollection($mapFiles), 200);
     }
 
@@ -111,7 +111,6 @@ class MapFileController extends ApiController
      */
     public function update(Request $request, MapFile $mapFile)
     {
-
         $rules = [
             'bank_id' => 'required',
             'base' => 'required',
@@ -150,6 +149,21 @@ class MapFileController extends ApiController
         $mapFile->save();
 
         return $this->showOne($mapFile);
+    }
+
+    public function patch(PatchMappingRequest $request, MapFile $map)
+    {
+        $patched = $this->mappingFileService->patchMapping(
+            $map,
+            $request->description,
+            $request->dateFormat,
+            $request->separator,
+            $request->skipTop,
+            $request->skipBottom,
+            $request->map
+        );
+
+        return $patched;
     }
 
     /**

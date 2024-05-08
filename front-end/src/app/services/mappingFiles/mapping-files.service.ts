@@ -2,8 +2,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { MappingFileIndex, MappingIndex, StoreMappingRequest } from '../Interfaces/mapping-file.interface';
-import { GenericResponse } from '../Interfaces/shared.interfaces';
+import { MappingFileIndex, MappingIndex, StoreMappingRequest, updateMappingRequest } from '../../Interfaces/mapping-file.interface';
+import { GenericResponse } from '../../Interfaces/shared.interfaces';
 import { map } from 'rxjs/operators';
 
 @Injectable({
@@ -58,5 +58,9 @@ export class MappingFilesService {
     )
   }
 
-  
+  patchMap(data: updateMappingRequest): Observable<MappingIndex>{
+    return this.httpClient.patch<GenericResponse>(`${this.baseUrl}`,data).pipe(
+      map((respone) => respone.data)
+    )
+  }
 }

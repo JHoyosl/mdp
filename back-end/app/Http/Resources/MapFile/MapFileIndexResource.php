@@ -31,6 +31,9 @@ class MapFileIndexResource extends JsonResource
             'base' => json_decode($this->base),
             'separator' => $this->separator,
             'extension' => $this->extension,
+            'skipTop' => $this->skip_top,
+            'skipBottom' => $this->skip_bottom,
+            'dateFormat' => $this->date_format,
         ];
     }
 }

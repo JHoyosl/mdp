@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Passport\Passport;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,6 +52,7 @@ Route::resource('usersCompanies', 'User\UserCompanyController');
 // MAPING FILES ROUTES
 Route::get('mappingFiles/getMapIndex', 'MapFile\MapFileController@getMapIndex');
 Route::post('mappingFiles/MappingFileToArray', 'MapFile\MapFileController@MappingFileToArray');
+Route::patch('mappingFiles/{map}', 'MapFile\MapFileController@patch');
 
 Route::resource('mappingFiles', 'MapFile\MapFileController');
 // MAPING FILES ROUTES
@@ -90,25 +92,25 @@ Route::post('reconciliation/autoReconciliation/{process}', 'Reconciliation\Recon
 
 
 // TODO: OLD ROUTES REMOVE
-Route::name('getCuentasToConciliar')
-	->get('conciliar/getCuentasToConciliar', 'Conciliar\ConciliarController@getCuentasToConciliar');
-Route::name('setIniProcess')
-	->post('conciliar/setIniProcess', 'Conciliar\ConciliarController@setIniProcess');
-Route::name('isIniConciliar')
-	->post('conciliar/isIniConciliar', 'Conciliar\ConciliarController@isIniConciliar');
-Route::name('closeIniConciliar')
-	->post('conciliar/closeIniConciliar', 'Conciliar\ConciliarController@closeIniConciliar');
-Route::name('uploadAccountFile')
-	->post('conciliar/uploadAccountFile', 'Conciliar\ConciliarController@uploadAccountFile');
-Route::name('uploadIniConciliar')
-	->post('conciliar/uploadIniFile', 'Conciliar\ConciliarController@uploadIniFile');
-Route::name('uploadConciliarContable')
-	->post('conciliar/uploadConciliarContable', 'Conciliar\ConciliarController@uploadConciliarContable');
-Route::name('balanceCloseAccount')
-	->post('conciliar/balanceCloseAccount', 'Conciliar\ConciliarController@balanceCloseAccount');
+// Route::name('getCuentasToConciliar')
+// 	->get('conciliar/getCuentasToConciliar', 'Conciliar\ConciliarController@getCuentasToConciliar');
+// Route::name('setIniProcess')
+// 	->post('conciliar/setIniProcess', 'Conciliar\ConciliarController@setIniProcess');
+// Route::name('isIniConciliar')
+// 	->post('conciliar/isIniConciliar', 'Conciliar\ConciliarController@isIniConciliar');
+// Route::name('closeIniConciliar')
+// 	->post('conciliar/closeIniConciliar', 'Conciliar\ConciliarController@closeIniConciliar');
+// Route::name('uploadAccountFile')
+// 	->post('conciliar/uploadAccountFile', 'Conciliar\ConciliarController@uploadAccountFile');
+// Route::name('uploadIniConciliar')
+// 	->post('conciliar/uploadIniFile', 'Conciliar\ConciliarController@uploadIniFile');
+// Route::name('uploadConciliarContable')
+// 	->post('conciliar/uploadConciliarContable', 'Conciliar\ConciliarController@uploadConciliarContable');
+// Route::name('balanceCloseAccount')
+// 	->post('conciliar/balanceCloseAccount', 'Conciliar\ConciliarController@balanceCloseAccount');
 
-//CONCILIAR - HEADER CONTROLLER
-Route::resource('headers', 'Conciliar\HeaderController', ['except' => 'create', 'edit']);
+// //CONCILIAR - HEADER CONTROLLER
+// Route::resource('headers', 'Conciliar\HeaderController', ['except' => 'create', 'edit']);
 
 //CONCILIAR ROUTES
 
@@ -140,7 +142,7 @@ Route::name('formatsExterno')->get('mapFiles/formatsExterno/{id}', 'MapFile\MapF
 Route::name('formatsLocal')->get('mapFiles/formatsLocal/{id}', 'MapFile\MapFileController@formatsLocal');
 Route::name('recoveryPssw')->get('users/recoveryPssw/{email}', 'User\UserController@recoveryPssw');
 Route::name('setCurrentCompany')->get('users/setCurrentCompany/{company_id}', 'User\UserController@setCurrentCompany');
-Route::name('getHeaderItems')->get('headers/getHeaderItems/{headerId}', 'Conciliar\ItemController@getHeaderItems');
+// Route::name('getHeaderItems')->get('headers/getHeaderItems/{headerId}', 'Conciliar\ItemController@getHeaderItems');
 
 
 //POST
@@ -229,9 +231,11 @@ Route::name('getUserRoles')
 
 
 
-
+Passport::routes(function ($router) {
+	$router->forClients();
+}, ['middleware' => 'auth:api']);
 
 // Route::name('verify')->get('users/verify/{token}','User\UserController@verify');
 //Oauth
 
-Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
+// Route::post('oauth/token', '\Laravel\Passport\Http\Controllers\AccessTokenController@issueToken');
