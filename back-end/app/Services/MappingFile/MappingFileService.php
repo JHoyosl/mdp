@@ -2,6 +2,8 @@
 
 namespace App\Services\MappingFile;
 
+use App\Models\Account;
+use App\Models\Company;
 use App\Models\MapFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -118,5 +120,14 @@ class MappingFileService
 
     $mapping->save();
     return $mapping;
+  }
+
+  public function delete($id)
+  {
+    $map = MapFile::findOrFail($id);
+    Account::where('map_id', $map->id)->update(['map_id' => null]);
+    Company::findOrFail($map->company_id)->update(['map_id' => null]);
+
+    return MapFile::findOrFail($id)->delete();
   }
 }

@@ -13,12 +13,11 @@ class AddMapFileCompany extends Migration
      */
     public function up()
     {
-        Schema::table('companies', function($table) {
+        Schema::table('companies', function ($table) {
             $table->integer('map_id')->unsigned()->nullable()->default(null);
 
             $table->foreign('map_id')->references('id')->on('map_files');
         });
-        
     }
 
     /**
@@ -28,7 +27,7 @@ class AddMapFileCompany extends Migration
      */
     public function down()
     {
-        Schema::table('companies', function($table) {
+        Schema::table('companies', function ($table) {
             $table->dropColumn('map_id');
         });
     }

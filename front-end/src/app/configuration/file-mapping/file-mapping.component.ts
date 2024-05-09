@@ -5,7 +5,8 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { MappingFilesService } from 'src/app/services/mappingFiles/mapping-files.service';
 import { MatSelectChange } from '@angular/material';
 
-import Swal from 'sweetalert2';
+import Swal, { SweetAlertResult } from 'sweetalert2';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-file-mapping',
@@ -24,6 +25,7 @@ export class FileMappingComponent implements OnInit {
   mappingIndex: MappingIndex[] = [];
   detailMapInfo: MappingFileIndex;
   editMapping: MappingFileIndex;
+  toDeleteMapping: MappingFileIndex;
 
   modalInfo = {
     'title':'Asociación de Campos (Mapeo)',
@@ -33,6 +35,7 @@ export class FileMappingComponent implements OnInit {
   constructor(
     private mappingFileService: MappingFilesService,
     private modalService: NgbModal,
+    private toastr: ToastrService,
   ) { }
 
   ngOnInit() {
@@ -41,10 +44,11 @@ export class FileMappingComponent implements OnInit {
   }
 
   filterChange(event: MatSelectChange){
-    this.getMappingInfo(event.value);
+    this.sourceFilter = event.value;
+    this.getMappingInfo();
   }
 
-  getMappingInfo(source: 'thirdParty' | 'accounting' | 'all' = 'accounting'){
+  getMappingInfo(){
     Swal.fire({
       title: 'Procesando',
       allowOutsideClick: false,
@@ -52,7 +56,7 @@ export class FileMappingComponent implements OnInit {
       imageUrl: 'assets/images/2.gif',
 
     });
-    this.mappingFileService.index(source).subscribe(
+    this.mappingFileService.index(this.sourceFilter).subscribe(
       (response) => this.mappingInfo = response,
       (err) => console.error(err),
       () => Swal.close()
@@ -78,12 +82,31 @@ export class FileMappingComponent implements OnInit {
   listAction(action: { type: string, map: MappingFileIndex }){
     if(action.type === 'detail'){
       this.openDetailDialog(action.map);
-      console.log('show detail');
     }
     if(action.type === 'edit'){
       this.editMapping = action.map;
       this.selectedIndex = 2;
-      console.log(`Edit ${action.map.id}`);
+    }
+    if(action.type === 'delete'){
+      this.toDeleteMapping = action.map;
+      Swal.fire({
+        title: 'Confirmación',
+        text: `¿Desea eliminar el Mapeo ${action.map.description}?`,
+        showConfirmButton: true,
+        confirmButtonAriaLabel: 'Eliminar',
+        confirmButtonText: 'Eliminar',
+        confirmButtonColor: '#d33',
+        showCancelButton: true,
+        cancelButtonAriaLabel: 'Cancelar',
+        cancelButtonText: 'Cancelar',
+        cancelButtonColor: '#3085d6'
+      }).then((result: SweetAlertResult) => {
+        if(result.value){
+          this.deleteMapping(this.toDeleteMapping);
+        }else{
+          this.toDeleteMapping = null;
+        }
+      });
     }
   }
 
@@ -97,4 +120,24 @@ export class FileMappingComponent implements OnInit {
       .find((index) => index.id === mapIndex).description;
   }
 
+  deleteMapping(mapping: MappingFileIndex){
+    this.toDeleteMapping = null;
+    Swal.fire({
+      title: 'Procesando',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      imageUrl: 'assets/images/2.gif',
+
+    });
+    this.mappingFileService.deleteMap(mapping.id).subscribe(
+      (_) => {
+        this.toastr.info('Mapeo Eliminado');
+        Swal.close();
+        this.getMappingInfo();
+      },
+      (err) => {
+        console.error(err)
+      },
+    );
+  }
 }

@@ -6,7 +6,8 @@ import { BankRequestsService } from 'src/app/services/bank/bank-requests.service
 import { MappingFilesService } from 'src/app/services/mappingFiles/mapping-files.service';
 import { ToastrService } from 'ngx-toastr';
 import { zip } from 'rxjs';
-import { MappingIndex, StoreMappingRequest } from 'src/app/Interfaces/mapping-file.interface';
+import { MappingIndex, StoreMappingRequest, Map } from 'src/app/Interfaces/mapping-file.interface';
+import Swal, { SweetAlertResult } from 'sweetalert2';
 
 @Component({
   selector: 'app-add-mapping',
@@ -101,14 +102,16 @@ export class AddMappingComponent implements OnInit {
   }
 
   submitMapping(){
-    const mapped = [];
+    const mapped: Map[] = [];
+    const mappingIdCheck = [];
     this.mappingArray.forEach((element, index) => {
       mapped.push({
         fileColumn: index,
         mapIndex: this.formMapping.get(index.toString()).value,
         value: element.value,
         header: element.description,
-      })
+      });
+      mappingIdCheck.push(this.formMapping.get(index.toString()).value);
     });
     const storeRequest: StoreMappingRequest = {
       type: this.formFileMapping.get('type').value,
@@ -123,7 +126,17 @@ export class AddMappingComponent implements OnInit {
     if(storeRequest.type === 'external'){
       storeRequest.bankId = this.formFileMapping.get('bank').value;
     }
-    // TODO: validar campos obligatorios y que no hayan repetidos
+
+  // check for mandatory mapping
+   this.mappingIndex
+    .filter((item) => item.type.toString() === '1')
+    .forEach((item) => {
+      if(!mappingIdCheck.includes(item.id)){
+        this.toastr.error(`${item.description} es Obligatorio`);
+        return;
+      }
+    })
+    
     this.mappingFilesService.store(storeRequest).subscribe(
       (response) => {
         this.mappingResult.emit(true);
@@ -141,7 +154,13 @@ export class AddMappingComponent implements OnInit {
     const file = this.formFileMapping.get('file').value;
     const skipTop = this.formFileMapping.get('skipTop').value;
     const type = this.formFileMapping.get('type').value;
+    Swal.fire({
+      title: 'Procesando',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      imageUrl: 'assets/images/2.gif',
 
+    });
     zip(
       this.mappingFilesService.mappingFileToArray(skipTop, file),
       this.mappingFilesService.getMapIndex(type)
@@ -149,13 +168,15 @@ export class AddMappingComponent implements OnInit {
       (response) => {
         this.disabledButtons = !this.disabledButtons;
         this.formFileMapping.disable();
-        this.mappingIndex = response[1].sort((a:MappingIndex,b:MappingIndex) => {
-          return a.description < b.description ? -1 : 1;
-        });
+        this.mappingIndex = response[1]
+          .sort((a:MappingIndex,b:MappingIndex) => a.description < b.description ? -1 : 1);
+
+        console.log(this.mappingIndex);
         this.mappingArray = this.pairMappingArray(response[0]);
         this.setFormMapping(this.mappingArray);
       },
-      (err) => console.error(err)
+      (err) => console.error(err),
+      () => Swal.close()
     );
 
     console.log(file, skipTop);

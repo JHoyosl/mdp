@@ -63,4 +63,10 @@ export class MappingFilesService {
       map((respone) => respone.data)
     )
   }
+
+  deleteMap(mapId: number):Observable<string>{
+    return this.httpClient.delete<GenericResponse>(`${this.baseUrl}/${mapId}`).pipe(
+      map((respone)=> respone.data.toString())
+    );
+  }
 }

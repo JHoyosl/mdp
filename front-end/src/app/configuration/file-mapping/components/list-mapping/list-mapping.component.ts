@@ -38,8 +38,11 @@ export class ListMappingComponent implements OnInit {
     }
   }
 
-  edit(map: MappingFileIndex){
+  delete(map: MappingFileIndex){
+    this.action.emit({type: 'delete', map});
+  }
 
+  edit(map: MappingFileIndex){
     this.action.emit({type: 'edit', map })
   }
 

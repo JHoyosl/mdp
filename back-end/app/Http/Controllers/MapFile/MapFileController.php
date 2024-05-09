@@ -29,6 +29,7 @@ class MapFileController extends ApiController
         $this->middleware('auth:api')->only(
             [
                 'index',
+                'destroy',
                 'show',
                 'update',
                 'store',
@@ -174,7 +175,12 @@ class MapFileController extends ApiController
      */
     public function destroy($id)
     {
-        // 
+        try {
+            $this->mappingFileService->delete($id);
+            return $this->showMessage('success', 200);
+        } catch (Exception $e) {
+            return $this->errorResponse($e->getMessage(), $e->getCode());
+        }
     }
 
     //TODO: MOVER AL GRUPO QUE NO SE ELIMINA, NO ELIMINAR SIN VALIDAR
