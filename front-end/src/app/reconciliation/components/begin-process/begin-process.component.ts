@@ -76,7 +76,6 @@ export class BeginProcessComponent implements OnInit {
   }
 
   onFileChange(event: Event): void {
-    console.log(event);
     const file = (event.target as HTMLInputElement).files[0];
     this.fileName = file.name;
     this.uploadFile.patchValue({file: file});

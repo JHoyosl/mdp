@@ -26,7 +26,6 @@ export class ReconciliationBalanceComponent implements OnInit {
       this.dataSource = this.setDataSource(items);
       this.setForm(this.dataSource);
     }
-    console.log(this.dataSource);
   }
   
   _reconciliationItems: ReconciliationItem[];
@@ -55,7 +54,7 @@ export class ReconciliationBalanceComponent implements OnInit {
   constructor(private  fb: FormBuilder, private reconciliationService: ReconciliationService) { }
 
   ngOnInit() {
-    console.log(this._reconciliationItems);
+
   }
 
   setDataSource(items: ReconciliationItem[]): DetailedBalance[] {
@@ -115,10 +114,8 @@ export class ReconciliationBalanceComponent implements OnInit {
       }
     });
     
-    console.log(data);
     this.reconciliationService.uploadBalance(process, data).subscribe(
       (response) => {
-        console.log(response);
         Swal.close();
         // this.updateBalance.emit(true);
       },
@@ -154,7 +151,6 @@ export class ReconciliationBalanceComponent implements OnInit {
 
   difference(element: DetailInfo): number{
     const diff = Number(element.newBalance) - Number(element.prevBalance);
-    console.log(diff);
     return diff;
   }
 

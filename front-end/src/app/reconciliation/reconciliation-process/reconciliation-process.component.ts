@@ -45,7 +45,6 @@ export class ReconciliationProcessComponent implements OnInit, OnDestroy {
     });
     const item = this.reconciliationProcess.items$.subscribe(
       (item) => { 
-        console.log(item);
         this.items = item;
       });
 
@@ -80,7 +79,6 @@ export class ReconciliationProcessComponent implements OnInit, OnDestroy {
     // if(process){
     //   this.reconciliationService.getProcessById(process).subscribe(
     //     (response) => {
-    //       console.log(response);
     //     }
     //   );
     // }

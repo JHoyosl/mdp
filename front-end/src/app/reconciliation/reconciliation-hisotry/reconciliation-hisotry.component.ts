@@ -60,7 +60,6 @@ export class ReconciliationHisotryComponent implements OnInit {
         let tmpArray = [];
         const data = response.reduce((acc, curr) => {
           if(acc == curr.process){
-            console.log(acc);
             tmpArray.push(curr);  
           }else{
             groupedData.push(tmpArray);
@@ -73,7 +72,6 @@ export class ReconciliationHisotryComponent implements OnInit {
 
         this.reconciliationItems = groupedData;
         this.dataSource.data = this.reconciliationItems;
-        console.log(response);
       },
       (err) => {
         console.error(err);

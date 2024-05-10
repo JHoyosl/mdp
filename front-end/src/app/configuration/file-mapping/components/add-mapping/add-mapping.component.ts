@@ -57,7 +57,7 @@ export class AddMappingComponent implements OnInit {
         const sortByName = response.sort((a,b) => a.name < b.name ? -1 : 1) 
         this.bankList = sortByName
       },
-      (err) => console.log(err)
+      (err) => console.error(err)
     );
   }
 
@@ -76,7 +76,6 @@ export class AddMappingComponent implements OnInit {
     mappingArray.forEach((_, index) =>{
       this.formMapping.addControl(index.toString(), new FormControl(''));
     });
-    console.log(this.formMapping);
   }
 
   setFormFileMapping():void{
@@ -171,15 +170,12 @@ export class AddMappingComponent implements OnInit {
         this.mappingIndex = response[1]
           .sort((a:MappingIndex,b:MappingIndex) => a.description < b.description ? -1 : 1);
 
-        console.log(this.mappingIndex);
         this.mappingArray = this.pairMappingArray(response[0]);
         this.setFormMapping(this.mappingArray);
       },
       (err) => console.error(err),
       () => Swal.close()
     );
-
-    console.log(file, skipTop);
   }
 
   pairMappingArray(data: string[][]){

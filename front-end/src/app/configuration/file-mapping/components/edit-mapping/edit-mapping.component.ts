@@ -37,7 +37,6 @@ export class EditMappingComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log(this.mapping);
     this.setForm(this.mapping);
     this.baseMap = this.mapping.base;
     this.setFormMap(this.mapping.map);
@@ -81,7 +80,6 @@ export class EditMappingComponent implements OnInit {
     })
   }
   setForm(mapping: MappingFileIndex){
-    console.log(mapping);
     const type = mapping.type === 'conciliar_externo' 
       ? 'external'
       : 'internal';
@@ -122,7 +120,6 @@ export class EditMappingComponent implements OnInit {
       skipBottom: this.formEditMapping.get('skipBottom').value,
       map: mapped,
     }
-    console.log(data);
   }
 
   cancel(){

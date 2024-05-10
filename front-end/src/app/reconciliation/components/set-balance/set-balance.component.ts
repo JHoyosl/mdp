@@ -53,7 +53,6 @@ export class SetBalanceComponent implements OnInit {
    }
 
   ngOnInit() {
-    console.log(this.accountsResume);
   }
 
   displayButtons(){
@@ -99,7 +98,6 @@ export class SetBalanceComponent implements OnInit {
     const invalidItems = this._reconciliationItems.reduce<ReconciliationItem[]>((acc, curr) => 
       ReconciliationHelper.balanceDifference(curr) !== 0 ? [...acc, curr ] : acc, 
       []);
-    console.log(invalidItems);
     if(invalidItems.length > 0){
       Swal.fire({title: 'Error',text: 'Las diferencias deben ser cero (0)'});
       return;

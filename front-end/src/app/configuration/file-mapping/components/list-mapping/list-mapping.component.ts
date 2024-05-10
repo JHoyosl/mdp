@@ -24,7 +24,7 @@ export class ListMappingComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
-    console.log(this.data);
+
   }
 
   signToText(sign: string): string{
