@@ -74,7 +74,7 @@ class MappingFileService
 
   public function getMapIndex($type)
   {
-    if (MapFile::TYPE_EXTERNAL) {
+    if ($type == MapFile::TYPE_EXTERNAL) {
       return DB::Table('map_bank_index')
         ->orderBy('description')
         ->get();
