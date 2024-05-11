@@ -179,6 +179,23 @@ export const ROUTES: RouteInfo[] = [
         ]
       },
       {
+        path: '',
+        title: 'Maestros',
+        icon: '',
+        class: 'has-arrow',
+        extralink: false,
+        submenu: [
+          {
+            path: '/configuration/masters/tx-type',
+            title: 'Tipo de Tx',
+            icon: '',
+            class: '',
+            extralink: false,
+            submenu: []
+          },
+        ]
+      },
+      {
         path: '/banks',
         title: 'Bancos',
         icon: '',

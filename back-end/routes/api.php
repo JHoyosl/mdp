@@ -115,8 +115,8 @@ Route::post('reconciliation/autoReconciliation/{process}', 'Reconciliation\Recon
 //CONCILIAR ROUTES
 
 
-Route::resource('externalTxType', 'TxType\ExternalTxTypeController', ['except' => 'create', 'edit']);
-Route::resource('localTxType', 'TxType\LocalTxTypeController', ['except' => 'create', 'edit']);
+Route::resource('externalTxType', 'Masters\TxType\ExternalTxTypeController', ['except' => 'create', 'edit']);
+Route::resource('localTxType', 'Masters\TxType\LocalTxTypeController', ['except' => 'create', 'edit']);
 
 Route::resource('balanceOperativo', 'BalanceGeneral\BalanceGeneralController', ['except' => []]);
 

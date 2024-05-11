@@ -7,7 +7,7 @@ import { MappingFilesService } from 'src/app/services/mappingFiles/mapping-files
 import { ToastrService } from 'ngx-toastr';
 import { zip } from 'rxjs';
 import { MappingIndex, StoreMappingRequest, Map } from 'src/app/Interfaces/mapping-file.interface';
-import Swal, { SweetAlertResult } from 'sweetalert2';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-add-mapping',

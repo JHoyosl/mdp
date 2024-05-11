@@ -1,0 +1,81 @@
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-4" style="padding: 2px;">
+      <mat-card style="margin-top: 10px; text-align: center;">
+        <h4 class="card-title">Nuevo Tipo de Transacción</h4>
+        <form [formGroup]="formTxType" >
+          <!-- source -->
+          <mat-form-field>
+            <mat-label>Fuente</mat-label>
+            <mat-select formControlName="source">
+              <mat-option value="internal"> Interno</mat-option>
+              <mat-option value="external"> Externo</mat-option>
+            </mat-select>
+          </mat-form-field>  
+          <!-- banks -->
+          <mat-form-field *ngIf="formSoruce === 'external'">
+            <mat-label>Banco</mat-label>
+            <mat-select formControlName="bank">
+              <mat-option *ngFor="let bank of bankList" 
+                [value]="bank.id"
+              >{{ bank.name }}</mat-option>
+            </mat-select>
+          </mat-form-field>  
+          <!-- description -->
+          <mat-form-field>
+            <mat-label>Descripción</mat-label>
+            <input matInput 
+              formControlName="description"
+              placeholder="Descripción"
+          >
+          </mat-form-field>
+          <!-- Tx -->
+          <mat-form-field>
+            <mat-label>Codigo Transacción</mat-label>
+            <input matInput 
+              formControlName="tx"
+              placeholder="Transacción"
+          >
+        </mat-form-field>
+          <!-- type -->
+          <mat-form-field *ngIf="formSoruce === 'external'">
+            <mat-label>Tipo de  Transacción</mat-label>
+            <mat-select formControlName="type">
+              <mat-option value="SIMPLE"> Simple</mat-option>
+              <mat-option value="COMPUESTO"> Compuesto</mat-option>
+            </mat-select>
+          </mat-form-field>  
+          <!-- Reference -->
+          <mat-form-field>
+            <mat-label>Referencia</mat-label>
+            <input matInput 
+              formControlName="reference"
+              placeholder="Referencia"
+          >
+          </mat-form-field>
+          <!-- Signo -->
+          <mat-form-field>
+            <mat-label>Signo</mat-label>
+            <input matInput 
+              formControlName="sign"
+              placeholder="Signo"
+          >
+          </mat-form-field>
+          
+        
+          <div class="flex d-flex mt-4 justify-content-around">
+            <button mat-raised-button 
+              (click)="submitForm()"
+              color="primary" 
+              class="mr-2"
+            >Cargar</button>
+            <button mat-raised-button
+              (click)="cancel()"
+              type="button" 
+            >Cancelar</button>
+          </div>
+        </form>
+      </mat-card>
+    </div>
+  </div>
+</div>

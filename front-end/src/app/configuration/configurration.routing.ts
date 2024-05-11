@@ -1,5 +1,6 @@
 import { Routes } from "@angular/router";
 import { FileMappingComponent } from "./file-mapping/file-mapping.component";
+import { TxTypesComponent } from "./masters/tx-types/tx-types.component";
 
 export const ConfigurationRoutes : Routes = [
   {
@@ -12,6 +13,13 @@ export const ConfigurationRoutes : Routes = [
           title: '',
         }
       },
+      {
+        path: 'masters/tx-type',
+        component: TxTypesComponent,
+        data: {
+          title: ''
+        }
+      }
     ],
   },
 ]

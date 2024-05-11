@@ -1,0 +1,49 @@
+<!-- <button (click)="onClick( tabset)">name</button> -->
+<div class="card">
+  <div class="card-body">
+    <h3 class="card-title">Tipos de Transacción </h3> 
+    <h6 class="card-subtitle">Configuración Tipos de Transacción</h6>
+      <mat-tab-group  [(selectedIndex)]="selectedIndex">
+        <mat-tab label="Listado" >
+          <ng-template matTabContent >
+            <div class="d-flex flex-row-reverse mt-2">
+              <mat-form-field>
+                <mat-label>Filtro</mat-label>
+                <mat-select [(value)]="sourceFilter">
+                  <mat-option [value]="'accounting'">Interno</mat-option>
+                  <mat-option [value]="'thirdParty'">Externo</mat-option>
+                </mat-select>
+              </mat-form-field>  
+            </div>
+            <app-list-external-tx-type *ngIf="sourceFilter === 'thirdParty'"
+              [externalInfo]="eTxTypeList"
+              (deleted)="deleted($event)"
+              (toEdit)="edit($event)"
+            ></app-list-external-tx-type>
+            <app-list-local-tx-type *ngIf="sourceFilter !== 'thirdParty'"
+              [localInfo]="lTxTypelist"
+              (deleted)="deleted($event)"
+              (toEdit)="edit($event)"
+            ></app-list-local-tx-type>
+          </ng-template>
+        </mat-tab>
+        <mat-tab label="Cargue">
+          <app-add-tx-type
+            (created)="actions($event)"
+          ></app-add-tx-type>
+        </mat-tab>
+        <mat-tab label="Editar" disabled>  
+          <ng-template matTabContent >
+            <app-edit-tx-type
+              [txType]="toEdit"
+              (canceled)="actions($event)"
+              (edited)="actions($event)"
+            ></app-edit-tx-type>
+          </ng-template>
+        </mat-tab>
+      </mat-tab-group>
+  </div>
+</div>
+
+
+

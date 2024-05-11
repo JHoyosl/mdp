@@ -3,6 +3,7 @@
 namespace App\Services\DataBase;
 
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 
 class TableServices
 {
@@ -12,7 +13,7 @@ class TableServices
 
         $conciliationLocalHeadersTable = 'conciliationLocalHeader_' . $companyId;
 
-        Schema::create($conciliationLocalHeadersTable, function ($table) {
+        Schema::create($conciliationLocalHeadersTable, function (Blueprint $table) {
             $table->increments('id');
             $table->integer('uploadedBy')->unsigned();
             $table->string('filePath')->nullable();
@@ -28,6 +29,21 @@ class TableServices
 
             $table->foreign('created_by')->references('id')->on('users');
             $table->foreign('close_by')->references('id')->on('users');
+        });
+    }
+
+    static function createLocalTxTypeTable(string $companyId)
+    {
+        $tableName = 'local_tx_types_' . $companyId;
+
+        Schema::create($tableName, function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('description');
+            $table->string('tx');
+            $table->string('reference');
+            $table->string('sign');
+            $table->softDeletes();
+            $table->timestamps();
         });
     }
 }
