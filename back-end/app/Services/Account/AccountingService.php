@@ -13,14 +13,16 @@ use Illuminate\Support\Facades\DB;
 use App\Models\HeaderAccountingInfo;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use App\Services\MappingFile\MappingFileService;
 
 class AccountingService
 {
-
+    private MappingFileService $mappingFileService;
     protected $accountingItemsTable = '';
 
-    public function __construct()
+    public function __construct(MappingFileService $mappingFileService)
     {
+        $this->mappingFileService = $mappingFileService;
     }
 
     public function getAccInfoToReconciliate($companyId, $localAccount, $startDate, $endDate)
@@ -56,7 +58,6 @@ class AccountingService
 
     public function index($companyId)
     {
-
         return HeaderAccountingInfo::all();
     }
 
@@ -169,13 +170,23 @@ class AccountingService
         $carbonEnd = Carbon::parse($endDate)->addDay();
         $fileArray = $this->fileToArray($file);
 
+        $mapIndex = $this->mappingFileService->getMapIndex(MapFile::TYPE_INTERNAL);
         $mapModel = MapFile::find($map_id);
         $map = json_decode($mapModel->map, true);
+        $separator = $mapModel->separator;
+        $dateFormat = str_replace('aaaa', 'yyyy', $mapModel->date_format);
 
         $row = [];
         foreach ($fileArray as $fileKey => $fileValue) {
+
             foreach ($map as $value) {
-                $row[$value['value']] = $fileValue[$value['fileColumn']];
+                $item = $mapIndex->first(function ($item) use ($value) {
+                    return $item->id == $value['mapIndex'];
+                });
+                if (!$item) {
+                    throw new Exception('No existe un indice');
+                }
+                $row[$item->description] = $fileValue[$value['fileColumn']];
             }
             if ($row['FECHA DE MOVIMIENTO'] == null) {
                 continue;
@@ -184,22 +195,22 @@ class AccountingService
                 throw new Exception("Fecha de movimiento inválida en {$fileKey}" . json_encode($row), 400);
             }
 
-            $row['CUENTA EXTERNA'] = array_key_exists($row['NUMERO CUENTA CONTABLE'], $accArray)
+            $row['CUENTA EXTERNA'] = array_key_exists(strVal($row['NUMERO CUENTA CONTABLE']), $accArray)
                 ? $accArray[$row['NUMERO CUENTA CONTABLE']]
                 : $row['NUMERO CUENTA CONTABLE'];
+
+            $row['VALOR DEBITO'] = $this->fixedCurrency($separator, $row['VALOR DEBITO']);
+            $row['VALOR CREDITO'] = $this->fixedCurrency($separator, $row['VALOR CREDITO']);
+            $row['SALDO ACTUAL'] = $this->fixedCurrency($separator, $row['SALDO ACTUAL']);
 
             $mapped[] = $this->rowToInsert($row, $headerId, $carbonStart, $carbonEnd, $fileKey);
         }
         return $mapped;
     }
 
-    private function getExternalAccountNumber($localAccount)
+    private function fixedCurrency($separator, $value)
     {
-        $account = Account::where('local_account', $localAccount)->first();
-        if ($account) {
-            return $account->bankbank_account;
-        }
-        return $localAccount;
+        $value = str_replace('$', '', $value);
     }
 
     private function rowToInsert($row, $headerId, $startDate, $endDate, $fileKey)

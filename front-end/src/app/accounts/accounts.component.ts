@@ -7,6 +7,9 @@ import Swal from 'sweetalert2';
 import { MapFileModel } from '../models/mapFile.model';
 import { ToastrService } from 'ngx-toastr';
 import { CompanyModel } from '../models/company.model';
+import { zip } from 'rxjs';
+import { MappingFilesService } from '../services/mappingFiles/mapping-files.service';
+import { MappingFileIndex } from '../Interfaces/mapping-file.interface';
 
 
 
@@ -33,8 +36,8 @@ export class AccountsComponent implements OnInit {
   externalSelected: '';
 
   showMap = [];
-  formatExternolist = [];
-  formatInternolist = [];
+  formatExternolist: MappingFileIndex[] = [];
+  formatInternolist: MappingFileIndex[] = [];
   selectedExterno: string;
   selectedLocal: string;
 
@@ -49,7 +52,8 @@ export class AccountsComponent implements OnInit {
 
   constructor( private apiRequest: ApiRequestService,
       private modalService: NgbModal,
-      private toastr: ToastrService
+      private toastr: ToastrService,
+      private mappingService: MappingFilesService
       ) {
 
 
@@ -92,6 +96,7 @@ export class AccountsComponent implements OnInit {
     const formData = new FormData();
     formData.set('company_id', this.setFormatAccount.companies.id);
     formData.set('map_id', format.id);
+
 
     this.apiRequest.postForm( formData, 'companies/setMap')
       .subscribe( (response) => {
@@ -170,22 +175,18 @@ export class AccountsComponent implements OnInit {
   getFormats(bank_id: string, company_id: string ) {
     this.formatExternolist = [];
     this.formatInternolist = [];
-    this.apiRequest.getCollection( `mapFiles/formatsExterno/${bank_id}`)
-      .subscribe( (response) => {
 
-        this.formatExternolist = response;
-      }, (err) => {
+    zip(
+      this.mappingService.index('thirdParty'),
+      this.mappingService.index('accounting')
+    ).subscribe(
+      (response) => {
+        this.formatExternolist = response[0];
+        this.formatInternolist = response[1];
+      }
+    );
 
-        console.error(err);
-      });
-
-      this.apiRequest.getCollection( `mapFiles/formatsLocal/${company_id}`)
-      .subscribe( (response) => {
-        this.formatInternolist = response;
-      }, (err) => {
-
-        console.error(err);
-      });
+    
   }
 
   setFromatShow(account) {

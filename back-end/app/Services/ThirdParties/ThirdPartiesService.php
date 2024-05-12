@@ -6,25 +6,31 @@ use Exception;
 use Carbon\Carbon;
 use App\Models\Account;
 use App\Models\MapFile;
+use App\Traits\DatesTrait;
 use Illuminate\Support\Str;
 use App\Models\ExternalTxType;
 use App\Models\ThirdPartiesItems;
-use Illuminate\Support\Facades\DB;
 
+use Illuminate\Support\Facades\DB;
 use App\Models\HeaderThirdPartiesInfo;
-use App\Traits\DatesTrait;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use App\Services\MappingFile\MappingFileService;
 
 
 class ThirdPartiesService
 {
     use DatesTrait;
 
+    private MappingFileService $mappingFileService;
+
+    public function __construct(MappingFileService $mappingFileService)
+    {
+        $this->mappingFileService = $mappingFileService;
+    }
+
     public function getAccInfoToReconciliate($accountId, $startDate, $endDate)
     {
-
-
         $tableName = $this->getThirdPartiesItemsTableName($accountId);
         $itemsTable = new ThirdPartiesItems($tableName);
 
@@ -235,134 +241,136 @@ class ThirdPartiesService
 
     public function mapInfo($account, $header, $file, $startDate, $endDate)
     {
-
+        $mapIndex = $this->mappingFileService->getMapIndex(MapFile::TYPE_EXTERNAL);
         $mapFile = MapFile::find($account->map_id);
-        $map =  json_decode($mapFile->map, true);
-
-        $indexMap =  [];
-        foreach ($map as $value) {
-            $indexMap[$value['fileColumn']] = $value['value'];
-        }
-
+        $map = json_decode($mapFile->map, true);
         $separator = $mapFile->separator;
+        $dateFormat = str_replace('aaaa', 'Y', $mapFile->date_format);
+        $dateFormat = str_replace('mm', 'm', $dateFormat);
+        $dateFormat = str_replace('dd', 'd', $dateFormat);
 
-        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
-        $spreadsheet->setActiveSheetIndex(0);
-        $worksheet = $spreadsheet->getActiveSheet();
+        $fileArray = $this->fileToArray($file, $mapFile->skip_top);
 
-        $startRow = 2;
+        $carbonStart = Carbon::parse($startDate)->subDay();
+        $carbonEnd = Carbon::parse($endDate)->addDay();
 
         $mappedInfo = [];
 
-        foreach ($worksheet->getRowIterator($startRow) as $rowKey => $row) {
+        foreach ($fileArray as $fileKey => $fileValue) {
+            $row = [];
+            foreach ($map as $value) {
 
-            $cellIterator = $row->getCellIterator();
-            // $cellIterator->setIterateOnlyExistingCells(true);
-            $mappedRow = [];
-
-            // Init  in -1 to start adding before conditions return
-            $fileColumn = -1;
-            foreach ($cellIterator as  $columnKey => $cell) {
-                $fileColumn++;
-
-                if (\PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($cell)) {
-                    $mappedRow[$indexMap[$fileColumn]] = date("Y-m-d H:i:s", \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($cell->getValue()));
-                    continue;
+                $item = $mapIndex->first(function ($item) use ($value) {
+                    return $item->id == $value['mapIndex'];
+                });
+                if (!$item) {
+                    throw new Exception('No existe un indice');
                 }
-                $mappedRow[$indexMap[$fileColumn]] = $cell->getValue();
-
-                if (in_array($indexMap[$fileColumn], ["VALOR CRÉDITO", "VALOR DEBITO", "VALOR (DEBITO/CREDITO)"])) {
-
-                    $value = $mappedRow[$indexMap[$fileColumn]];
-                    $value = str_replace("$", "", $value);
-
-                    $value = $this->currencyToDecimal($value, $separator);
-
-                    if ($indexMap[$fileColumn] == "VALOR (DEBITO/CREDITO)") {
-                        if ($value > 0) {
-                            $mappedRow['VALOR CRÉDITO'] =  $value;
-                        } else {
-                            $mappedRow['VALOR DEBITO'] =  abs($value);
-                        }
-                    }
-                    $mappedRow[$indexMap[$fileColumn]] = $value;
-                }
+                $row[$item->description] = $fileValue[$value['fileColumn']];
             }
 
-            if (count($mappedRow) == 0) continue;
-            $tmpInsertCell  = $this->cellToInsertExterno($mappedRow, $header->id, $startDate, $endDate);
-
-            $txInfo = $this->getTxInfo($tmpInsertCell, $account->bank_id);
-
-            if ($txInfo[0]) {
-                $tmpInsertCell['tx_type_id'] = $txInfo[1]['id'];
-                $tmpInsertCell['tx_type_name'] = $txInfo[1]['tx'];
-            } else {
-                $error = \Illuminate\Validation\ValidationException::withMessages(
-                    ['No existe una transacción con descripción: ' . $tmpInsertCell['descripcion'], $tmpInsertCell, $txInfo]
-                );
-                throw $error;
+            // Validate dates
+            $row['FECHA DEL MOVIMIENTO'] = Carbon::parse($row['FECHA DEL MOVIMIENTO']);
+            if ($row['FECHA DEL MOVIMIENTO']->gt($carbonEnd)) {
+                throw new Exception("Fecha de movimiento mayor del rango en {$row['FECHA DEL MOVIMIENTO']->format('Y/m/d')} - " . json_encode($row), 400);
             }
-            $mappedInfo[]  = $tmpInsertCell;
+            if ($row['FECHA DEL MOVIMIENTO']->lt($carbonStart)) {
+                throw new Exception("Fecha de movimiento menor de rango en {$row['FECHA DEL MOVIMIENTO']->format('Y/m/d')} - " . json_encode($row), 400);
+            }
+            $row['FECHA DEL MOVIMIENTO'] = $row['FECHA DEL MOVIMIENTO']->format('Y/m/d');
+
+            // fix currency and decimal separtor
+            $row['VALOR DEBITO'] = $this->fixedCurrency($separator, $row['VALOR DEBITO']);
+            $row['VALOR CRÉDITO'] = $this->fixedCurrency($separator, $row['VALOR CRÉDITO']);
+
+            if (array_key_exists('VALOR (DEBITO/CREDITO)', $row)) {
+                $row['VALOR (DEBITO/CREDITO'] = $this->fixedCurrency($separator, $row['VALOR (DEBITO/CREDITO']);
+                if ($row['VALOR (DEBITO/CREDITO'] > 0) {
+                    $mappedRow['VALOR CRÉDITO'] =  $row['VALOR (DEBITO/CREDITO'];
+                } else {
+                    $mappedRow['VALOR DEBITO'] =  abs($row['VALOR (DEBITO/CREDITO']);
+                }
+            }
+            $mappedInfo[] = $this->cellToInsertExterno($row,  $header->id);
         }
 
         return $mappedInfo;
     }
 
-    public function cellToInsertExterno($insertCell, $headerId, $startDate, $endDate)
+    private function fixedCurrency($separator, $value)
     {
-        //Garantee miss match date with time
-        $carbonStart = Carbon::parse($startDate)->subDay();
-        $carbonEnd = Carbon::parse($endDate)->addDay();
-
-        $moveDate = $insertCell["FECHA DEL MOVIMIENTO"];
-
-        // TODO: Tomar del mapeo el formato, pasar la logica a untrait
-        if (strlen($moveDate) == 8) {
-            $moveDate = substr_replace(substr_replace($moveDate, '-', 6, 0), '-', 4, 0);
+        $value = str_replace('$', '', $value);
+        if ($separator == ',') {
+            $value = str_replace('.', '', $value);
+            $value = str_replace(',', '.', $value);
         }
-        // $carbonCompare = new Carbon($insertCell["FECHA DEL MOVIMIENTO"]);
-        $carbonCompare = Carbon::parse($moveDate);
-
-        if ($carbonCompare->gt($carbonEnd)) {
-            throw new Exception("Fecha de movimiento mayor del rango en {$moveDate} - " . json_encode($insertCell), 400);
+        if ($separator == '.') {
+            $value = str_replace(',', '', $value);
         }
-        if ($carbonCompare->lt($carbonStart)) {
-            throw new Exception("Fecha de movimiento menor de rango en {$moveDate} - " . json_encode($insertCell), 400);
+        return floatval($value);
+    }
+
+    private function fileToArray($file, $skipTop)
+    {
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
+        $spreadsheet->setActiveSheetIndex(0);
+        $worksheet = $spreadsheet->getActiveSheet();
+        $highestRow = $worksheet->getHighestDataRow();
+
+        $rows = [];
+        foreach ($worksheet->getRowIterator() as $keyRow => $row) {
+            if ($skipTop >= $keyRow - 1) {
+                continue;
+            }
+            if ($keyRow > $highestRow) {
+                break;
+            }
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(FALSE); // This loops through all cells,
+            $cells = [];
+            foreach ($cellIterator as $cell) {
+                $cells[] = $cell->getValue();
+            }
+            $rows[] = $cells;
         }
 
+        return $rows;
+    }
+
+    public function cellToInsertExterno($row, $headerId)
+    {
         $insert =   [
             'header_id' => $headerId,
             'tx_type_id' => '',
             'tx_type_name' => '',
             'item_id' => '',
-            'descripcion' => $insertCell["TIPO DE TRANSACCION/DESCRIPCION"] ?? null,
+            'descripcion' => $row["TIPO DE TRANSACCION/DESCRIPCION"] ?? null,
             'operador' => '', // $insertCell["OPERADOR"],
-            'valor_credito' => $insertCell["VALOR CRÉDITO"] ?? null,
-            'valor_debito' => $insertCell["VALOR DEBITO"] ?? null,
-            'valor_debito_credito' => $insertCell["VALOR (DEBITO/CREDITO)"] ?? null,
-            'fecha_movimiento' => $insertCell["FECHA DEL MOVIMIENTO"] ?? null,
-            'fecha_archivo' => $insertCell["FECHA DEL ARCHIVO"] ?? null,
-            'codigo_tx' => $insertCell["CODIGO DE TRANSACCION"] ?? null,
-            'referencia_1' => $insertCell["REFERENCIA 1"] ?? null,
-            'referencia_2' => $insertCell["REFERENCIA 2"] ?? null,
-            'referencia_3' => $insertCell["REFERENCIA 3"] ?? null,
-            'nombre_titular' => $insertCell["NOMBRE TITULAR"] ?? null,
-            'identificacion_titular' => $insertCell["IDENTIFICACION TITULAR"] ?? null,
-            'numero_cuenta' => $insertCell["NUMERO DE CUENTA"] ?? null,
-            'nombre_transaccion' => $insertCell["NOMBRE DE TRANSACCION"] ?? null,
-            'consecutivo_registro' => $insertCell["CONSECUTIVO DE REGISTROS"] ?? null,
-            'nombre_oficina' => $insertCell["NOMBRE OFICINA"] ?? null,
-            'codigo_oficina' => $insertCell["CODIGO OFICINA"] ?? null,
-            'canal' => $insertCell["CANAL"] ?? null,
-            'nombre_proveedor' => $insertCell["NOMBRE PROVEEDOR"] ?? null,
-            'id_proveedor' => $insertCell["IDENTIFICACION DE PROVEEDOR"] ?? null,
-            'banco_destino' => $insertCell["BANCO DESTINO"] ?? null,
-            'fecha_rechazo' => $insertCell["FECHA DE RECHAZO"] ?? null,
-            'motivo_rechazo' => $insertCell["MOTIVO DE RECHAZO"] ?? null,
-            'ciudad' => $insertCell["CIUDAD"] ?? null,
-            'tipo_cuenta' => $insertCell["TIPO DE CUENTA"] ?? null,
-            'numero_documento' => $insertCell["NUMERO DE DOCUMENTO"] ?? null,
+            'valor_credito' => $row["VALOR CRÉDITO"] ?? null,
+            'valor_debito' => $row["VALOR DEBITO"] ?? null,
+            'valor_debito_credito' => $row["VALOR (DEBITO/CREDITO)"] ?? null,
+            'fecha_movimiento' => $row["FECHA DEL MOVIMIENTO"] ?? null,
+            'fecha_archivo' => $row["FECHA DEL ARCHIVO"] ?? null,
+            'codigo_tx' => $row["CODIGO DE TRANSACCION"] ?? null,
+            'referencia_1' => $row["REFERENCIA 1"] ?? null,
+            'referencia_2' => $row["REFERENCIA 2"] ?? null,
+            'referencia_3' => $row["REFERENCIA 3"] ?? null,
+            'nombre_titular' => $row["NOMBRE TITULAR"] ?? null,
+            'identificacion_titular' => $row["IDENTIFICACION TITULAR"] ?? null,
+            'numero_cuenta' => $row["NUMERO DE CUENTA"] ?? null,
+            'nombre_transaccion' => $row["NOMBRE DE TRANSACCION"] ?? null,
+            'consecutivo_registro' => $row["CONSECUTIVO DE REGISTROS"] ?? null,
+            'nombre_oficina' => $row["NOMBRE OFICINA"] ?? null,
+            'codigo_oficina' => $row["CODIGO OFICINA"] ?? null,
+            'canal' => $row["CANAL"] ?? null,
+            'nombre_proveedor' => $row["NOMBRE PROVEEDOR"] ?? null,
+            'id_proveedor' => $row["IDENTIFICACION DE PROVEEDOR"] ?? null,
+            'banco_destino' => $row["BANCO DESTINO"] ?? null,
+            'fecha_rechazo' => $row["FECHA DE RECHAZO"] ?? null,
+            'motivo_rechazo' => $row["MOTIVO DE RECHAZO"] ?? null,
+            'ciudad' => $row["CIUDAD"] ?? null,
+            'tipo_cuenta' => $row["TIPO DE CUENTA"] ?? null,
+            'numero_documento' => $row["NUMERO DE DOCUMENTO"] ?? null,
 
         ];
 
@@ -371,7 +379,6 @@ class ThirdPartiesService
 
     public function getTxInfo($values, $bank_id)
     {
-
         $externalTxTable = ExternalTxType::where('bank_id', $bank_id)
             ->where('reference', 'like', '%' . $values['codigo_tx'] . '%')
             ->get();
@@ -413,20 +420,6 @@ class ThirdPartiesService
 
             return [false, $externalTxTable];
         }
-    }
-
-    //TODO: Improve this implementation
-    public function currencyToDecimal($value, $separator)
-    {
-        $value = str_replace("$", "", $value);
-        if ($separator == ".") {
-            $value = str_replace(",", "", $value);
-            return  floatval($value);
-        }
-        $value = str_replace(".", "", $value);
-        $value = str_replace(",", ".", $value);
-
-        return  $value;
     }
 
     public function getThirdPartiesItemsTableName(String $accountId)

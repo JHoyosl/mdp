@@ -36,8 +36,7 @@ class AccountingController extends ApiController
 
     public function index()
     {
-        $companyId = $this->user->current_company;
-        $info = $this->accountingService->index($companyId);
+        $info = $this->accountingService->index($this->companyId);
         return $this->showAll($info);
     }
 
@@ -66,7 +65,7 @@ class AccountingController extends ApiController
                     $request->endDate,
                     $company
                 );
-            return $data;
+
             return $this->showOne($data);
         } catch (\Exception $e) {
 
@@ -98,7 +97,6 @@ class AccountingController extends ApiController
 
     public function getAccountingItems(Request $request)
     {
-
         $validated = $request->validate([
             'headerId' => 'required'
         ]);

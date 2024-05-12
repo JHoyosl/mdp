@@ -120,6 +120,13 @@ export class EditMappingComponent implements OnInit {
       skipBottom: this.formEditMapping.get('skipBottom').value,
       map: mapped,
     }
+
+    this.mappingFilesService.patchMap(data).subscribe(
+      (response) => {
+        console.log(response);
+      },
+      (err) => console.log(err)
+    );
   }
 
   cancel(){

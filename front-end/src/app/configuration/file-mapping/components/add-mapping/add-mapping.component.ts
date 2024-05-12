@@ -52,12 +52,20 @@ export class AddMappingComponent implements OnInit {
   }
 
   getBankList(){
+    Swal.fire({
+      title: 'Procesando',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      imageUrl: 'assets/images/2.gif',
+
+    });
     this.bankRequestsService.index().subscribe(
       (response) => {
         const sortByName = response.sort((a,b) => a.name < b.name ? -1 : 1) 
         this.bankList = sortByName
       },
-      (err) => console.error(err)
+      (err) => console.error(err),
+      () => Swal.close()
     );
   }
 
@@ -88,7 +96,7 @@ export class AddMappingComponent implements OnInit {
       skipBottom: ['0', [Validators.required]],
       file: [null, [Validators.required]],
     });
-
+    
     this.formFileMapping.get('type').valueChanges.subscribe(
       (value) => {
         this.showBank = value === 'external' ? true : false;
@@ -127,20 +135,31 @@ export class AddMappingComponent implements OnInit {
     }
 
   // check for mandatory mapping
+  let hasError = false;
    this.mappingIndex
     .filter((item) => item.type.toString() === '1')
     .forEach((item) => {
       if(!mappingIdCheck.includes(item.id)){
         this.toastr.error(`${item.description} es Obligatorio`);
-        return;
+        hasError = true;
       }
     })
-    
+    if(hasError){
+      return;
+    }
+    Swal.fire({
+      title: 'Procesando',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      imageUrl: 'assets/images/2.gif',
+
+    });
     this.mappingFilesService.store(storeRequest).subscribe(
       (response) => {
         this.mappingResult.emit(true);
       },
-      (err) => console.error(err)
+      (err) => console.error(err),
+      () => Swal.close()
     );
   }
 
