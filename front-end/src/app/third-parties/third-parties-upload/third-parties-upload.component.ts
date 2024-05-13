@@ -16,6 +16,7 @@ export class ThirdPartiesUploadComponent implements OnInit {
   @Input() account: ThirdPartyAccount;
   
   @Output() successUpload = new EventEmitter<number>();
+  @Output() cancelUpload = new EventEmitter<number>();
 
   @ViewChild('fileInput') fileInput: ElementRef;
 
@@ -87,5 +88,9 @@ export class ThirdPartiesUploadComponent implements OnInit {
     this.fileName = file.name;
     this.uploadForm.patchValue({ file: file});
     
+  }
+
+  cancel(){
+    this.uploadForm.reset();
   }
 }

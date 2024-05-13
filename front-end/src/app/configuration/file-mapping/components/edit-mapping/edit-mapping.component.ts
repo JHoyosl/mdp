@@ -103,12 +103,15 @@ export class EditMappingComponent implements OnInit {
 
   submitEdit(){
     // this.action.emit('success');
-    const mapped = this.baseMap.map((element, index) => {
-      return {
-        fileColumn: index,
-        mapIndex: this.formMap.get(index.toString()).value,
-        value: element.value,
-        header: element.description,
+    const mapped: Map[] = [];
+    this.baseMap.forEach((element, index) => {
+      if(this.formMap.get(index.toString()).value !== ""){
+        mapped.push({
+          fileColumn: index,
+          mapIndex: this.formMap.get(index.toString()).value,
+          value: element.value,
+          header: element.description,
+        });
       }
     });
     const data: updateMappingRequest = {

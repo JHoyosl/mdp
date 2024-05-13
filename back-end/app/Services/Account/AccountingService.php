@@ -58,7 +58,7 @@ class AccountingService
 
     public function index($companyId)
     {
-        return HeaderAccountingInfo::all();
+        return HeaderAccountingInfo::where('company_id', $companyId)->get();
     }
 
     public function uploadAccountInfo($user, $file, $startDate, $endDate, $company)

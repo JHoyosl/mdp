@@ -112,14 +112,17 @@ export class AddMappingComponent implements OnInit {
     const mapped: Map[] = [];
     const mappingIdCheck = [];
     this.mappingArray.forEach((element, index) => {
-      mapped.push({
-        fileColumn: index,
-        mapIndex: this.formMapping.get(index.toString()).value,
-        value: element.value,
-        header: element.description,
-      });
-      mappingIdCheck.push(this.formMapping.get(index.toString()).value);
+      if(this.formMapping.get(index.toString()).value !== ""){
+        mapped.push({
+          fileColumn: index,
+          mapIndex: this.formMapping.get(index.toString()).value,
+          value: element.value,
+          header: element.description,
+        });
+        mappingIdCheck.push(this.formMapping.get(index.toString()).value);
+      }
     });
+
     const storeRequest: StoreMappingRequest = {
       type: this.formFileMapping.get('type').value,
       description: this.formFileMapping.get('description').value,

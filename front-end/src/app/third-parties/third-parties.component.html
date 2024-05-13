@@ -26,6 +26,7 @@
             <app-third-parties-upload
               [account]="selectedAccount"
               (successUpload)="successUpload($event)"
+              (cancelUpload)="cancelUpload()"
             ></app-third-parties-upload>
           </mat-tab>
           <mat-tab label="Editar" disabled>  

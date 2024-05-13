@@ -53,7 +53,6 @@ class MappingFileService
     $data = [];
     foreach ($worksheet->getRowIterator($startRow) as $rowKey => $row) {
       $cellIterator = $row->getCellIterator();
-      $cellIterator->setIterateOnlyExistingCells(true);
 
       $rows = [];
       $count++;

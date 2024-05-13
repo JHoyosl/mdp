@@ -63,4 +63,8 @@ export class ThirdPartiesComponent implements OnInit {
 
   }
 
+  cancelUpload(){
+    this.selectedIndex = 0;
+  }
+
 }

@@ -250,7 +250,6 @@ class ThirdPartiesService
         $dateFormat = str_replace('dd', 'd', $dateFormat);
 
         $fileArray = $this->fileToArray($file, $mapFile->skip_top);
-
         $carbonStart = Carbon::parse($startDate)->subDay();
         $carbonEnd = Carbon::parse($endDate)->addDay();
 
@@ -259,11 +258,14 @@ class ThirdPartiesService
         foreach ($fileArray as $fileKey => $fileValue) {
             $row = [];
             foreach ($map as $value) {
-
+                if ($value['mapIndex'] == "null") {
+                    continue;
+                }
                 $item = $mapIndex->first(function ($item) use ($value) {
                     return $item->id == $value['mapIndex'];
                 });
                 if (!$item) {
+                    return [$value, $mapIndex, $item];
                     throw new Exception('No existe un indice');
                 }
                 $row[$item->description] = $fileValue[$value['fileColumn']];
@@ -312,11 +314,15 @@ class ThirdPartiesService
 
     private function fileToArray($file, $skipTop)
     {
-        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
+        $inputFileType = \PhpOffice\PhpSpreadsheet\IOFactory::identify($file);
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($inputFileType);
+        $spreadsheet = $reader->load($file);
+
+        // $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
         $spreadsheet->setActiveSheetIndex(0);
         $worksheet = $spreadsheet->getActiveSheet();
         $highestRow = $worksheet->getHighestDataRow();
-
+        $reader->setReadDataOnly(FALSE);
         $rows = [];
         foreach ($worksheet->getRowIterator() as $keyRow => $row) {
             if ($skipTop >= $keyRow - 1) {
@@ -328,9 +334,15 @@ class ThirdPartiesService
             $cellIterator = $row->getCellIterator();
             $cellIterator->setIterateOnlyExistingCells(FALSE); // This loops through all cells,
             $cells = [];
-            foreach ($cellIterator as $cell) {
-                $cells[] = $cell->getValue();
+            foreach ($cellIterator as $keyCell => $cell) {
+                $value = $worksheet->getCell($keyCell . $keyRow);
+                if (\PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($worksheet->getCell($keyCell . $keyRow))) {
+                    $cells[] = date("Y-m-d", \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($value->getValue()));
+                    continue;
+                }
+                $cells[] = $worksheet->getCell($keyCell . $keyRow)->getValue();
             }
+
             $rows[] = $cells;
         }
 
