@@ -73,6 +73,7 @@ class LocalTxTypeController extends ApiController
                 $request->description,
                 $request->tx,
                 $request->reference,
+                $request->type,
                 $request->sign
             );
             return $this->showMessage(new LocalTxTypeResource($newTx), 200);

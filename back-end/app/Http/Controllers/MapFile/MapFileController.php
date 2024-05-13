@@ -15,6 +15,7 @@ use App\Http\Requests\MapFile\PatchMappingRequest;
 use App\Http\Requests\MapFile\MappingUploadRequest;
 use App\Http\Resources\MapFile\MapFileIndexCollection;
 use App\Http\Requests\MapFile\MappingFileToArrayRequest;
+use App\Http\Resources\MapFile\MapFileIndexResource;
 
 class MapFileController extends ApiController
 {
@@ -163,8 +164,8 @@ class MapFileController extends ApiController
             $request->skipBottom,
             $request->map
         );
-
         return $patched;
+        return $this->showMessage(new MapFileIndexResource($patched));
     }
 
     /**

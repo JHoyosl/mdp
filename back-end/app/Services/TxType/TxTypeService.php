@@ -52,13 +52,13 @@ class TxTypeService
     return $newTx;
   }
 
-  public function storeLocalTx($companyId, $description, $tx, $reference, $sign)
+  public function storeLocalTx($companyId, $description, $tx, $reference, $type, $sign)
   {
     $tableName = $this->getLocalTxTableName($companyId);
     $table = new LocalTxType($tableName);
     $txTypeCheck = $table->where('description', $description)
       ->where('tx', $tx)
-      ->where('company_id', $companyId)
+      ->where('type', $type)
       ->where('reference', $reference)
       ->where('sign', $sign)
       ->first();
@@ -66,12 +66,13 @@ class TxTypeService
     if ($txTypeCheck) {
       throw  new \Exception('Ya existe el tipo de tx');
     }
+
     $newTxTypes = new LocalTxType($tableName);
     $newTxTypes->description = $description;
-    $newTxTypes->company_id = $companyId;
     $newTxTypes->tx = $tx;
     $newTxTypes->reference = $reference;
     $newTxTypes->sign = $sign;
+    $newTxTypes->type = $type;
     $newTxTypes->save();
 
     return  $newTxTypes;

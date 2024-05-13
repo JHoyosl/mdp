@@ -43,7 +43,7 @@ export interface StoreMappingRequest {
 }
 
 export interface updateMappingRequest {
-  'id': number,
+  'id'?: number,
   'description': string,
   'dateFormat': string,
   'separator': string,

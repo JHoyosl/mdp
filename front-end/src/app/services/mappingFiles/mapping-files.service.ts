@@ -58,8 +58,8 @@ export class MappingFilesService {
     )
   }
 
-  patchMap(data: updateMappingRequest): Observable<MappingIndex>{
-    return this.httpClient.patch<GenericResponse>(`${this.baseUrl}`,data).pipe(
+  patchMap(id: number, data: updateMappingRequest): Observable<MappingIndex>{
+    return this.httpClient.patch<GenericResponse>(`${this.baseUrl}/${id}`,data).pipe(
       map((respone) => respone.data)
     )
   }

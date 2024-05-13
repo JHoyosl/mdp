@@ -114,7 +114,7 @@ class MappingFileService
     $mapping->date_format = $dateFormat;
     $mapping->description = $separator;
     $mapping->skip_top = $skipTop;
-    $mapping->skip_botton = $skipBottom;
+    $mapping->skip_bottom = $skipBottom;
     $mapping->map = $map;
 
     $mapping->save();

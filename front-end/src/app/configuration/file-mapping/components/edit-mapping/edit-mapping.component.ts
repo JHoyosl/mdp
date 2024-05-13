@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 import { zip } from 'rxjs';
 import { Bank } from 'src/app/Interfaces/bank.interface';
 import { Map, MappingFileIndex, MappingIndex, updateMappingRequest } from 'src/app/Interfaces/mapping-file.interface';
@@ -32,6 +33,7 @@ export class EditMappingComponent implements OnInit {
     private fb: FormBuilder, 
     private bankRequestsService: BankRequestsService,
     private mappingFilesService: MappingFilesService,
+    private toastr: ToastrService
   ) { 
     
   }
@@ -104,6 +106,7 @@ export class EditMappingComponent implements OnInit {
   submitEdit(){
     // this.action.emit('success');
     const mapped: Map[] = [];
+    const mappingIdCheck = [];
     this.baseMap.forEach((element, index) => {
       if(this.formMap.get(index.toString()).value !== ""){
         mapped.push({
@@ -112,10 +115,22 @@ export class EditMappingComponent implements OnInit {
           value: element.value,
           header: element.description,
         });
+        mappingIdCheck.push(this.formMap.get(index.toString()).value);
       }
     });
+    let hasError = false;
+   this.mappingIndex
+    .filter((item) => item.type.toString() === '1')
+    .forEach((item) => {
+      if(!mappingIdCheck.includes(item.id)){
+        this.toastr.error(`${item.description} es Obligatorio`);
+        hasError = true;
+      }
+    })
+    if(hasError){
+      return;
+    }
     const data: updateMappingRequest = {
-      id: this.mapping.id,
       description: this.formEditMapping.get('description').value,
       dateFormat: this.formEditMapping.get('dateFormat').value,
       separator: this.formEditMapping.get('separator').value,
@@ -124,8 +139,9 @@ export class EditMappingComponent implements OnInit {
       map: mapped,
     }
 
-    this.mappingFilesService.patchMap(data).subscribe(
+    this.mappingFilesService.patchMap(this.mapping.id, data).subscribe(
       (response) => {
+        this.action.emit('cancel');
         console.log(response);
       },
       (err) => console.log(err)
