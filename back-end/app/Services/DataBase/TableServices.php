@@ -2,6 +2,7 @@
 
 namespace App\Services\DataBase;
 
+use App\Models\LocalTxType;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 
@@ -42,6 +43,7 @@ class TableServices
             $table->string('tx');
             $table->string('reference');
             $table->string('sign');
+            $table->string('type')->default(LocalTxType::SIMPLE_TYPE);
             $table->softDeletes();
             $table->timestamps();
         });

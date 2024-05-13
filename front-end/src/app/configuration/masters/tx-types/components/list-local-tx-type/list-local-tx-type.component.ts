@@ -24,7 +24,7 @@ export class ListLocalTxTypeComponent implements OnInit {
   @ViewChild(MatSort) sort: MatSort;
   
   dataSource = new MatTableDataSource<LocalTxType>([]);
-  displayedColumns = ['description', 'tx', 'reference', 'sign', 'Actions' ];
+  displayedColumns = ['description', 'tx', 'reference', 'type', 'sign', 'Actions' ];
   
   constructor(
     private txTypeService: TxTypeService,

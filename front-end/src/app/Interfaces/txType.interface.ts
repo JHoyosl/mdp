@@ -14,15 +14,16 @@ export interface ExternalTxType {
 }
 
 export interface LocalTxType {
-    id: number
-    description: string
-    tx: string
-    companyId: number
-    reference: string
-    sign: string
-    deletedAt: string
-    createdAt: string
-    updatedAt: string
+    id: number;
+    description: string;
+    tx: string;
+    companyId: number;
+    reference: string;
+    sign: string;
+    type: 'COMPUESTO' | 'SIMPLE';
+    deletedAt: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 
@@ -31,6 +32,7 @@ export interface CreateLocalTxRequest {
   tx: string;
   reference: string;
   sign: string;
+  type: string;
 }
 
 export interface CreateExternalTxRequest extends CreateLocalTxRequest{

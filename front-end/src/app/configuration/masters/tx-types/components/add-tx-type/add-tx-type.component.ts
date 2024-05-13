@@ -57,16 +57,15 @@ export class AddTxTypeComponent implements OnInit {
       tx: ['', Validators.required],
       reference: ['', Validators.required],
       sign: ['', Validators.required],
+      type: ['', Validators.required]
     });
 
     this.formTxType.get('source').valueChanges.subscribe(
       (value) => {
         if(value === 'external'){
           this.formTxType.addControl('bank', new FormControl('', Validators.required));
-          this.formTxType.addControl('type', new FormControl('', Validators.required));
         }else{
           this.formTxType.removeControl('bank');
-          this.formTxType.removeControl('type');
         }
       }
     );
@@ -90,7 +89,7 @@ export class AddTxTypeComponent implements OnInit {
       request = this.getExternalForm();
 
       this.txTypeService.storeExternal(request as CreateExternalTxRequest).subscribe(
-        (response) => {
+        (_) => {
           this.created.emit({source: 'local', status: true});
         },
         (err) => {
@@ -122,7 +121,8 @@ export class AddTxTypeComponent implements OnInit {
       description: this.formTxType.get('description').value,
       tx: this.formTxType.get('tx').value,
       reference: this.formTxType.get('reference').value,
-      sign: this.formTxType.get('sign').value
+      sign: this.formTxType.get('sign').value,
+      type: this.formTxType.get('type').value,
     }
   }
 

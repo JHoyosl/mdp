@@ -60,7 +60,6 @@ export class EditTxTypeComponent implements OnInit {
   }
 
   setForm(txType: ExternalTxType | LocalTxType){
-    console.log('set form');
     this.formTxType = this.fb.group({
       source: [
         {
@@ -71,12 +70,12 @@ export class EditTxTypeComponent implements OnInit {
       tx: [txType.tx, Validators.required],
       reference: [txType.reference, Validators.required],
       sign: [txType.sign, Validators.required],
+      type: [txType.type, Validators.required]
     });
 
     if(this.isExternal){
       const tmpTxType = txType as ExternalTxType;
       this.formTxType.addControl('bank', new FormControl(tmpTxType.bank.id, Validators.required))
-      this.formTxType.addControl('type', new FormControl(tmpTxType.type, Validators.required))
     }
   }
 
@@ -142,6 +141,7 @@ export class EditTxTypeComponent implements OnInit {
       tx: this.formTxType.get('tx').value,
       reference: this.formTxType.get('reference').value,
       sign: this.formTxType.get('sign').value,
+      type: this.formTxType.get('type').value,
     }
   }
 

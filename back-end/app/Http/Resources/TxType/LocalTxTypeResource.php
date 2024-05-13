@@ -21,6 +21,7 @@ class LocalTxTypeResource extends JsonResource
             'companyId'     => $this->company_id,
             'reference'     => $this->reference,
             'sign'          => $this->sign,
+            'type'          => $this->type,
             'deletedAt'     => $this->deleted_at,
             'createdAt'     => $this->created_at,
             'updatedAt'     => $this->updated_at,

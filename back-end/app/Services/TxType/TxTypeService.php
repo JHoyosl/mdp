@@ -78,7 +78,7 @@ class TxTypeService
   }
 
 
-  public  function updateLocalTx($id, $companyId, $description, $tx, $reference, $sign)
+  public  function updateLocalTx($id, $companyId, $description, $tx, $reference, $type, $sign)
   {
     $tableName = $this->getLocalTxTableName($companyId);
     $txType = (new LocalTxType($tableName))->findOrFail($id);
@@ -87,6 +87,7 @@ class TxTypeService
     $txType->tx = $tx;
     $txType->reference = $reference;
     $txType->sign = $sign;
+    $txType->type = $type;
     $txType->save();
 
     return $txType;

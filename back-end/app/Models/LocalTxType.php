@@ -9,34 +9,38 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class LocalTxType extends Model
 {
     use SoftDeletes;
-    
+
+    const SIMPLE_TYPE = 'SIMPLE';
+    const COMPUESTO_TYPE = 'COMPUESTO';
+
     protected $table = "conciliar_local_tx_type";
     protected $dates = ['deleted_at'];
 
 
-    public function __construct($tableName){
+    public function __construct($tableName)
+    {
 
         $this->table = $tableName;
-
     }
 
-     /**
+    /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'description', 
-        'tx', 
+        'description',
+        'tx',
         'company_id',
         'reference',
         'sign',
-        
+        'type',
+
     ];
 
-    function companies(){
+    function companies()
+    {
 
-    	return $this->belongsTo(Company::class, 'company_id');
+        return $this->belongsTo(Company::class, 'company_id');
     }
-
 }

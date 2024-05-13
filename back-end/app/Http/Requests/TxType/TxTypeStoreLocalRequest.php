@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\TxType;
 
+use App\Models\LocalTxType;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class TxTypeStoreLocalRequest extends FormRequest
@@ -28,6 +30,7 @@ class TxTypeStoreLocalRequest extends FormRequest
             'tx' => ['required', 'string'],
             'reference' => ['required', 'string'],
             'sign' => ['required', 'string'],
+            'type' => ['required', Rule::in([LocalTxType::SIMPLE_TYPE, LocalTxType::COMPUESTO_TYPE])],
         ];
     }
 }
