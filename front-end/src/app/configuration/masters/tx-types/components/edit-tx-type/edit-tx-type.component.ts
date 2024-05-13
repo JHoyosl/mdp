@@ -19,7 +19,6 @@ export class EditTxTypeComponent implements OnInit {
     this._txType = val;
     this.isExternal = ('bank' in this._txType);
     this.setForm(this._txType);
-    console.log(this._txType);
   }
   @Output() edited = new EventEmitter<{source: TxType, status: boolean}>();
   @Output() canceled = new EventEmitter<{source: 'local' | 'external', status: boolean}>()

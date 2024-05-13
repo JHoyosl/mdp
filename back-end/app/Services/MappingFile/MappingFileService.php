@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Company;
 use App\Models\MapFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class MappingFileService
@@ -38,10 +39,12 @@ class MappingFileService
 
   public function MappingFileToArray($file, $skipTop)
   {
-
+    ini_set('memory_limit', '-1');
+    set_time_limit(300);
     $ext = $file->extension() == 'txt' ? 'csv' : $file->extension();
     $filePath = rand() . '.' . $ext;
     $fullPath = storage_path('tmp') . '/' . $filePath;
+
     Storage::disk('tmp')->put($filePath, file_get_contents($file));
 
     $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
@@ -65,7 +68,7 @@ class MappingFileService
       }
       $data[] = $rows;
       if ($count == 2) {
-        unlink($fullPath);
+        File::delete($fullPath);
         return $data;
       }
     }
@@ -112,9 +115,10 @@ class MappingFileService
   {
     $mapping->description = $description;
     $mapping->date_format = $dateFormat;
-    $mapping->description = $separator;
+    $mapping->separator = $separator;
     $mapping->skip_top = $skipTop;
     $mapping->skip_bottom = $skipBottom;
+    $mapping->separator = $separator;
     $mapping->map = $map;
 
     $mapping->save();

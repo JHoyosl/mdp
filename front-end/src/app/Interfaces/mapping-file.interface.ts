@@ -43,13 +43,13 @@ export interface StoreMappingRequest {
 }
 
 export interface updateMappingRequest {
-  'id'?: number,
-  'description': string,
-  'dateFormat': string,
-  'separator': string,
-  'skipTop': number,
-  'skipBottom': number,
-  'map': Map[],
+  id?: number,
+  description: string,
+  dateFormat: string,
+  separator: string,
+  skipTop: number,
+  skipBottom: number,
+  map: Map[] | string,
 }
 
 // TODO: FIX INTERFACES

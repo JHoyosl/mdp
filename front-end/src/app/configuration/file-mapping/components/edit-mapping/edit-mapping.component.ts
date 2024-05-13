@@ -87,7 +87,7 @@ export class EditMappingComponent implements OnInit {
       : 'internal';
     this.formEditMapping = this.fb.group({
       type: [{value:type, disabled: true}, [Validators.required]],
-      description: [{value:mapping.description, disabled: true}, [Validators.required]],
+      description: [{value:mapping.description, disabled: false}, [Validators.required]],
       separator: [mapping.separator, [Validators.required]],
       dateFormat: [mapping.dateFormat, [Validators.required]],
       skipTop: [mapping.skipTop,[Validators.required]],
@@ -136,15 +136,14 @@ export class EditMappingComponent implements OnInit {
       separator: this.formEditMapping.get('separator').value,
       skipTop: this.formEditMapping.get('skipTop').value,
       skipBottom: this.formEditMapping.get('skipBottom').value,
-      map: mapped,
+      map: JSON.stringify(mapped),
     }
 
     this.mappingFilesService.patchMap(this.mapping.id, data).subscribe(
       (response) => {
         this.action.emit('cancel');
-        console.log(response);
       },
-      (err) => console.log(err)
+      (err) => console.error(err)
     );
   }
 

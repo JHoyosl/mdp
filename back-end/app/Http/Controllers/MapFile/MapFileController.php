@@ -164,7 +164,7 @@ class MapFileController extends ApiController
             $request->skipBottom,
             $request->map
         );
-        return $patched;
+
         return $this->showMessage(new MapFileIndexResource($patched));
     }
 
