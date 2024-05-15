@@ -185,8 +185,6 @@ class ReconciliationController extends ApiController
     public function deleteProcess(Request  $request)
     {
         return $this->reconciliationService->deleteProcess($request->process, $this->companyId);
-
-        return "Hola";
     }
 
     public function startNewProcess(Request $request)
@@ -250,6 +248,7 @@ class ReconciliationController extends ApiController
                 $this->user,
                 $this->companyId
             );
+            return $initReconciliation;
             return $this->showAll($initReconciliation);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
@@ -605,7 +604,6 @@ class ReconciliationController extends ApiController
     public function uploadIniFile(Request $request)
     {
 
-        // return $this->reconciliationService->IniReconciliation($request->file, $this->user)
         $user = Auth::user();
 
         $headers = new ReconciliationHeader($this->conciliar_headers_table);

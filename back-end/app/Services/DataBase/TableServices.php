@@ -35,7 +35,7 @@ class TableServices
 
     static function createLocalTxTypeTable(string $companyId)
     {
-        $tableName = 'local_tx_types_' . $companyId;
+        $tableName = 'reconciliation_local_tx_types_' . $companyId;
 
         Schema::create($tableName, function (Blueprint $table) {
             $table->bigIncrements('id');

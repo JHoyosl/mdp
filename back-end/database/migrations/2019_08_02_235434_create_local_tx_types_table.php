@@ -13,7 +13,7 @@ class CreateLocalTxTypesTable extends Migration
      */
     public function up()
     {
-        Schema::create('local_tx_types_[companyId]', function (Blueprint $table) {
+        Schema::create('reconciliation_local_tx_types_[companyId]', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('description');
             $table->string('tx');
@@ -31,6 +31,6 @@ class CreateLocalTxTypesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('local_tx_types');
+        Schema::dropIfExists('reconciliation_local_tx_types');
     }
 }

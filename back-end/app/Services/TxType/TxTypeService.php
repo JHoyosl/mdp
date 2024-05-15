@@ -125,6 +125,6 @@ class TxTypeService
   //HELPERS
   private function getLocalTxTableName($companyId)
   {
-    return 'local_tx_types_' . $companyId;
+    return 'reconciliation_local_tx_types_' . $companyId;
   }
 }
