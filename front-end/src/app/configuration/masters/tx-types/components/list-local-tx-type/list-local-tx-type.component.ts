@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { MatPaginator, MatSort, MatTableDataSource } from '@angular/material';
 import { ToastrService } from 'ngx-toastr';
+import { Observable } from 'rxjs';
 import { LocalTxType } from 'src/app/Interfaces/txType.interface';
 import { TxTypeService } from 'src/app/services/tx-type/tx-type.service';
 
@@ -23,17 +24,26 @@ export class ListLocalTxTypeComponent implements OnInit {
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
   
+  filter$: Observable<string>;
   dataSource = new MatTableDataSource<LocalTxType>([]);
   displayedColumns = ['description', 'tx', 'reference', 'type', 'sign', 'Actions' ];
   
   constructor(
     private txTypeService: TxTypeService,
     private toastr: ToastrService
-  ) { }
+  ) { 
+    this.filter$ = this.txTypeService.filter$;
+  }
 
   ngOnInit() {
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
+    this.filter$.subscribe(
+      (response) => {
+        if(response){
+          this.dataSource.filter = response.trim().toLowerCase();
+        }
+      });
   }
 
   edit(el: LocalTxType){

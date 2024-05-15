@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { zip } from 'rxjs';
+import { FormControl } from '@angular/forms';
+import { Subject, zip } from 'rxjs';
 import { ExternalTxType, LocalTxType, TxType } from 'src/app/Interfaces/txType.interface';
 import { TxTypeService } from 'src/app/services/tx-type/tx-type.service';
 import Swal from 'sweetalert2';
@@ -11,18 +12,24 @@ import Swal from 'sweetalert2';
 })
 export class TxTypesComponent implements OnInit {
 
-  selectedIndex = 0;
   sourceFilter: 'accounting' | 'thirdParty' = 'thirdParty';
+  toEdit: ExternalTxType | LocalTxType;
   eTxTypeList: ExternalTxType[] = [];
   lTxTypelist: LocalTxType[] = [];
-
-  toEdit: ExternalTxType | LocalTxType;
+  filter = new FormControl();
+  selectedIndex = 0;
 
   constructor(private txTypeService: TxTypeService) {  }
 
   ngOnInit() {
     this.getTxTypeInfo();
+    this.filter.valueChanges.subscribe(
+      (value) => {
+        this.txTypeService.setFilter(value);
+      }
+    );
   }
+
 
   getTxTypeInfo(){
     Swal.fire({

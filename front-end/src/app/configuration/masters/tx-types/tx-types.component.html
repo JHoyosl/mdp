@@ -6,9 +6,16 @@
       <mat-tab-group  [(selectedIndex)]="selectedIndex">
         <mat-tab label="Listado" >
           <ng-template matTabContent >
-            <div class="d-flex flex-row-reverse mt-2">
+            <div class="d-flex justify-content-around mt-2">
               <mat-form-field>
                 <mat-label>Filtro</mat-label>
+                <input matInput 
+                  [formControl]="filter"
+                  placeholder="Buscar..."
+              >
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Fuente</mat-label>
                 <mat-select [(value)]="sourceFilter">
                   <mat-option [value]="'accounting'">Interno</mat-option>
                   <mat-option [value]="'thirdParty'">Externo</mat-option>
@@ -19,11 +26,13 @@
               [externalInfo]="eTxTypeList"
               (deleted)="deleted($event)"
               (toEdit)="edit($event)"
+              (filter)="filter$"
             ></app-list-external-tx-type>
             <app-list-local-tx-type *ngIf="sourceFilter !== 'thirdParty'"
               [localInfo]="lTxTypelist"
               (deleted)="deleted($event)"
               (toEdit)="edit($event)"
+              (filter)="filter$"
             ></app-list-local-tx-type>
           </ng-template>
         </mat-tab>

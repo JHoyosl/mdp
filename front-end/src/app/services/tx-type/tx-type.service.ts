@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { GenericResponse } from 'src/app/Interfaces/shared.interfaces';
 import { CreateExternalTxRequest, CreateLocalTxRequest, ExternalTxType, LocalTxType, UpdateExternalTxRequest, UpdateLocalTxRequest } from 'src/app/Interfaces/txType.interface';
@@ -14,10 +14,18 @@ export class TxTypeService {
   private externalUrl = `${environment.url}externalTxType`;
   private localUrl = `${environment.url}localTxType`;
 
+  private filter = new BehaviorSubject<string>(null);
+  filter$: Observable<string> = this.filter.asObservable();
+
   constructor(private httpClient: HttpClient) { 
 
   }
 
+  setFilter(value:string){
+    this.filter.next(value);
+  }
+
+  // REQUESTS
   indexExternal():Observable<ExternalTxType[]>{
     return this.httpClient.get<GenericResponse>(`${this.externalUrl}`).pipe(
       map((response) => response.data)

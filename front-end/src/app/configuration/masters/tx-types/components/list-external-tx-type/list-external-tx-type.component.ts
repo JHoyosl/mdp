@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { MatPaginator, MatSort, MatTableDataSource } from '@angular/material';
 import { ToastrService } from 'ngx-toastr';
+import { Observable } from 'rxjs';
+import { filter, skipUntil, skipWhile, takeWhile } from 'rxjs/operators';
 import { ExternalTxType } from 'src/app/Interfaces/txType.interface';
 import { TxTypeService } from 'src/app/services/tx-type/tx-type.service';
 
@@ -12,9 +14,9 @@ import Swal from 'sweetalert2';
   styleUrls: ['./list-external-tx-type.component.css']
 })
 export class ListExternalTxTypeComponent implements OnInit {
-
   @Output() deleted = new EventEmitter<{source: 'external', status: boolean}>();
   @Output() toEdit = new EventEmitter<{source: 'external', txType: ExternalTxType}>();
+
   @Input() 
   set externalInfo(val: ExternalTxType[]){
     this.dataSource.data = val;
@@ -26,17 +28,25 @@ export class ListExternalTxTypeComponent implements OnInit {
   
   dataSource = new MatTableDataSource<ExternalTxType>([]);
   displayedColumns = ['bank', 'description', 'tx', 'reference', 'type', 'sign', 'Actions' ];
+  filter$: Observable<string>;
 
   constructor(
     private txTypeService: TxTypeService,
     private toastr: ToastrService
   ) { 
-
+    this.filter$ = this.txTypeService.filter$;
   }
 
   ngOnInit() {
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
+    this.filter$.subscribe(
+      (response) => {
+        if(response){
+          this.dataSource.filter = response.trim().toLowerCase();
+        }
+      }
+    );
   }
 
   edit(el: ExternalTxType){
