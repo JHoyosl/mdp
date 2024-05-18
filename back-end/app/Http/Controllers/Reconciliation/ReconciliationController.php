@@ -236,7 +236,7 @@ class ReconciliationController extends ApiController
 
     public function iniReconciliation(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'file' => 'required',
             'date' => 'required'
         ]);

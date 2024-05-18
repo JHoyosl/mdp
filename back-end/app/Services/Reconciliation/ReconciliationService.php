@@ -772,7 +772,7 @@ class ReconciliationService
         }
 
         foreach ($localInfo as $key => $row) {
-            if (!$row || $row[3] == null) {
+            if (!$row || !isset($row[3]) || $row[3] == null) {
                 continue;
             }
             if ($row[0] != $accountNumber) {
@@ -791,8 +791,20 @@ class ReconciliationService
             $txTypeId = null;
             $txTypeName = null;
 
-            $txType = $localTxTypeTable
-                ->where('description', strtoupper($row[8]))
+            $txType = $localTxTypeTable->select(
+                DB::raw(
+                    "id,
+                    UPPER(description) as description,
+                    tx,
+                    reference,
+                    sign,
+                    type,
+                    deleted_at,
+                    created_at,
+                    updated_at"
+                )
+            )->where('description', strtoupper($row[8]))
+                ->orWhereRaw("UPPER('" . $row[8] . "') LIKE CONCAT(description, '%')")
                 ->first();
 
             if (!$txType) {
@@ -849,7 +861,7 @@ class ReconciliationService
         }
 
         foreach ($externalInfo as $key => $row) {
-            if (!$row || $row[3] == null) {
+            if (!$row || !isset($row[3]) || $row[3] == null) {
                 continue;
             }
             if ($row[2] != $accountNumber) {
@@ -868,17 +880,20 @@ class ReconciliationService
             $txTypeId = null;
             $txTypeName = null;
 
-            $txType = ExternalTxType::where('bank_id', $account->bank_id)
-                ->where('description', trim($row[7]))
-                ->first();
-
-            if ($txType) {
-                $txTypeId = $txType->id;
-                $txTypeName = $txType->tx;
-            }
-
-            $txType = ExternalTxType::where('description', 'like', trim($row[7]) . '%')
-                ->where('type', 'COMPUESTO')
+            $txType = ExternalTxType::select(
+                DB::raw(
+                    "id,
+                    UPPER(description) as description,
+                    tx,
+                    reference,
+                    sign,
+                    type,
+                    deleted_at,
+                    created_at,
+                    updated_at"
+                )
+            )->where('description', strtoupper($row[7]))
+                ->orWhereRaw("UPPER('" . $row[7] . "') LIKE CONCAT(description, '%')")
                 ->first();
 
             if ($txType) {
