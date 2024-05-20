@@ -73,13 +73,16 @@ export class EditMappingComponent implements OnInit {
     );
    
   }
+
   setFormMap(map: Map[]){
-    map.forEach((item,  index) => {
+    this.baseMap.forEach((item, index) =>{
+      const mapIndex = map.find((element) => element.fileColumn == index);
       this.formMap.addControl(
         index.toString(), 
-        new FormControl(item.mapIndex)
+        new FormControl(mapIndex ? mapIndex.mapIndex : '')
       )
-    })
+    });
+
   }
   setForm(mapping: MappingFileIndex){
     const type = mapping.type === 'conciliar_externo' 
@@ -107,6 +110,7 @@ export class EditMappingComponent implements OnInit {
     // this.action.emit('success');
     const mapped: Map[] = [];
     const mappingIdCheck = [];
+
     this.baseMap.forEach((element, index) => {
       if(this.formMap.get(index.toString()).value !== ""){
         mapped.push({

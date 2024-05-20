@@ -6,6 +6,7 @@ use Exception;
 use App\Models\Account;
 use App\Models\Company;
 use App\Models\MapFile;
+use App\Traits\DatesTrait;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use App\Models\AccountingItems;
@@ -17,6 +18,8 @@ use App\Services\MappingFile\MappingFileService;
 
 class AccountingService
 {
+    use DatesTrait;
+
     private MappingFileService $mappingFileService;
     protected $accountingItemsTable = '';
 
@@ -64,6 +67,8 @@ class AccountingService
     public function uploadAccountInfo($user, $file, $startDate, $endDate, $company)
     {
         ini_set('memory_limit', '-1');
+        set_time_limit(300);
+
         $this->accountingItemsTable = $this->getAccountinItemsTableName($user->current_company);
 
         $this->createTableAccountingItems();
@@ -168,8 +173,8 @@ class AccountingService
         //Garantee miss match date with time
         $carbonStart = Carbon::parse($startDate)->subDay();
         $carbonEnd = Carbon::parse($endDate)->addDay();
-        $fileArray = $this->fileToArray($file);
 
+        $fileArray = $this->fileToArray($file);
         $mapIndex = $this->mappingFileService->getMapIndex(MapFile::TYPE_INTERNAL);
         $mapModel = MapFile::find($map_id);
         $map = json_decode($mapModel->map, true);
@@ -203,7 +208,7 @@ class AccountingService
             $row['VALOR CREDITO'] = $this->fixedCurrency($separator, $row['VALOR CREDITO']);
             $row['SALDO ACTUAL'] = $this->fixedCurrency($separator, $row['SALDO ACTUAL']);
 
-            $mapped[] = $this->rowToInsert($row, $headerId, $carbonStart, $carbonEnd, $fileKey);
+            $mapped[] = $this->rowToInsert($row, $headerId, $carbonStart, $carbonEnd, $fileKey, $dateFormat);
         }
         return $mapped;
     }
@@ -213,9 +218,9 @@ class AccountingService
         $value = str_replace('$', '', $value);
     }
 
-    private function rowToInsert($row, $headerId, $startDate, $endDate, $fileKey)
+    private function rowToInsert($row, $headerId, $startDate, $endDate, $fileKey, $dateFormat)
     {
-        $carbonCompare = Carbon::createFromFormat('Ymd', $row['FECHA DE MOVIMIENTO']);
+        $carbonCompare = $this->transformDate($dateFormat, $row['FECHA DE MOVIMIENTO']);
         if ($carbonCompare->gte($endDate)) {
             throw new Exception("Fecha de movimiento mayor del rango en {$fileKey}" . json_encode($row), 400);
         }

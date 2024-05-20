@@ -8,6 +8,15 @@ use Illuminate\Support\Carbon;
 trait DatesTrait
 {
 
+  private function transformDate($format, $date)
+  {
+    $fixDate = $date;
+    if (strlen($date) > 10) {
+      $fixDate = substr($date, 0, 10);
+    }
+    return Carbon::parse($fixDate);
+  }
+
   function getDateFormat($mapId)
   {
   }
