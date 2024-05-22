@@ -277,12 +277,18 @@ class ReconciliationService
         $tableName = $this->getReconciliationLocalValuesTableName($companyId);
         $localValuesTable =  new ReconciliationLocalValues($tableName);
         $localValuesTable->where('item_id', $items[0]->newProcess->id)->delete();
-        $localValuesTable->insert($accountingInfo);
+
+        foreach (array_chunk($accountingInfo, 500) as $t) {
+            DB::table($tableName)->insert($t);
+        }
 
         $tableName = $this->getReconciliationExternalValuesTableName($companyId);
         $externalValuesTable =  new ReconciliationExternalValues($tableName);
         $externalValuesTable->where('item_id', $items[0]->newProcess->id)->delete();
-        $externalValuesTable->insert($thirdPartyInfo);
+
+        foreach (array_chunk($thirdPartyInfo, 500) as $t) {
+            DB::table($tableName)->insert($t);
+        }
     }
 
     public function createReconciliationItem($items, $endDate, $type = ReconciliationItem::TYPE_PARTIAL)

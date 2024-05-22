@@ -209,6 +209,7 @@ class ReconciliationController extends ApiController
             );
             return $this->showAll($items);
         } catch (Exception $e) {
+            return $e;
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
     }
