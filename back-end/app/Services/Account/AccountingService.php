@@ -204,6 +204,7 @@ class AccountingService
                 ? $accArray[$row['NUMERO CUENTA CONTABLE']]
                 : $row['NUMERO CUENTA CONTABLE'];
 
+
             $row['VALOR DEBITO'] = $this->fixedCurrency($separator, $row['VALOR DEBITO']);
             $row['VALOR CREDITO'] = $this->fixedCurrency($separator, $row['VALOR CREDITO']);
             $row['SALDO ACTUAL'] = $this->fixedCurrency($separator, $row['SALDO ACTUAL']);
@@ -216,7 +217,16 @@ class AccountingService
     private function fixedCurrency($separator, $value)
     {
         $value = str_replace('$', '', $value);
+        if ($separator == ',') {
+            $value = str_replace('.', '', $value);
+            $value = str_replace(',', '.', $value);
+        }
+        if ($separator == '.') {
+            $value = str_replace(',', '', $value);
+        }
+        return floatval($value);
     }
+
 
     private function rowToInsert($row, $headerId, $startDate, $endDate, $fileKey, $dateFormat)
     {

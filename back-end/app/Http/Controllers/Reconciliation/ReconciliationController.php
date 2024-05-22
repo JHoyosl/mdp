@@ -224,7 +224,6 @@ class ReconciliationController extends ApiController
     {
         $accounts = $this->reconciliationService
             ->getAccountProcessById($this->companyId, $process);
-
         return $this->showAll($accounts);
     }
 

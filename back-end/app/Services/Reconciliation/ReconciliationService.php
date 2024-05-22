@@ -325,10 +325,16 @@ class ReconciliationService
         foreach ($items  as $item) {
             $accountingInfo = $this->accountingService
                 ->getAccInfoToReconciliate($companyId, $item->local_account, $item->end_date, $date);
+            if (count($accountingInfo) == 0) {
+                throw new Exception("No accounting data for dates: {$item->end_date} {$date}");
+            }
             $item['accountingInfo'] = $accountingInfo;
 
             $thirdPartyInfo = $this->thirdPartiesService
                 ->getAccInfoToReconciliate($item->account_id, $item->end_date, $date);
+            if (count($accountingInfo) == 0) {
+                throw new Exception("No thirdParty data for dates: {$item->end_date} {$date}");
+            }
             $item['thirdPartyInfo'] = $thirdPartyInfo;
         }
         return  $items;
@@ -371,11 +377,11 @@ class ReconciliationService
         $items = [];
         $invalidItems = [];
         foreach ($accounts as $value) {
-
-            $item = $itemsTable->where($itemsTableName . '.id', $value)
+            $item = $itemsTable->where($itemsTableName . '.account_id', $value)
                 ->join('accounts', $itemsTableName . '.account_id', 'accounts.id')
                 ->orderBy($itemsTableName . '.created_at')
                 ->first();
+
             if ($item->step != ReconciliationItem::STEP_DONE) {
                 $invalidItems[] = [
                     'bankAccount' => $item->bank_account,
@@ -447,6 +453,7 @@ class ReconciliationService
         if (is_Null($itemsTable->first())) {
             return collect([]);
         }
+
         $accounts = Account::where('company_id', $companyId)
             ->join('banks', 'accounts.bank_id', 'banks.id')
             ->leftjoin($itemsTableName . ' AS items', 'accounts.id', 'items.account_id')
@@ -470,9 +477,25 @@ class ReconciliationService
                 'items.status',
                 'items.step',
             )
+            ->orderBy('start_date', 'desc')
             ->get();
 
-        return $accounts;
+
+        $data = $accounts->reduce(function ($acc, $item) {
+            if (!$acc) {
+                $acc[] = $item;
+                return $acc;
+            }
+            foreach ($acc as $row) {
+                if ($row->accountId == $item->accountId) {
+                    return $acc;
+                }
+            }
+            $acc[] = $item;
+            return Collect($acc);
+        });
+
+        return $data;
     }
 
     public function setBalance($companyId, $balanceInfo, $process)

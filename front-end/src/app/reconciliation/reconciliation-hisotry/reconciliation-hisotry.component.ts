@@ -69,8 +69,7 @@ export class ReconciliationHisotryComponent implements OnInit {
         }, response[0].process);
 
         groupedData.push(tmpArray);
-
-        this.reconciliationItems = groupedData;
+        this.reconciliationItems = groupedData.filter(el => el.length > 0);
         this.dataSource.data = this.reconciliationItems;
       },
       (err) => {
