@@ -8,6 +8,7 @@ use App\Models\HeaderAccountingInfo;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
 use App\Services\Account\AccountingService;
+use App\Services\Account\SetAccountinTxService;
 use App\Services\Reconciliation\ReconciliationService;
 
 
@@ -19,9 +20,13 @@ class AccountingController extends ApiController
 
     protected AccountingService $accountingService;
     private ReconciliationService $reconciliationService;
+    private SetAccountinTxService $setAccountinTxService;
 
-    public function __construct(AccountingService $accountingService, ReconciliationService $reconciliationService)
-    {
+    public function __construct(
+        AccountingService $accountingService,
+        ReconciliationService $reconciliationService,
+        SetAccountinTxService $setAccountinTxService
+    ) {
         $this->middleware('auth:api');
         $this->middleware(function ($request, $next) {
             $this->user = Auth::user();
@@ -31,6 +36,7 @@ class AccountingController extends ApiController
 
         $this->accountingService = $accountingService;
         $this->reconciliationService = $reconciliationService;
+        $this->setAccountinTxService = $setAccountinTxService;
     }
 
 
@@ -106,5 +112,16 @@ class AccountingController extends ApiController
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
+    }
+
+    public function setTxType(Request $request)
+    {
+        $request->validate([
+            'accounts' => 'required'
+        ]);
+        $accounts = json_decode($request->accounts);
+
+        return $this->setAccountinTxService->getCompuestoTxQuery($this->companyId, $accounts);
+        return $accounts;
     }
 }

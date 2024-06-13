@@ -207,9 +207,9 @@ class ReconciliationController extends ApiController
                 $this->companyId,
                 $this->user
             );
+            return $items;
             return $this->showAll($items);
         } catch (Exception $e) {
-            return $e;
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
     }
@@ -881,7 +881,7 @@ class ReconciliationController extends ApiController
         Schema::create($this->conciliar_tmp_external_values_table, function ($table) {
             $table->bigIncrements('id');
             $table->boolean('matched')->default(false);
-            $table->integer('tx_type_id')->unsigned();
+            $table->integer('tx_type_id')->unsigned()->nullable();
             $table->string('tx_type_name')->nullable();
             $table->integer('item_id')->unsigned()->nullable();
             $table->string('descripcion')->comment = 'transaccion/descripcion';

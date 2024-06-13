@@ -448,7 +448,7 @@ class ThirdPartiesService
             $table->bigIncrements('id');
             $table->unsignedInteger('header_id');
             $table->boolean('matched')->default(false);
-            $table->integer('tx_type_id')->unsigned();
+            $table->integer('tx_type_id')->unsigned()->nullable();
             $table->string('tx_type_name')->nullable();
             $table->integer('item_id')->unsigned()->nullable();
             $table->string('descripcion')->comment = 'transaccion/descripcion';

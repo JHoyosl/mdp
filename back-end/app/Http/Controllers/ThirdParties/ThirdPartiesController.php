@@ -4,11 +4,11 @@ namespace App\Http\Controllers\ThirdParties;
 
 use Exception;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
-use App\Services\Reconciliation\ReconciliationService;
 use App\Services\ThirdParties\ThirdPartiesService;
+use App\Services\Reconciliation\ReconciliationService;
+use App\Services\ThirdParties\SetThirdPartiesTxService;
 
 
 class ThirdPartiesController extends ApiController
@@ -18,9 +18,13 @@ class ThirdPartiesController extends ApiController
     private $companyId;
     private ThirdPartiesService $thirdPartiesService;
     private ReconciliationService $reconciliationService;
+    private SetThirdPartiesTxService $setThirdPartiesTxService;
 
-    public function __construct(ThirdPartiesService $thirdPartiesService, ReconciliationService $reconciliationService)
-    {
+    public function __construct(
+        ThirdPartiesService $thirdPartiesService,
+        ReconciliationService $reconciliationService,
+        SetThirdPartiesTxService $setThirdPartiesTxService
+    ) {
         $this->middleware('auth:api')->except([]);
         $this->middleware(function ($request, $next) {
             $this->user = Auth::user();
@@ -30,6 +34,7 @@ class ThirdPartiesController extends ApiController
 
         $this->thirdPartiesService = $thirdPartiesService;
         $this->reconciliationService = $reconciliationService;
+        $this->setThirdPartiesTxService = $setThirdPartiesTxService;
     }
 
     public function index()
@@ -111,5 +116,15 @@ class ThirdPartiesController extends ApiController
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
         }
+    }
+
+    public function setTxType(Request $request)
+    {
+        $request->validate([
+            'accounts' => 'required'
+        ]);
+        $accounts = json_decode($request->accounts);
+
+        return $this->setThirdPartiesTxService->updateCompuestoTx($this->companyId, $accounts);
     }
 }

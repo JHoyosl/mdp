@@ -16,19 +16,26 @@ use App\Models\ReconciliationLocalValues;
 use Illuminate\Database\Schema\Blueprint;
 use App\Models\ReconciliationExternalValues;
 use App\Services\Account\AccountingService;
+use App\Services\Account\SetAccountinTxService;
 use App\Services\ThirdParties\ThirdPartiesService;
 
 class ReconciliationService
 {
     private ThirdPartiesService $thirdPartiesService;
     private AccountingService $accountingService;
+    private SetAccountinTxService $setAccountinTxService;
+    private AutomaticReconciliation $automaticReconciliation;
 
     function __construct(
         ThirdPartiesService $thirdPartiesService,
-        AccountingService $accountingService
+        AccountingService $accountingService,
+        SetAccountinTxService $setAccountinTxService,
+        AutomaticReconciliation $automaticReconciliation
     ) {
         $this->thirdPartiesService = $thirdPartiesService;
         $this->accountingService = $accountingService;
+        $this->setAccountinTxService = $setAccountinTxService;
+        $this->automaticReconciliation = $automaticReconciliation;
     }
 
     public function IniReconciliation($date, $file, $user, $companyId)
@@ -91,76 +98,22 @@ class ReconciliationService
         $itemTable = new ReconciliationItem($itemTableName);
         $items = $itemTable->where('process', $process)->with('account')->get();
 
-        $acccounts = $items->map(function ($value) {
+        $accounts = $items->map(function ($value) {
             return $value->account->local_account;
         });
 
-        $externalTableName = $this->getReconciliationExternalValuesTableName($companyId);
-        $externalTable = new ReconciliationExternalValues($externalTableName);
-        $localTableName = $this->getReconciliationLocalValuesTableName($companyId);
-        $localTable = new ReconciliationLocalValues($localTableName);
-
-        $pivot = DB::table($pitvotTableName)->select('local_value')->get()->toArray();
-        $ids = [];
-        foreach ($pivot as $value) {
-            $ids[] = $value->local_value;
-        }
-        $ids = array_unique($ids);
-
-        $matched1 = $localTable->leftJoin($externalTableName, function ($join) use ($localTableName, $externalTableName) {
-            $join->on($localTableName . '.fecha_movimiento', $externalTableName . '.fecha_movimiento');
-            $join->on($localTableName . '.local_account', $externalTableName . '.local_account');
-            $join->on($localTableName . '.valor_debito', $externalTableName . '.valor_credito');
-            $join->on($localTableName . '.valor_credito', $externalTableName . '.valor_debito');
-        })
-            ->select(
-                $localTableName . '.id as localId',
-                $externalTableName . '.id as externalId',
-                $localTableName . '.fecha_movimiento',
-                $localTableName . '.local_account as cuenta_libros',
-                $localTableName . '.cuenta_externa as cuenta_bancos',
-                $localTableName . '.valor_debito as deb_libros',
-                $externalTableName . '.valor_credito as cred_bancos',
-                $localTableName . '.valor_credito as cred_libros',
-                $externalTableName . '.valor_debito as deb_bancos',
-                $localTableName . '.referencia_1 as lReferencia_1',
-                $externalTableName . '.referencia_1 as eReferencia_1',
-                $externalTableName . '.referencia_2 as eReferencia_2',
-                $externalTableName . '.referencia_3 as eReferencia_3',
-            )
-            ->whereIn($localTableName . '.local_account', $acccounts)
-            ->whereNotIn('localId', $ids)
-            ->whereNotNull($externalTableName . '.local_account')
-            ->get();
-
-        $ref1_1 = $this->queryByRef('referencia_1', 'referencia_1', $localTable, $externalTableName, $localTableName);
-        $ref1_2 = $this->queryByRef('referencia_1', 'referencia_2', $localTable, $externalTableName, $localTableName);
-        $ref1_3 = $this->queryByRef('referencia_1', 'referencia_3', $localTable, $externalTableName, $localTableName);
-        $ref2_1 = $this->queryByRef('referencia_2', 'referencia_1', $localTable, $externalTableName, $localTableName);
-        $ref2_2 = $this->queryByRef('referencia_2', 'referencia_2', $localTable, $externalTableName, $localTableName);
-        $ref2_3 = $this->queryByRef('referencia_2', 'referencia_3', $localTable, $externalTableName, $localTableName);
-        $ref3_1 = $this->queryByRef('referencia_3', 'referencia_1', $localTable, $externalTableName, $localTableName);
-        $ref3_2 = $this->queryByRef('referencia_3', 'referencia_2', $localTable, $externalTableName, $localTableName);
-        $ref3_3 = $this->queryByRef('referencia_3', 'referencia_3', $localTable, $externalTableName, $localTableName);
-
-        $merged = array_merge(
-            $ref1_1->toArray(),
-            $ref1_2->toArray(),
-            $ref1_3->toArray(),
-            $ref2_1->toArray(),
-            $ref2_2->toArray(),
-            $ref2_3->toArray(),
-            $ref3_1->toArray(),
-            $ref3_2->toArray(),
-            $ref3_3->toArray(),
-            $matched1->toArray()
-        );
-        //fecha, numero de cuenta, valord debito, valor credito, 
-        return $merged;
-        // $data = $localTable->where('matched')
-
-        return $items;
+        // $this->automaticReconciliation->case1($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case1b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case1c($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case2($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case2b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case2c($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case2d($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case2e($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
     }
+
+
+
 
     public function newProcess($date, $accounts, $companyId, $user)
     {
@@ -181,6 +134,16 @@ class ReconciliationService
         $balance = $this->getProcessBalance($items[0]->newProcess->process, $companyId);
 
         $this->setReconciliationBalance($balance, $companyId);
+
+        // get array of local_account number
+        $accountNumbers = array_map(function ($account) {
+            return $account->local_account;
+        }, $items);
+        //set txType
+        $this->setAccountinTxService->updateSimpleTx($companyId, $accountNumbers);
+        $this->setAccountinTxService->updateTxByReference($companyId, $accountNumbers);
+
+
         DB::commit();
 
         return $this->getAccountProcessById($companyId, $items[0]->newProcess->process);
@@ -1111,6 +1074,9 @@ class ReconciliationService
     // HELPERS
 
     //if accountId != null, looking for account
+
+
+
     public function hasReconciliationBefore($startDate, $endDate, $companyId, $accountId = NULL)
     {
         $itemTableName = $this->getReconciliationItemTableName($companyId);
@@ -1356,7 +1322,7 @@ class ReconciliationService
 
             $table->bigIncrements('id');
             $table->integer('item_id')->unsigned()->nullable();
-            $table->integer('tx_type_id')->unsigned();
+            $table->integer('tx_type_id')->unsigned()->nullable();
             $table->string('tx_type_name')->nullable();
             $table->string('descripcion')->comment = 'transaccion/descripcion';
             $table->string('local_account');
@@ -1446,6 +1412,7 @@ class ReconciliationService
         Schema::create($pivotTableName, function (Blueprint $table) {
             $table->foreignId('external_value');
             $table->foreignId('local_value');
+            $table->string('case');
             $table->primary(['external_value', 'local_value']);
         });
     }

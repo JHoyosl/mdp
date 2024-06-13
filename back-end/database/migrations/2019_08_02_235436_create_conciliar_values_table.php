@@ -15,7 +15,7 @@ class CreateConciliarValuesTable extends Migration
     {
         Schema::create('conciliar_external_values', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->integer('tx_type_id')->unsigned();
+            $table->integer('tx_type_id')->unsigned()->nullable();
             $table->integer('map_id')->unsigned();
             $table->string('descripcion')->comment = 'transaccion/descripcion';
             $table->string('valor_credito')->nullable();
@@ -25,7 +25,7 @@ class CreateConciliarValuesTable extends Migration
             $table->string('codigo_tx')->nullable();
             $table->string('referencia_1')->nullable();
             $table->string('referencia_2')->nullable();
-            $table->string('referencia_3')->nullable();            
+            $table->string('referencia_3')->nullable();
             $table->string('fecha_archivo')->nullable();
             $table->string('nombre_titular')->nullable();
             $table->string('identificacion_titula')->nullable();

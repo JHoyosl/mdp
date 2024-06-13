@@ -25,6 +25,7 @@ Route::get('accounting/getAccountingItems', 'Accounting\AccountingController@get
 
 Route::post('accounting/uploadAccountingInfo', 'Accounting\AccountingController@uploadAccountingInfo');
 Route::post('accounting/deleteLastUpload', 'Accounting\AccountingController@deleteLastUpload');
+Route::post('accounting/setTxType', 'Accounting\AccountingController@setTxType');
 
 Route::resource('accounting', 'Accounting\AccountingController');
 
@@ -36,6 +37,7 @@ Route::get('thirdParties/getHeaderItems', 'ThirdParties\ThirdPartiesController@g
 
 Route::post('thirdParties/uploadAccountInfo', 'ThirdParties\ThirdPartiesController@uploadAccountInfo');
 Route::post('thirdParties/deleteLastUpload', 'ThirdParties\ThirdPartiesController@deleteLastUpload');
+Route::post('thirdParties/setTxType', 'ThirdParties\ThirdPartiesController@setTxType');
 
 Route::resource('thirdParties', 'ThirdParties\ThirdPartiesController');
 
