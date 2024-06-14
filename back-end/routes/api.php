@@ -19,6 +19,14 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });*/
 
+//SECURITY START
+Route::resource('security/permission', 'Security\Permission');
+Route::resource('security/role', 'Security\Role');
+Route::resource('security/role.permission', 'Security\RolePermission');
+Route::resource('security/user.role', 'Security\UserRole');
+
+//SECURITY END
+
 //START ACCOUNTING ROUTER
 Route::get('accounting/getAccountingItems', 'Accounting\AccountingController@getAccountingItems');
 
