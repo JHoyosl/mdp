@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { BalanceGeneralComponent } from './balance-general/balance-general.component';
+import { CuadresComponent } from './cuadres.component';
+import { ThirdPartiesComponent } from './third-parties/third-parties.component';
 
 
 
@@ -10,13 +12,23 @@ export const CuadresRoutes: Routes = [
       children: [
         {
           path: 'balanceGeneral',
+          component: CuadresComponent,
+          data: {
+            title: 'Cuadres Operativos',
+          }
+        },
+        {
+          path: 'thirdParties',
+          component: ThirdPartiesComponent,
+          data: {
+            title: 'Cuadres Terceros',
+          }
+        },
+        {
+          path: 'balanceGeneralOld',
           component: BalanceGeneralComponent,
           data: {
-            title: 'Cuadres Balance General',
-            urls: [
-              { title: 'Dashboard', url: '/dashboard' },
-              { title: 'Cuadres Balance General' }
-            ]
+            title: 'Cuadres Operativos',
           }
         },
       ]

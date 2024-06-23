@@ -15,6 +15,8 @@ import { ListExternalTxTypeComponent } from './masters/tx-types/components/list-
 import { AddTxTypeComponent } from './masters/tx-types/components/add-tx-type/add-tx-type.component';
 import { ListLocalTxTypeComponent } from './masters/tx-types/components/list-local-tx-type/list-local-tx-type.component';
 import { EditTxTypeComponent } from './masters/tx-types/components/edit-tx-type/edit-tx-type.component';
+import { OperationalMasterComponent } from './masters/operational-master/operational-master.component';
+import { OperaionalListComponent } from './masters/operational-master/operaional-list/operaional-list.component';
 
 
 
@@ -25,7 +27,7 @@ import { EditTxTypeComponent } from './masters/tx-types/components/edit-tx-type/
     AddMappingComponent, 
     ListMappingComponent, 
     DetailMappingComponent, 
-    EditMappingComponent, TxTypesComponent, ListExternalTxTypeComponent, AddTxTypeComponent, ListLocalTxTypeComponent, EditTxTypeComponent
+    EditMappingComponent, TxTypesComponent, ListExternalTxTypeComponent, AddTxTypeComponent, ListLocalTxTypeComponent, EditTxTypeComponent, OperationalMasterComponent, OperaionalListComponent
   ],
   imports: [
     FormsModule,

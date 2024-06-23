@@ -128,6 +128,28 @@ Route::post('reconciliation/autoReconciliation/{process}', 'Reconciliation\Recon
 Route::resource('externalTxType', 'Masters\TxType\ExternalTxTypeController', ['except' => 'create', 'edit']);
 Route::resource('localTxType', 'Masters\TxType\LocalTxTypeController', ['except' => 'create', 'edit']);
 
+
+Route::group(['prefix' => 'cuadresOperativos'], function () {
+	Route::get('balanceGeneral/getBalanceNaturaleza', 'CuadresOperativos\BalanceGeneralController@getBalanceNaturaleza');
+	Route::post('balanceGeneral/uploadBalance', 'CuadresOperativos\BalanceGeneralController@uploadBalance');
+	Route::resource('balanceGeneral', 'CuadresOperativos\BalanceGeneralController');
+
+	Route::resource('agreements/master', 'CuadresOperativos\AgreementsMasterController');
+	Route::post('agreements/master/upload', 'CuadresOperativos\AgreementsMasterController@uploadMaster');
+
+	Route::get('agreements/result', 'CuadresOperativos\AgreementsController@agreementsResult');
+	Route::post('agreements/upload', 'CuadresOperativos\AgreementsController@upload');
+	Route::resource('agreements', 'CuadresOperativos\AgreementsController');
+});
+
+
+
+
+
+
+
+
+
 Route::resource('balanceOperativo', 'BalanceGeneral\BalanceGeneralController', ['except' => []]);
 
 //RUTAS MIXTAS
@@ -176,8 +198,8 @@ Route::name('setUserCurrentCompany')
 //BALANCE
 Route::name('balanceGeneralCreateTables')
 	->post('balanceGeneral/createTables', 'BalanceGeneral\BalanceGeneralController@createTables');
-Route::name('balanceGeneralUploadFile')
-	->post('balanceGeneral/uploadBalance', 'BalanceGeneral\BalanceGeneralController@uploadBalance');
+// Route::name('balanceGeneralUploadFile')
+// 	->post('balanceGeneral/uploadBalance', 'BalanceGeneral\BalanceGeneralController@uploadBalance');
 Route::name('balanceGeneralUploadConvenios')
 	->post('balanceGeneral/uploadConvenios', 'BalanceGeneral\BalanceGeneralController@uploadConvenios');
 Route::name('balanceGeneralGetBalance')

@@ -1,0 +1,62 @@
+<div class="container">
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title">{{title}}</h4>
+      <form class="form-horizontal p-t-20" [formGroup]="formUpload" (submit)="onSubmit()">
+        <div class="form-group">
+          <mat-form-field class="full-width-input">
+            <input matInput 
+              formControlName="date"
+              [matDatepicker]="fromPicker" 
+              placeholder="Desde"
+            >
+            <mat-hint>DD/MM/AAAA</mat-hint>
+            <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
+            <mat-datepicker #fromPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-group">
+          <input type="file" #fileInput style="display: none;" (change)="onFileChange($event)">
+  
+          <mat-form-field 
+            class="full-width-input"
+            (click)="openFileUpload($event)">
+            <mat-label>Archivo</mat-label>
+            <input matInput 
+              value="{{  fileName }}"
+              placeholder="Archivo"
+              disabled
+            >
+            <mat-icon matSuffix 
+              style="cursor: pointer"
+            >cloud_upload</mat-icon>
+            <mat-hint>Información de Tercero</mat-hint>
+          </mat-form-field>
+        </div>      
+        <div class="flex d-flex mt-4 justify-content-around">
+          <button mat-raised-button
+            type="submit"
+            color="primary" 
+            class="mr-2"
+          >Cargar</button>
+          <button mat-raised-button
+            type="button" 
+            (click)="close()"
+          >Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- <h1 mat-dialog-title>Hi {{data.name}}</h1>
+<div mat-dialog-content>
+  <p>What's your favorite animal?</p>
+  <mat-form-field>
+    <input matInput [(ngModel)]="data">
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="onNoClick()">No Thanks</button>
+  <button mat-button [mat-dialog-close]="data.animal" cdkFocusInitial>Ok</button>
+</div> -->

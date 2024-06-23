@@ -1,0 +1,29 @@
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between">
+      <h4 class="card-title">Balance vs Balance</h4> 
+      <button mat-raised-button
+          type="button"
+          color="primary" 
+          class="mr-2"
+          (click)="openDialog()"
+        >Cargar Balance</button>
+    </div>
+    <br/>
+    <mat-tab-group  [(selectedIndex)]="selectedIndex">
+      
+      <mat-tab label="Historial" >
+        <ng-template matTabContent >
+          <app-balance-general-list></app-balance-general-list>
+        </ng-template>
+      </mat-tab>
+      <mat-tab label="Resultado" disabled>
+        <app-balance-general-result></app-balance-general-result>
+      </mat-tab>
+      <mat-tab label="Editar" disabled>  
+        <ng-template matTabContent >
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

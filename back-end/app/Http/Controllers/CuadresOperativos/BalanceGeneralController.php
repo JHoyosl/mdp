@@ -1,35 +1,43 @@
 <?php
 
-namespace App\Http\Controllers\BalanceGeneral;
+namespace App\Http\Controllers\CuadresOperativos;
 
 set_time_limit(300);
 
 use App\Traits\DbTools;
+use App\Traits\TableNamming;
 use Illuminate\Http\Request;
 use App\Models\ConvenioCuadre;
 use App\Models\NaturalezaCuentas;
 use App\Models\BalanceGeneralItem;
 use Illuminate\Support\Facades\DB;
 use App\Models\BalanceGeneralHeader;
-use Illuminate\Support\Facades\Auth;
 
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\BalanceGeneralImport;
 use App\Models\OperativoConvenioItem;
 use Illuminate\Support\Facades\Schema;
-use App\Http\Controllers\ApiController;
 
+use App\Http\Controllers\ApiController;
 use App\Models\OperativoConvenioHeader;
 use App\Services\BalanceClearedService;
 use App\Imports\OperativoConvenioImport;
 use App\Exports\CuadreBalanceGeneralExport;
 
+use App\Http\Resources\Cuadres\BalanceSheetCollection;
+use App\Services\CuadresOperativos\BalanceSheetReconciliation;
+
 class BalanceGeneralController extends ApiController
 {
     use DbTools;
+    use TableNamming;
 
     private BalanceClearedService $balanceCleared;
+    private BalanceSheetReconciliation $balanceSheetReconciliation;
+
     private int $companyId;
+    private $user;
 
     protected $balance_general_headers = '';
     protected $balance_general_items = '';
@@ -39,15 +47,16 @@ class BalanceGeneralController extends ApiController
     protected $operativo_cuentas = '';
 
 
-    public function __construct(BalanceClearedService $balanceCleared)
-    {
-
-        $this->balanceCleared = $balanceCleared;
-
+    public function __construct(
+        BalanceClearedService $balanceCleared,
+        BalanceSheetReconciliation $balanceSheetReconciliation
+    ) {
         $this->middleware(function ($request, $next) {
             $this->companyId = Auth::user()->current_company;
 
             $user = Auth::user();
+            $this->user = Auth::user();
+            $this->companyId = $user->current_company;
 
             $this->balance_general_headers = 'balance_general_headers_' . $user->current_company;
             $this->balance_general_items = 'balance_general_items_' . $user->current_company;
@@ -56,11 +65,8 @@ class BalanceGeneralController extends ApiController
             $this->convenios_cuentas = 'convenios_cuentas_' . $user->current_company;
             $this->operativo_cuentas = 'operativo_cuentas_' . $user->current_company;
 
-
-
             return $next($request);
         });
-
 
         $this->middleware('auth:api')->only(
             [
@@ -74,9 +80,10 @@ class BalanceGeneralController extends ApiController
                 'downloadConvenioResultado',
                 'uploadOperativoMaster',
                 'uploadConvenioCuentasMaster'
-
             ]
         );
+        $this->balanceCleared = $balanceCleared;
+        $this->balanceSheetReconciliation = $balanceSheetReconciliation;
     }
     /**
      * Display a listing of the resource.
@@ -85,29 +92,10 @@ class BalanceGeneralController extends ApiController
      */
     public function index()
     {
-        if (!$this->schemaExist($this->balance_general_headers)) {
-            try {
-                return $this->balanceCleared->createTables($this->companyId);
-            } catch (\Exception $e) {
-                return $this->showMessage($e->getMessage(), 500);
-            }
-        }
+        $headers = $this->balanceSheetReconciliation
+            ->getBalanceSheetHeaders($this->companyId);
 
-        $headerTable = new BalanceGeneralHeader($this->balance_general_headers);
-
-        $headers = $headerTable->orderBy('fecha', 'desc')->get();
-
-        return $this->showAll($headers);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        return new BalanceSheetCollection($headers);
     }
 
     /**
@@ -133,17 +121,6 @@ class BalanceGeneralController extends ApiController
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -163,9 +140,110 @@ class BalanceGeneralController extends ApiController
      */
     public function destroy($id)
     {
-        //
+        return $this->showMessage($this->balanceSheetReconciliation->deleteBalance($this->companyId, $id));
     }
 
+    public function getBalanceNaturaleza(Request $request)
+    {
+        $tableName = $this->getBalanceSheetHeadersTableName($this->companyId);
+        $request->validate([
+            'date' => 'required|exists:' . $tableName . ',fecha',
+        ]);
+
+        $override = false;
+        if ($request->has('override')) {
+            $override = $request->override == 'false' ? false : true;
+        }
+
+        $result = $this->balanceSheetReconciliation
+            ->getBalanceNaturaleza($this->companyId, $request->date, $override);
+        // TODO: Create Resource
+        return $this->showMessage($result, 200);
+    }
+
+    public function uploadBalance(Request $request)
+    {
+        $tableName = $this->getBalanceSheetHeadersTableName($this->companyId);
+
+        $request->validate([
+            'file' => 'required',
+            'date' => 'required|unique:' . $tableName . ',fecha'
+        ]);
+
+        return $this->balanceSheetReconciliation->uploadBlance(
+            $request->date,
+            $request->file,
+            $this->companyId,
+            $this->user
+        );
+        return "hola";
+        $user = Auth::user();
+        $header_id = null;
+
+
+        $balanceHeaders = new BalanceGeneralHeader($this->balance_general_headers);
+
+        $header = $balanceHeaders->where('fecha', $request->fecha)->first();
+
+        if ($header == null) {
+
+            $headerInsert = new BalanceGeneralHeader($this->balance_general_headers);
+
+            $insertValues = [
+                'fecha' => $request->fecha,
+                'file_name' => $request->file->getClientOriginalName(),
+                'file_path' => $request->file->store($user->current_company . '/balances', 'cuadres'),
+                'status' => BalanceGeneralHeader::OPEN,
+                'user' => $user->id,
+            ];
+
+
+
+            $headerInsert->insert($insertValues);
+
+            $balanceHeaders = new BalanceGeneralHeader($this->balance_general_headers);
+
+            $header = $balanceHeaders->where('fecha', $request->fecha)->first();
+        } else {
+
+            $header->file_path = $request->file->store($user->current_company . '/balances', 'cuadres');
+            $header->save();
+        }
+
+
+        $deleteBalance = new BalanceGeneralItem($this->balance_general_items);
+        $deleteBalance->where('header_id', $header->id)->delete();
+
+        $array = Excel::toArray(new BalanceGeneralImport, storage_path('app/cuadres/' . $header->file_path));
+
+        $insertArray = [];
+
+
+        for ($i = 5; $i < count($array[0]); $i++) {
+
+            $tmpArray = [
+
+                'header_id' => $header->id,
+                'registro' => $array[0][$i][0],
+                'agencia' => $array[0][$i][1],
+                'cuenta' => $array[0][$i][2],
+                'nombre_cuenta' => $array[0][$i][3],
+                'saldo_anterior' => $array[0][$i][4],
+                'debito' => $array[0][$i][5],
+                'credito' => $array[0][$i][6],
+                'saldo_actual' => $array[0][$i][7],
+
+            ];
+
+            $insertArray[] = $tmpArray;
+        }
+
+
+        $tableBalanceItems = new BalanceGeneralItem($this->balance_general_items);
+        $tableBalanceItems->insert($insertArray);
+
+        return $this->showArray($header);
+    }
 
     public function getBalance(Request $request)
     {
@@ -262,7 +340,7 @@ class BalanceGeneralController extends ApiController
         }
     }
 
-    public function getBalanceNaturaleza($headerId)
+    public function getBalanceNaturalezaOld($headerId)
     {
 
         $responseBalance = array();
@@ -285,7 +363,7 @@ class BalanceGeneralController extends ApiController
                 $this->operativo_cuentas . ".cuenta"
             )
             ->get();
-
+        return $balance;
         $responseBalance['CONTABILIDAD'] = [];
         $responseBalance['OPERATIVO'] = [];
         foreach ($balance as $row) {
@@ -652,75 +730,7 @@ class BalanceGeneralController extends ApiController
         return $naturalezaCuentas;
     }
 
-    public function uploadBalance(Request $request)
-    {
-        $user = Auth::user();
-        $header_id = null;
 
-
-        $balanceHeaders = new BalanceGeneralHeader($this->balance_general_headers);
-
-        $header = $balanceHeaders->where('fecha', $request->fecha)->first();
-
-        if ($header == null) {
-
-            $headerInsert = new BalanceGeneralHeader($this->balance_general_headers);
-
-            $insertValues = [
-                'fecha' => $request->fecha,
-                'file_name' => $request->file->getClientOriginalName(),
-                'file_path' => $request->file->store($user->current_company . '/balances', 'cuadres'),
-                'status' => BalanceGeneralHeader::OPEN,
-                'user' => $user->id,
-            ];
-
-
-
-            $headerInsert->insert($insertValues);
-
-            $balanceHeaders = new BalanceGeneralHeader($this->balance_general_headers);
-
-            $header = $balanceHeaders->where('fecha', $request->fecha)->first();
-        } else {
-
-            $header->file_path = $request->file->store($user->current_company . '/balances', 'cuadres');
-            $header->save();
-        }
-
-
-        $deleteBalance = new BalanceGeneralItem($this->balance_general_items);
-        $deleteBalance->where('header_id', $header->id)->delete();
-
-        $array = Excel::toArray(new BalanceGeneralImport, storage_path('app/cuadres/' . $header->file_path));
-
-        $insertArray = [];
-
-
-        for ($i = 5; $i < count($array[0]); $i++) {
-
-            $tmpArray = [
-
-                'header_id' => $header->id,
-                'registro' => $array[0][$i][0],
-                'agencia' => $array[0][$i][1],
-                'cuenta' => $array[0][$i][2],
-                'nombre_cuenta' => $array[0][$i][3],
-                'saldo_anterior' => $array[0][$i][4],
-                'debito' => $array[0][$i][5],
-                'credito' => $array[0][$i][6],
-                'saldo_actual' => $array[0][$i][7],
-
-            ];
-
-            $insertArray[] = $tmpArray;
-        }
-
-
-        $tableBalanceItems = new BalanceGeneralItem($this->balance_general_items);
-        $tableBalanceItems->insert($insertArray);
-
-        return $this->showArray($header);
-    }
 
 
     public function createTables()

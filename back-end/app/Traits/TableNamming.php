@@ -35,4 +35,34 @@ trait TableNamming
   {
     return 'accounting_items_' . $companyId;
   }
+
+  public function getBalanceSheetHeadersTableName($companyId)
+  {
+    return 'balance_general_headers_' . $companyId;
+  }
+
+  public function getBalanceSheetItemsTableName($companyId)
+  {
+    return 'balance_general_items_' . $companyId;
+  }
+
+  public function getAgreemenetsHeadersTableName($companyId)
+  {
+    return 'agreements_headers_' . $companyId;
+  }
+
+  public function getAgreemenetsItemsTableName($companyId)
+  {
+    return 'agreements_items_' . $companyId;
+  }
+
+  public function getAgreementsMasterTableName($companyId)
+  {
+    return 'agreements_master_' . $companyId;
+  }
+
+  public function getMasterOperational($companyId)
+  {
+    return 'operativo_cuentas_' . $companyId;
+  }
 }

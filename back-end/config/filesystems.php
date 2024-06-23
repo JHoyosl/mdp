@@ -75,8 +75,9 @@ return [
         'cuadres' => [
             'driver' => 'local',
             'root' => storage_path('app/cuadres'),
-            'url' => env('APP_URL') . '/storage',
-            'visibility' => 'public',
+            'url' => env('APP_URL') . '/public/cuadres/',
+            'visibility' => 'private',
+            'throw' => true,
         ],
 
         's3' => [

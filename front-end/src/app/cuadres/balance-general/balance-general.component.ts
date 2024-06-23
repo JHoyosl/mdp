@@ -4,6 +4,8 @@ import { ToastrService } from 'ngx-toastr';
 import { NgbTabset } from '@ng-bootstrap/ng-bootstrap';
 import Swal from 'sweetalert2';
 import { BalanceConvenioModel } from 'src/app/models/balanceConvenio.model';
+import { MatDialog } from '@angular/material';
+import { UploadFileComponent } from '../components/upload-file/upload-file.component';
 
 @Component({
   selector: 'app-balance-general',
@@ -22,7 +24,13 @@ export class BalanceGeneralComponent implements OnInit {
   currentBalance:any;
   convenios = new BalanceConvenioModel();
 
-  constructor(private apiRequest: ApiRequestService, private toastr: ToastrService ) { }
+  response = '';
+
+  constructor(
+    public dialog: MatDialog,
+    private apiRequest: ApiRequestService, 
+    private toastr: ToastrService
+  ) { }
 
   ngOnInit() {
     this.tabSet.activeId = 'Proceso';
@@ -37,6 +45,18 @@ export class BalanceGeneralComponent implements OnInit {
     this.tabSet.activeId = 'Proceso';
 
 
+  }
+
+  openDialog(): void {
+    console.log("hola");
+    const dialogRef = this.dialog.open(UploadFileComponent, {
+      width: '250px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('The dialog was closed');
+      this.response = result;
+    });
   }
 
   getBalanceList() {

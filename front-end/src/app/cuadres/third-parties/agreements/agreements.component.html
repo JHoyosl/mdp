@@ -1,0 +1,25 @@
+<div class="card">
+  <div class="card-body">
+    <div class="float-right">
+      <button mat-raised-button
+          type="button"
+          color="primary" 
+          class="mr-2"
+        >Guardar</button>
+    </div>
+    <mat-tab-group  [(selectedIndex)]="selectedIndex">
+      <mat-tab label="Historial" >
+        <ng-template matTabContent >
+          <app-agreements-list></app-agreements-list>
+        </ng-template>
+      </mat-tab>
+      <mat-tab label="Cargue">
+        
+      </mat-tab>
+      <mat-tab label="Editar" disabled>  
+        <ng-template matTabContent >
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

@@ -3,3 +3,8 @@ export interface GenericResponse {
     message: string,
     status: number
 }
+
+export interface GenericError {
+    message: string,
+    errors: any
+}

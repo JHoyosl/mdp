@@ -51,6 +51,22 @@ export const ROUTES: RouteInfo[] = [
         extralink: false,
         submenu: []
       },
+      {
+        path: '/cuadres/thirdParties',
+        title: 'Cuadres de Terceros',
+        icon: '',
+        class: '',
+        extralink: false,
+        submenu: []
+      },
+      {
+        path: '/cuadres/balanceGeneralOld',
+        title: 'Balance General Old',
+        icon: '',
+        class: '',
+        extralink: false,
+        submenu: []
+      },
     ]
   },
   {

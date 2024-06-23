@@ -1,0 +1,340 @@
+<?php
+
+namespace App\Services\CuadresOperativos;
+
+use Exception;
+use App\Traits\TableNamming;
+use App\Models\ConvenioCuadre;
+use App\Models\BalanceGeneralItem;
+use Illuminate\Support\Facades\DB;
+use App\Models\BalanceGeneralHeader;
+use Illuminate\Support\Facades\Schema;
+use App\Models\OperativoConvenioHeader;
+use Illuminate\Support\Facades\Storage;
+
+class BalanceSheetReconciliation
+{
+  use TableNamming;
+
+  public function __construct()
+  {
+  }
+
+  public function getBalanceSheetHeaders($companyId)
+  {
+    $balanceSheetHeadersTableName = $this->getBalanceSheetHeadersTableName($companyId);
+
+    if (!Schema::hasTable($balanceSheetHeadersTableName)) {
+      $this->createBalanceSheetHeadersTable($balanceSheetHeadersTableName);
+    }
+
+    $headerTable = new BalanceGeneralHeader($balanceSheetHeadersTableName);
+    $headers = $headerTable->orderBy('fecha', 'desc')->get();
+
+    return $headers;
+  }
+
+  public function getBalanceNaturaleza($companyId, $date, $override = false)
+  {
+
+    $tableName = $this->getBalanceSheetHeadersTableName($companyId);
+    $headerTable = new BalanceGeneralHeader($tableName);
+    $balanceHeader = $headerTable->where('fecha', $date)->first();
+    $headerId = $balanceHeader->id;
+
+    $fileName = $this->balanceNaturalezaFileName($companyId, $headerId);
+
+    if (Storage::disk('cuadres')->exists($fileName) && !$override) {
+      return json_decode(Storage::disk('cuadres')->get($fileName));
+    }
+
+    $masterOperatinalTableName = $this->getMasterOperational($companyId);
+    $balanceItemsTableName = $this->getBalanceSheetItemsTableName($companyId);
+
+    $responseBalance = array();
+
+    $accounting = DB::table($masterOperatinalTableName)
+      ->select(
+        $masterOperatinalTableName . ".cuenta AS cuenta_maestro",
+        $balanceItemsTableName . ".saldo_actual",
+        $balanceItemsTableName . ".header_id",
+        $balanceItemsTableName . ".cuenta AS cuenta_balance",
+        $masterOperatinalTableName . ".area",
+        $masterOperatinalTableName . ".descripcion",
+        $masterOperatinalTableName . ".naturaleza",
+        $masterOperatinalTableName . ".tipo_saldo",
+      )
+      ->where($balanceItemsTableName . '.header_id', $headerId)
+      ->where($masterOperatinalTableName . '.area', 'CONTABILIDAD')
+      ->where(function ($query) use ($masterOperatinalTableName, $balanceItemsTableName) {
+        $query
+          ->orWhere(function ($subQuery1) use ($masterOperatinalTableName, $balanceItemsTableName) {
+            $subQuery1
+              ->where($masterOperatinalTableName . '.naturaleza', 'DEBITO')
+              ->where($balanceItemsTableName . '.saldo_actual', '<', 0)
+              ->where($masterOperatinalTableName . '.tipo_saldo', '=', 'Con saldo');
+          })
+          ->orWhere(function ($subQuery2) use ($masterOperatinalTableName, $balanceItemsTableName) {
+            $subQuery2
+              ->where($masterOperatinalTableName . '.naturaleza', 'CREDITO')
+              ->where($balanceItemsTableName . '.saldo_actual', '>', 0)
+              ->where($masterOperatinalTableName . '.tipo_saldo', '=', 'Con saldo');
+          })
+          ->orWhere(function ($ceros) use ($masterOperatinalTableName, $balanceItemsTableName) {
+            $ceros
+              ->where($balanceItemsTableName . '.saldo_actual', '!=', 0)
+              ->where($masterOperatinalTableName . '.tipo_saldo', '=', 'CEROS');
+          });
+      })
+      ->join(
+        $balanceItemsTableName,
+        $balanceItemsTableName . '.cuenta',
+        $masterOperatinalTableName . ".cuenta"
+      )->get();
+
+    $operational = DB::table($masterOperatinalTableName)
+      ->select(
+        $masterOperatinalTableName . ".cuenta AS cuenta_maestro",
+        $balanceItemsTableName . ".saldo_actual",
+        $balanceItemsTableName . ".header_id",
+        $balanceItemsTableName . ".cuenta AS cuenta_balance",
+        $masterOperatinalTableName . ".area",
+        $masterOperatinalTableName . ".descripcion",
+        $masterOperatinalTableName . ".naturaleza",
+        $masterOperatinalTableName . ".tipo_saldo",
+      )
+      ->where($balanceItemsTableName . '.header_id', $headerId)
+      ->where($masterOperatinalTableName . '.area', 'OPERACIONES')
+      ->where(function ($query) use ($masterOperatinalTableName, $balanceItemsTableName) {
+        $query
+          ->orWhere(function ($subQuery1) use ($masterOperatinalTableName, $balanceItemsTableName) {
+            $subQuery1
+              ->where($masterOperatinalTableName . '.naturaleza', 'DEBITO')
+              ->where($balanceItemsTableName . '.saldo_actual', '<', 0)
+              ->where($masterOperatinalTableName . '.tipo_saldo', '=', 'Con saldo');
+          })
+          ->orWhere(function ($subQuery2) use ($masterOperatinalTableName, $balanceItemsTableName) {
+            $subQuery2
+              ->where($masterOperatinalTableName . '.naturaleza', 'CREDITO')
+              ->where($balanceItemsTableName . '.saldo_actual', '>', 0)
+              ->where($masterOperatinalTableName . '.tipo_saldo', '=', 'Con saldo');
+          })
+          ->orWhere(function ($ceros) use ($masterOperatinalTableName, $balanceItemsTableName) {
+            $ceros
+              ->where($balanceItemsTableName . '.saldo_actual', '!=', 0)
+              ->where($masterOperatinalTableName . '.tipo_saldo', '=', 'CEROS');
+          });
+      })
+      ->join(
+        $balanceItemsTableName,
+        $balanceItemsTableName . '.cuenta',
+        $masterOperatinalTableName . ".cuenta"
+      )->get();
+
+    $responseBalance['CONTABILIDAD'] = $accounting;
+    $responseBalance['OPERATIVO'] = $operational;
+
+    $info = [
+      'nautralezaContable' => $accounting,
+      'nautralezaOperativa' => $operational,
+    ];
+
+    Storage::disk('cuadres')->put($fileName, json_encode($info));
+
+    return $info;
+  }
+  public function getBalanceResult($companyId, $date)
+  {
+
+    $tableName = $this->getBalanceSheetHeadersTableName($companyId);
+    $headerTable = new BalanceGeneralHeader($tableName);
+
+    $balanceHeader = $headerTable->where('fecha', $date)->first();
+
+    if ($balanceHeader) {
+      $agreementsHeadersTableName =  $this->getAgreemenetsHeadersTableName($companyId);
+      $agreementsHeadersTable = new OperativoConvenioHeader($agreementsHeadersTableName);
+      $agreementsHeader = $agreementsHeadersTable->where('fecha', $date)->first();
+
+      if ($agreementsHeader) {
+        $agreementsItemsName = $this->getAgreemenetsItemsTableName($companyId);
+
+        $items = DB::table($agreementsItemsName)
+          ->select(DB::raw("SUM(" . $agreementsItemsName . ".salcuo) AS sum_salcuo,convenios_items_" . $companyId . ".header_id,convenios_items_" . $companyId . ".numcon"))
+          ->where('header_id', $agreementsHeader->id)
+          ->groupBy('numcon', 'header_id', 'numcon')
+          ->get();
+      }
+    }
+
+    $agreementsMasterTableName = $this->getMasterAgreements($companyId);
+    $agreementsMaster = (new ConvenioCuadre($agreementsMasterTableName))->get();
+
+    $balanceItemsTableName = $this->getBalanceSheetItemsTableName($companyId);
+    $balanceItemsTable = new BalanceGeneralItem($balanceItemsTableName);
+
+    $balanceItems = $balanceItemsTable
+      ->select(
+        $balanceItemsTableName . '.cuenta',
+        $balanceItemsTableName . '.nombre_cuenta',
+        $balanceItemsTableName . '.saldo_actual'
+      )
+      ->join(
+        $agreementsMasterTableName,
+        $agreementsMasterTableName . '.cuenta',
+        $balanceItemsTableName . '.cuenta'
+      )
+      ->where($balanceItemsTableName . '.header_id', $balanceHeader->id)
+      ->get();
+
+
+
+    $info = [
+      'balance' => [
+        'header' => $balanceHeader,
+        'items' => $balanceItems,
+      ],
+      'convenios' => ['header' => $balanceHeader, 'items' => $items],
+      'cuentasArray' => $agreementsMaster,
+    ];
+    return $info;
+  }
+
+
+
+  public function uploadBlance($date, $file, $companyId, $user)
+  {
+    $balanceSheetHeaderTableName = $this->getBalanceSheetHeadersTableName($companyId);
+    $balanceHeaderTable = new BalanceGeneralHeader($balanceSheetHeaderTableName);
+    $header = $balanceHeaderTable->where('fecha', $date)->first();
+
+    DB::beginTransaction();
+    if (!$header) {
+      $insertValues = [
+        'fecha' => $date,
+        'file_name' => '',
+        'file_path' => '',
+        'status' => BalanceGeneralHeader::OPEN,
+        'user' => $user->id,
+      ];
+      $balanceHeaderTable->insert($insertValues);
+
+      $header = $balanceHeaderTable->where('fecha', $date)->first();
+    }
+
+    $balance = $this->balanceToInsert($file, $header->id);
+
+    $balanceItemsTableName = $this->getBalanceSheetItemsTableName($companyId);
+
+    try {
+      foreach (array_chunk($balance, 500) as $t) {
+        DB::table($balanceItemsTableName)->insert($t);
+      }
+    } catch (Exception $e) {
+      DB::rollBack();
+      throw $e;
+    }
+
+    DB::commit();
+    return $header;
+  }
+
+  public function deleteBalance($companyId, $id)
+  {
+    $balanceSheetHeaderTableName = $this->getBalanceSheetHeadersTableName($companyId);
+    $balanceHeader = (new BalanceGeneralHeader($balanceSheetHeaderTableName))->where('id', $id)->first();
+
+    if (!$balanceHeader) {
+      throw new Exception('Model not found');
+    }
+
+    $headerId = $balanceHeader->id;
+
+    $fileName = $this->balanceNaturalezaFileName($companyId, $headerId);
+
+    if (Storage::disk('cuadres')->exists($fileName)) {
+      Storage::disk('cuadres')->delete($fileName);
+    }
+
+    $balanceItemsTableName = $this->getBalanceSheetItemsTableName($companyId);
+    (new BalanceGeneralItem($balanceItemsTableName))->where('header_id', $headerId)->delete();
+
+    (new BalanceGeneralHeader($balanceSheetHeaderTableName))->where('id', $id)->delete();
+
+    return 'success';
+  }
+
+  //HELPERS 
+
+  private function balanceNaturalezaFileName($companyId, $headerId)
+  {
+
+    return "{$companyId}/balanceNaturaleza/{$headerId}.json";
+  }
+
+  private function balanceToInsert($file, $headerId)
+  {
+    $startRow = 6;
+    $inputFileType = \PhpOffice\PhpSpreadsheet\IOFactory::identify($file);
+    $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($inputFileType);
+    $spreadsheet = $reader->load($file);
+
+    $spreadsheet->setActiveSheetIndex(0);
+    $worksheet = $spreadsheet->getActiveSheet();
+    $highestRow = $worksheet->getHighestDataRow();
+    $rows = [];
+
+    foreach ($worksheet->getRowIterator($startRow) as $keyRow => $row) {
+
+      $cellIterator = $row->getCellIterator();
+      $cellIterator->setIterateOnlyExistingCells(FALSE); // This loops through all cells,
+      $cells = [];
+      foreach ($cellIterator as $keyCell => $cell) {
+        $cells[] = $worksheet->getCell($keyCell . $keyRow)->getValue();
+      }
+      $rows[] = [
+        'header_id' => $headerId,
+        'registro' => $cells[0],
+        'agencia' => $cells[1],
+        'cuenta' => $cells[2],
+        'nombre_cuenta' => $cells[3],
+        'saldo_anterior' => floatval($cells[4]),
+        'debito' => floatval($cells[5]),
+        'credito' => floatval($cells[6]),
+        'saldo_actual' => floatval($cells[7]),
+      ];
+    }
+
+    return $rows;
+    //   $tmpArray = [
+
+    //     'header_id' => $header->id,
+    //     'registro' => $array[0][$i][0],
+    //     'agencia' => $array[0][$i][1],
+    //     'cuenta' => $array[0][$i][2],
+    //     'nombre_cuenta' => $array[0][$i][3],
+    //     'saldo_anterior' => $array[0][$i][4],
+    //     'debito' => $array[0][$i][5],
+    //     'credito' => $array[0][$i][6],
+    //     'saldo_actual' => $array[0][$i][7],
+
+    // ];
+  }
+
+
+  // TABLES CEATION
+  public function createBalanceSheetHeadersTable($tableName)
+  {
+    Schema::create($tableName, function ($table) {
+      $table->bigIncrements('id');
+      $table->dateTime('fecha');
+      $table->string('file_name');
+      $table->string('file_path');
+      $table->string('status');
+      $table->string('user');
+
+      $table->softDeletes();
+      $table->timestamps();
+    });
+  }
+}
