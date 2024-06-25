@@ -48,13 +48,11 @@ export class BalanceGeneralComponent implements OnInit {
   }
 
   openDialog(): void {
-    console.log("hola");
     const dialogRef = this.dialog.open(UploadFileComponent, {
       width: '250px'
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('The dialog was closed');
       this.response = result;
     });
   }

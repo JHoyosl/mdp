@@ -49,3 +49,9 @@ td.mat-cell {
 .mat-input-element{
   text-align: right ;
 }
+
+.currency{
+  text-align: right !important;
+  justify-content:right !important;
+  margin-right: 2px;
+}

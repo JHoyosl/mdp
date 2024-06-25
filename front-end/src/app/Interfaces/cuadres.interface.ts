@@ -76,3 +76,27 @@ export interface uploadCuadreRequest{
   file: File;
   source: 'balance'
 }
+
+//AGREEMENTS
+export interface AgreementsHeader{
+  balanceId: number;
+  agreementId: number;
+  balanceDate: string;
+  agreementDate: string;
+  status: string;
+  user: number;
+}
+
+export interface AgreementsRequestUpload{
+  date: string;
+  file: File;
+}
+
+export interface AgreeementsResult {
+  account: string;
+  line: string;
+  name: string;
+  saldoActual: string;
+  sumSalcuo: string;
+  difference: string;
+}

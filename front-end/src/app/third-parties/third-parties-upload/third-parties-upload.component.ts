@@ -70,10 +70,6 @@ export class ThirdPartiesUploadComponent implements OnInit {
           
       }, (err) => {
         Swal.close();
-        Swal.fire({
-          type: 'error',
-          text: err.error,
-        });
         console.error(err.error);
       });
   }

@@ -150,13 +150,13 @@ class BalanceGeneralController extends ApiController
             'date' => 'required|exists:' . $tableName . ',fecha',
         ]);
 
-        $override = false;
-        if ($request->has('override')) {
-            $override = $request->override == 'false' ? false : true;
+        $overwrite = false;
+        if ($request->has('overwrite')) {
+            $overwrite = $request->overwrite == 'false' ? false : true;
         }
 
         $result = $this->balanceSheetReconciliation
-            ->getBalanceNaturaleza($this->companyId, $request->date, $override);
+            ->getBalanceNaturaleza($this->companyId, $request->date, $overwrite);
         // TODO: Create Resource
         return $this->showMessage($result, 200);
     }

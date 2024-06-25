@@ -13,10 +13,11 @@ export class ThirdPartiesComponent implements OnInit {
   selectedValue: string;
 
   constructor(
-    private componentFactoryResolver: ComponentFactoryResolver
+    private componentFactoryResolver: ComponentFactoryResolver,
   ) { }
 
   ngOnInit() {
+
     this.changeSelectedAccount('agreements');
   }
 

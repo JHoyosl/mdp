@@ -100,11 +100,14 @@ class AgreementsController extends ApiController
      */
     public function destroy($id)
     {
-        //
+        return $this->showMessage($this->agreementsService->deleteAgreement($this->companyId, $id));
     }
 
     public function agreementsResult(Request $request)
     {
+        ini_set('memory_limit', '-1');
+        ini_set('max_execution_time', '300');
+
         $agreementsHeader = $this->getAgreemenetsHeadersTableName($this->companyId);
         $balanceHeader = $this->getBalanceSheetHeadersTableName($this->companyId);
 
@@ -113,7 +116,13 @@ class AgreementsController extends ApiController
             'date' => 'exists:' . $balanceHeader . ',fecha'
         ]);
 
-        return $this->agreementsService->getAgreementsResult($this->companyId, $request->date);
+        $overwrite = false;
+        if ($request->has('overwrite')) {
+            $overwrite = $request->overwrite == 'false' ? false : true;
+        }
+
+        $result = $this->agreementsService->getAgreementsResult($this->companyId, $request->date, $overwrite);
+        return $this->showMessage($result);
     }
 
     public function upload(Request $request)

@@ -1,0 +1,7 @@
+@import '../../../../styles/table.css';
+
+.mat-table{
+  width: 50%;
+  margin: 0 auto;
+  
+}

@@ -1,12 +1,11 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, from, observable, of } from 'rxjs';
+import { Observable} from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BalanceList, BalanceResultResponse, uploadCuadreRequest } from 'src/app/Interfaces/cuadres.interface';
 import { GenericResponse } from 'src/app/Interfaces/shared.interfaces';
 import { environment } from 'src/environments/environment';
 import { CuadresService } from './cuadres.service';
-import Swal from 'sweetalert2';
 
 @Injectable({
   providedIn: 'root'
@@ -57,4 +56,6 @@ export class CuadresRequestsService {
       })
     )
   }
+
+  
 }

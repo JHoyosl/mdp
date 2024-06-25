@@ -34,7 +34,7 @@ class BalanceSheetReconciliation
     return $headers;
   }
 
-  public function getBalanceNaturaleza($companyId, $date, $override = false)
+  public function getBalanceNaturaleza($companyId, $date, $overwrite = false)
   {
 
     $tableName = $this->getBalanceSheetHeadersTableName($companyId);
@@ -44,7 +44,7 @@ class BalanceSheetReconciliation
 
     $fileName = $this->balanceNaturalezaFileName($companyId, $headerId);
 
-    if (Storage::disk('cuadres')->exists($fileName) && !$override) {
+    if (Storage::disk('cuadres')->exists($fileName) && !$overwrite) {
       return json_decode(Storage::disk('cuadres')->get($fileName));
     }
 
@@ -225,7 +225,6 @@ class BalanceSheetReconciliation
     $balance = $this->balanceToInsert($file, $header->id);
 
     $balanceItemsTableName = $this->getBalanceSheetItemsTableName($companyId);
-
     try {
       foreach (array_chunk($balance, 500) as $t) {
         DB::table($balanceItemsTableName)->insert($t);
@@ -298,29 +297,29 @@ class BalanceSheetReconciliation
         'agencia' => $cells[1],
         'cuenta' => $cells[2],
         'nombre_cuenta' => $cells[3],
-        'saldo_anterior' => floatval($cells[4]),
-        'debito' => floatval($cells[5]),
-        'credito' => floatval($cells[6]),
-        'saldo_actual' => floatval($cells[7]),
+        'saldo_anterior' => $this->fixedCurrency(',', $cells[4]),
+        'debito' => $this->fixedCurrency(',', $cells[5]),
+        'credito' => $this->fixedCurrency(',', $cells[6]),
+        'saldo_actual' => $this->fixedCurrency(',', $cells[7]),
       ];
     }
 
     return $rows;
-    //   $tmpArray = [
-
-    //     'header_id' => $header->id,
-    //     'registro' => $array[0][$i][0],
-    //     'agencia' => $array[0][$i][1],
-    //     'cuenta' => $array[0][$i][2],
-    //     'nombre_cuenta' => $array[0][$i][3],
-    //     'saldo_anterior' => $array[0][$i][4],
-    //     'debito' => $array[0][$i][5],
-    //     'credito' => $array[0][$i][6],
-    //     'saldo_actual' => $array[0][$i][7],
-
-    // ];
   }
 
+  //HELPERS
+  private function fixedCurrency($separator, $value)
+  {
+    $value = str_replace('$', '', $value);
+    if ($separator == ',') {
+      $value = str_replace('.', '', $value);
+      $value = str_replace(',', '.', $value);
+    }
+    if ($separator == '.') {
+      $value = str_replace(',', '', $value);
+    }
+    return floatval($value);
+  }
 
   // TABLES CEATION
   public function createBalanceSheetHeadersTable($tableName)

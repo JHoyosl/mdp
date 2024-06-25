@@ -17,6 +17,8 @@ import { AgreementsComponent } from './third-parties/agreements/agreements.compo
 import { ConfirmDialogComponent } from '../shared/components/confirm-dialog/confirm-dialog.component';
 import { ThirdPartiesComponent } from './third-parties/third-parties.component';
 import { AgreementsListComponent } from './third-parties/agreements/agreements-list/agreements-list.component';
+import { AgreementsUploadComponent } from './third-parties/agreements/agreements-upload/agreements-upload.component';
+import { AgreementsResultComponent } from './third-parties/agreements/agreements-result/agreements-result.component';
 
 @NgModule({
   declarations: [
@@ -29,6 +31,8 @@ import { AgreementsListComponent } from './third-parties/agreements/agreements-l
     AgreementsComponent,
     ThirdPartiesComponent,
     AgreementsListComponent,
+    AgreementsUploadComponent,
+    AgreementsResultComponent,
     
   ],
   imports: [

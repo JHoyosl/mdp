@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AgreementsService } from 'src/app/services/cuadres/agreements/agreements.service';
 
 @Component({
   selector: 'app-agreements',
@@ -7,9 +8,15 @@ import { Component, OnInit } from '@angular/core';
 })
 export class AgreementsComponent implements OnInit {
 
-  constructor() { }
+  selectedIndex = 0;
+  constructor(
+    private agreementsService: AgreementsService
+  ) { }
 
   ngOnInit() {
+    this.agreementsService.selectedIndex.subscribe(
+      (index) => this.selectedIndex = index
+    );
   }
 
 }

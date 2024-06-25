@@ -8,7 +8,9 @@ use App\Models\AgreementsHeader;
 use App\Models\AgreementsMaster;
 use Illuminate\Support\Facades\DB;
 use App\Models\BalanceGeneralHeader;
+use App\Models\BalanceGeneralItem;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class AgreementsService
 {
@@ -33,8 +35,8 @@ class AgreementsService
       ->select(
         $balanceSheetHeaderTableName . '.id AS balanceId',
         $agreementsHeader . '.id AS agreementId',
-        $balanceSheetHeaderTableName . '.fecha AS balanceFecha',
-        $agreementsHeader . '.date AS AgreementDate',
+        $balanceSheetHeaderTableName . '.fecha AS balanceDate',
+        $agreementsHeader . '.date AS agreementDate',
         $agreementsHeader . '.status',
         $agreementsHeader . '.user',
       )
@@ -44,33 +46,83 @@ class AgreementsService
     return $info;
   }
 
-  function getAgreementsResult($companyId, $date)
+  function deleteAgreement($companyId, $id)
+  {
+    $agreementsHeaderTableName = $this->getAgreemenetsHeadersTableName($companyId);
+    $agreementsHeadersTable = (new AgreementsHeader($agreementsHeaderTableName))
+      ->where('id', $id)->first();
+
+    if (!$agreementsHeadersTable) {
+      throw new Exception('Data not found', 400);
+    }
+
+    $agreementsItemsTable = $this->getAgreemenetsItemsTableName($companyId);
+    DB::beginTransaction();
+    DB::table($agreementsItemsTable)->where('header_id', $id)->delete();
+
+    $agreementsHeadersTable->delete();
+    $fileName = $this->agreementsFileName($companyId, $id);
+    if (Storage::disk('cuadres')->exists($fileName)) {
+      Storage::disk('cuadres')->delete($fileName);
+    }
+    DB::commit();
+    return 'success';
+  }
+
+  function getAgreementsResult($companyId, $date, $overwrite = false)
   {
     $tableName = $this->getBalanceSheetHeadersTableName($companyId);
     $headerTable = new BalanceGeneralHeader($tableName);
 
     $balanceHeader = $headerTable->where('fecha', $date)->first();
 
-    if ($balanceHeader) {
-      $agreementsHeadersTableName =  $this->getAgreemenetsHeadersTableName($companyId);
-      $agreementsHeadersTable = new AgreementsHeader($agreementsHeadersTableName);
-      $agreementsHeader = $agreementsHeadersTable->where('date', $date)->first();
-
-      if ($agreementsHeader) {
-        $agreementsItemsName = $this->getAgreemenetsItemsTableName($companyId);
-
-        $items = DB::table($agreementsItemsName)
-          ->select(DB::raw("SUM(" . $agreementsItemsName . ".salcuo) AS sum_salcuo," . $agreementsItemsName . ".header_id," . $agreementsItemsName . ".numcon"))
-          ->where('header_id', $agreementsHeader->id)
-          ->groupBy('numcon', 'header_id', 'numcon')
-          ->get();
-      }
+    if (!$balanceHeader) {
+      throw new Exception('No existe balance para la fecha: ' . $date, 400);
     }
 
-    $info = [
-      'balanceHeader' => $balanceHeader,
-      'items' => $items,
-    ];
+    $agreementsHeadersTableName =  $this->getAgreemenetsHeadersTableName($companyId);
+    $agreementsHeadersTable = new AgreementsHeader($agreementsHeadersTableName);
+    $agreementsHeader = $agreementsHeadersTable->where('date', $date)->first();
+
+    if (!$agreementsHeader) {
+      throw new Exception('No existe convenios para la fecha: ' . $date, 400);
+    }
+
+    $fileName = $this->agreementsFileName($companyId, $agreementsHeader->id);
+
+    if (Storage::disk('cuadres')->exists($fileName) && !$overwrite) {
+      return json_decode(Storage::disk('cuadres')->get($fileName));
+    }
+
+    $agreementsItemsName = $this->getAgreemenetsItemsTableName($companyId);
+    $agreementsMaster = $this->getAgreementsMasterTableName($companyId);
+    $balanceItems = $this->getBalanceSheetItemsTableName($companyId);
+
+    $balanceItemsTable = new BalanceGeneralItem($balanceItems);
+
+    $info = $balanceItemsTable
+      ->select(
+        $agreementsMaster . ".account",
+        $agreementsMaster . ".line",
+        $agreementsMaster . ".name",
+        $balanceItems . '.saldo_actual as saldoActual',
+        DB::raw('SUM(' . $agreementsItemsName . '.salcuo) sumSalcuo'),
+        DB::raw('SUM(' . $agreementsItemsName . '.salcuo) - ' . $balanceItems . '.saldo_actual AS difference')
+      )
+      ->join($agreementsMaster, $agreementsMaster . ".account", $balanceItems . ".cuenta")
+      ->join($agreementsItemsName, $agreementsItemsName . ".numcon", $agreementsMaster . ".line")
+      ->where($balanceItems . '.header_id', $balanceHeader->id)
+      ->where($agreementsItemsName . '.header_id', $agreementsHeader->id)
+      ->groupBy(
+        $agreementsMaster . ".account",
+        $agreementsMaster . ".line",
+        $agreementsMaster . ".name",
+        $balanceItems . ".saldo_actual"
+      )
+      ->get();
+
+    Storage::disk('cuadres')->put($fileName, json_encode($info));
+
     return $info;
   }
 
@@ -141,7 +193,7 @@ class AgreementsService
       $rows[] = [
         'account' => $cells[0],
         'line' => $cells[1],
-        'name' => $cells[1],
+        'name' => $cells[2],
         'created_at' => now(),
       ];
     }
@@ -161,6 +213,12 @@ class AgreementsService
   }
 
   //HELPERS
+  private function agreementsFileName($companyId, $headerId)
+  {
+
+    return "{$companyId}/agreements/{$headerId}.json";
+  }
+
   private function agreementsFileToInsert($file, $headerId)
   {
     $startRow = 2;
