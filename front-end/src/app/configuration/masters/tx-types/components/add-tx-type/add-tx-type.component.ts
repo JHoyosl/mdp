@@ -33,13 +33,7 @@ export class AddTxTypeComponent implements OnInit {
   
 
   getBankList(){
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.bankRequestsService.index().subscribe(
       (response) => {
         const sortByName = response.sort((a,b) => a.name < b.name ? -1 : 1) 
@@ -77,13 +71,7 @@ export class AddTxTypeComponent implements OnInit {
     }
     let request: CreateExternalTxRequest | CreateLocalTxRequest;
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     //external submit
     if(this.formSoruce === 'external' ){
       request = this.getExternalForm();

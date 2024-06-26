@@ -42,17 +42,11 @@ export class AgreementsListComponent implements OnInit, OnDestroy {
     if(this.dataSource.data){
       return;
     }
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
 
     this.agreementsRequestService.getAgreementsIndex().subscribe(
       (response) => {
-        Swal.close();
+    
         this.agreementsService.setAgreementList(response);
       },
       (err) => console.error(err)

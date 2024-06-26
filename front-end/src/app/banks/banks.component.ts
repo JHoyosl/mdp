@@ -120,13 +120,13 @@ export class BanksComponent implements OnInit {
     this.apiRequest.storebank( this.bank )
       .subscribe( response => {
         
-        Swal.close();
+    
         this.getbanks();
         this.tabSet.activeId = 'List';
         
       }, (err)=>{
         
-        Swal.close();
+    
         let errorMesage = "";
         for (var key in err.error.errors) {
           errorMesage+= `${err.error.errors[key]}, \n`; // "User john is #234"

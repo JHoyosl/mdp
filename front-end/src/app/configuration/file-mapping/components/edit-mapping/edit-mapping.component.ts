@@ -49,26 +49,20 @@ export class EditMappingComponent implements OnInit {
     const type = mapType === 'conciliar_externo' 
       ? 'external'
       : 'internal';
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     zip(
       this.bankRequestsService.index(),
       this.mappingFilesService.getMapIndex(type)
     ).subscribe(
       (response) => {
-        Swal.close();
+    
         const sortByName = response[0].sort((a,b) => a.name < b.name ? -1 : 1) 
         this.bankList = sortByName;
         this.mappingIndex = response[1];
       },
       (err) => {
         console.error(err);
-        Swal.close();
+    
       }
     );
    

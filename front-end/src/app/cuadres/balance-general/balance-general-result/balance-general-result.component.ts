@@ -18,6 +18,8 @@ export class BalanceGeneralResultComponent implements OnInit, OnDestroy {
   operationalDataSource = new MatTableDataSource<any>();
   sourceData: BalanceResultResponse = null;
 
+  selectedDate: string = null;
+
   resultColumns = [
     'cuenta_balance',
     'descripcion',
@@ -36,6 +38,7 @@ export class BalanceGeneralResultComponent implements OnInit, OnDestroy {
     this.cuadresServices.selectedDate$.pipe(takeUntil(this.componentDestroy$)).subscribe(
       (response) => {
         if(response){
+          this.selectedDate = response.split(' ').slice(0,1).join('');
           this.getBalanceResult(response);
         }
       },
@@ -45,23 +48,28 @@ export class BalanceGeneralResultComponent implements OnInit, OnDestroy {
   }
 
   getBalanceResult(date){
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
-
-    });
     this.cuadresRequestService.getBalanceResult(date).subscribe(
       (response) => {
-        Swal.close();
         this.sourceData = response;
         this.accountingDataSource.data = response.nautralezaContable;
         this.operationalDataSource.data = response.nautralezaOperativa;
       },
       (err) => {
-        Swal.close();
         console.error(err)
+      }
+    );
+  }
+
+  download(){
+    this.cuadresRequestService.downloadBalanceResult(this.selectedDate).subscribe(
+      (response) => {
+        const myBlob = new Blob([response], {type: 'application/vnd.oasis.opendocument.spreadsheet'});
+        const downloadUrl = URL.createObjectURL(myBlob);
+        const a = document.createElement('a');
+
+        a.href = downloadUrl;
+        a.download = `balance_naturaleza${this.selectedDate}.xlsx`;
+        a.click();
       }
     );
   }

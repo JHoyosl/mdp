@@ -277,7 +277,7 @@ export class ApiRequestService {
        this.http.post(`${this.url}oauth/token`, body)
           .subscribe( (response) => {
 
-            Swal.close();
+        
             let created_at = Date.now();
             let expres_in = (response['expires_in'] * 1000) + created_at;
 

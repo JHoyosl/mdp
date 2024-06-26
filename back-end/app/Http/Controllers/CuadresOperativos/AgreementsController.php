@@ -144,4 +144,15 @@ class AgreementsController extends ApiController
 
         return $this->showMessage($data);
     }
+
+    public function downloadResult(Request $request)
+    {
+        $agreementsTable = $this->getAgreemenetsHeadersTableName($this->companyId);
+        $request->validate([
+            'date' => 'required|exists:' . $agreementsTable . ',date'
+        ]);
+
+        $info = $this->agreementsService->downloadResult($this->companyId, $request->date);
+        return response()->download($info['filePath'], $info['fileName'], $info['headers']);
+    }
 }

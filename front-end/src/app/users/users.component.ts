@@ -79,7 +79,7 @@ export class UsersComponent implements OnInit {
 
     this.apiRequest.storeUser( this.newUser )
       .subscribe( (response) =>{
-        Swal.close();
+    
         
         Swal.fire({
           type: 'success',
@@ -89,7 +89,7 @@ export class UsersComponent implements OnInit {
         this.tabSet.activeId = 'List';
       }, (err)=>{
         
-        Swal.close();
+    
         let msnError = '';
 
         for (var k in err.error.errors) {
@@ -143,11 +143,11 @@ export class UsersComponent implements OnInit {
     this.apiRequest.newVerifyToken(user.id)
       .subscribe((response)=>{
         
-        Swal.close();
+    
         
       }, (err)=>{
         
-        Swal.close();
+    
         console.error(err);
       })
   }
@@ -201,7 +201,7 @@ export class UsersComponent implements OnInit {
 
     this.apiRequest.put( body, `users/${this.updateUser.id}` )
       .subscribe( (response) =>{
-        Swal.close();
+    
         
         Swal.fire({
           type: 'success',
@@ -212,7 +212,7 @@ export class UsersComponent implements OnInit {
       }, (err)=>{
         
         console.error(err);
-        Swal.close();
+    
         let msnError = '';
 
         for (var k in err.error.errors) {

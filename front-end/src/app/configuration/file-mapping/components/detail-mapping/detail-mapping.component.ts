@@ -31,13 +31,13 @@ export class DetailMappingComponent implements OnInit {
       });
     this.mappingFileService.getMapIndex(type).subscribe(
       (response) => {
-        Swal.close();
+    
         this.mappingIndex = response;
         this.detailMap = this.map.map;
         
       },
       (err) => {
-        Swal.close();
+    
         console.error(err)
       }
     );

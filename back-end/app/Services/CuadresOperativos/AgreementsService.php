@@ -11,6 +11,8 @@ use App\Models\BalanceGeneralHeader;
 use App\Models\BalanceGeneralItem;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class AgreementsService
 {
@@ -41,6 +43,7 @@ class AgreementsService
         $agreementsHeader . '.user',
       )
       ->leftjoin($agreementsHeader, $agreementsHeader . '.date', $balanceSheetHeaderTableName . '.fecha')
+      ->orderBy('fecha', 'desc')
       ->get();
 
     return $info;
@@ -212,11 +215,68 @@ class AgreementsService
     return $rows;
   }
 
+  public function downloadResult($companyId, $date)
+  {
+    $agreementsHeadersTableName = $this->getAgreemenetsHeadersTableName($companyId);
+    $header = (new AgreementsHeader($agreementsHeadersTableName))->where('date', $date)->first();
+    $fileName = $this->agreementsFileName($companyId, $header->id);
+
+    if (!Storage::disk('cuadres')->exists($fileName)) {
+      throw new Exception('No existe resultado', 400);
+    }
+    $jsonFile = Storage::disk('cuadres')->get($fileName);
+    $data = json_decode($jsonFile, true);
+
+    $xlsxFileName = $this->agreementsFileName($companyId, $header->id, 'xlsx');
+    $filePath = Storage::disk('cuadres')->path($xlsxFileName);
+
+    $fileName = 'convenios_' . $date . '.xlsx';
+
+    $this->agreementsResultToXlsx($data, $filePath);
+
+    $headers = array(
+      'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition' => "attachment; filename='" . $fileName . "'"
+    );
+    return [
+      'fileName' => $fileName,
+      'filePath' => $filePath,
+      'headers' => $headers
+    ];
+  }
+
   //HELPERS
-  private function agreementsFileName($companyId, $headerId)
+
+  public function agreementsResultToXlsx($data, $fileName)
+  {
+    $spreadsheet = new Spreadsheet();
+    $sheet1 = $spreadsheet->getActiveSheet();
+    $sheet1->setTitle('Nautraleza Contable');
+    $sheet1->setCellValue('A1', 'Cuenta');
+    $sheet1->setCellValue('B1', 'Linea');
+    $sheet1->setCellValue('C1', 'Nombre');
+    $sheet1->setCellValue('D1', 'Saldo');
+    $sheet1->setCellValue('E1', 'Operativo');
+    $sheet1->setCellValue('F1', 'Diferencia');
+
+    for ($i = 1; $i < count($data); $i++) {
+      $row = $i + 1;
+      $sheet1->setCellValue('A' . $row, $data[$i]['account']);
+      $sheet1->setCellValue('B' . $row, $data[$i]['line']);
+      $sheet1->setCellValue('C' . $row, $data[$i]['name']);
+      $sheet1->setCellValue('D' . $row, $data[$i]['saldoActual']);
+      $sheet1->setCellValue('E' . $row, $data[$i]['sumSalcuo']);
+      $sheet1->setCellValue('F' . $row, $data[$i]['difference']);
+    }
+
+    $writer = new Xlsx($spreadsheet);
+    $writer->save($fileName);
+  }
+
+  private function agreementsFileName($companyId, $headerId, $type = 'json')
   {
 
-    return "{$companyId}/agreements/{$headerId}.json";
+    return "{$companyId}/agreements/{$headerId}." . $type;
   }
 
   private function agreementsFileToInsert($file, $headerId)

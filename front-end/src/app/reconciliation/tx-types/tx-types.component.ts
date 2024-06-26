@@ -148,7 +148,7 @@ export class TxTypesComponent implements OnInit {
     this.apiRequest.store(formData, `localTxType`)
       .subscribe( (response)=>{
         
-        Swal.close();
+    
         this.getLocalTxTypes();
         this.tabSet.activeId = 'localList';
         this.localTxTypeNew = new LocalTxTypeModel();
@@ -191,7 +191,7 @@ export class TxTypesComponent implements OnInit {
       .subscribe( (response)=>{
         
         
-        Swal.close();
+    
         this.getExternalTxTypes();
         this.tabSet.activeId = 'List';
         this.externalTxTypeNew = new ExternalTxTypeModel();
@@ -246,7 +246,7 @@ export class TxTypesComponent implements OnInit {
     }, (err)=>{
       
       console.error(err);
-      Swal.close();
+  
       Swal.fire({
         title: 'Procesando',
         imageUrl: "assets/images/2.gif",
@@ -296,7 +296,7 @@ export class TxTypesComponent implements OnInit {
     }, (err)=>{
       
       console.error(err);
-      Swal.close();
+  
       Swal.fire({
         title: 'Procesando',
         imageUrl: "assets/images/2.gif",

@@ -16,8 +16,9 @@ export class AgreementsResultComponent implements OnInit, OnDestroy {
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   
-  dataSource = new MatTableDataSource<AgreeementsResult>([]);
+  date: string = null;
 
+  dataSource = new MatTableDataSource<AgreeementsResult>([]);
   displayedColumns = [
     'account',
     'line',
@@ -36,29 +37,38 @@ export class AgreementsResultComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.agreementsService.selectedResult$
       .pipe(
         takeUntil(this.destroyed$),
-        mergeMap((response) =>this.agreementsRequestService.getAgreementsResult(response))
+        mergeMap((response) =>{
+          this.date = response;
+          return this.agreementsRequestService.getAgreementsResult(response)
+        })
       ).subscribe(
         (response) => {
-          Swal.close();
           this.dataSource.data = response;
         },
         (err) => {
-          Swal.close();
+      
           console.error(err)
         }
       );
   }
 
+  download(){
+    this.agreementsRequestService.downloadBalanceResult(this.date).subscribe(
+      (response) => {
+        const myBlob = new Blob([response], {type: 'application/vnd.oasis.opendocument.spreadsheet'});
+        const downloadUrl = URL.createObjectURL(myBlob);
+        const a = document.createElement('a');
+
+        a.href = downloadUrl;
+        a.download = `convenios_${this.date}.xlsx`;
+        a.click();
+      }
+    );
+  }
 
   ngOnDestroy(): void {
     this.destroyed$.next(true);

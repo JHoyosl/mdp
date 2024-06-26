@@ -46,20 +46,14 @@ export class BeginProcessComponent implements OnInit {
   }
 
   getBalanceByProcess(process: string): void {
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.reconciliaitionService.getProcessById(process).subscribe(
       (response) => {
-        Swal.close();
+    
         this.accountsResume = response;
       },
       (err) => {
-        Swal.close();
+    
         console.error(err);
       }
     );
@@ -92,22 +86,16 @@ export class BeginProcessComponent implements OnInit {
       date
     }
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
 
     this.reconciliaitionService.uploadIni(data).subscribe(
       (response) => {
-        Swal.close();
+    
         this.location.go(`/conciliar/initAcc/${response[0].process}`);
         this.accountsResume = response;
       },
       (err) => {
-        Swal.close();
+    
         Swal.fire({
           type: 'error',
           text: err.error,

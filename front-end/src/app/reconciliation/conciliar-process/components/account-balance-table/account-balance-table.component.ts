@@ -36,21 +36,15 @@ export class AccountBalanceTableComponent implements OnInit {
     const formData = this.account.toFormData();
     formData.append('file', file[0]);
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.apiRequest.uploadFile(formData, 'conciliar/uploadAccountFile')
       .subscribe((response) => {
-        Swal.close();
+    
         this.toastr.success('Archivo cargado', 'Success!');
         this.updateInfo.emit(true);
 
       }, (err) => {
-        Swal.close();
+    
         Swal.fire(
           'Error',
           err.error.errors.join(),

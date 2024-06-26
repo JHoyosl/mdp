@@ -49,13 +49,7 @@ export class FileMappingComponent implements OnInit {
   }
 
   getMappingInfo(){
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.mappingFileService.index(this.sourceFilter).subscribe(
       (response) => this.mappingInfo = response,
       (err) => console.error(err),
@@ -122,17 +116,11 @@ export class FileMappingComponent implements OnInit {
 
   deleteMapping(mapping: MappingFileIndex){
     this.toDeleteMapping = null;
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.mappingFileService.deleteMap(mapping.id).subscribe(
       (_) => {
         this.toastr.info('Mapeo Eliminado');
-        Swal.close();
+    
         this.getMappingInfo();
       },
       (err) => {

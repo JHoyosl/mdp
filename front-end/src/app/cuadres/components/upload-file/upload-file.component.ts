@@ -55,22 +55,16 @@ export class UploadFileComponent implements OnInit {
       source: 'balance',
     }
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
 
 
     this.cuadreRequestsService.uploadCuadreInfo(data).subscribe(
       (response) => {
-        Swal.close();
+    
         this.toastr.success('Cargue exitoso', 'Correcto');
         this.close('success');
     }, (err) => {
-      Swal.close();
+  
       const error = err.error as GenericError;
       if(error.message === 'The given data was invalid.'){
         if(error['date'] !== 'undefined'){

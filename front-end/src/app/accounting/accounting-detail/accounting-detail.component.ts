@@ -45,11 +45,11 @@ export class AccountingDetailComponent implements OnInit {
       this.accountingService.getAccountingItems(this.accountingHeader).subscribe(
         (response) => {
           this.dataSource.data = response;
-          Swal.close();
+      
         },
         (err) => {
           console.error(err);
-          Swal.close();
+      
         }
       );
     }

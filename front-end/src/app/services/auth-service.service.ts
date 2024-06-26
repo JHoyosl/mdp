@@ -137,7 +137,7 @@ export class AuthServiceService {
     this.http.post(`${this.url}oauth/token`, body)
       .subscribe((response) => {
 
-        Swal.close();
+    
         const created_at = Date.now();
         const expires_in = (response['expires_in'] * 1000) + created_at;
 

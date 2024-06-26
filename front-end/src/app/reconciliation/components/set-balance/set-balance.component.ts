@@ -113,20 +113,14 @@ export class SetBalanceComponent implements OnInit {
         externalBalance: item.externalBalance,
       };
     })
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.reconciliationService.uploadBalance(process, data).subscribe(
       (response) => {
-        Swal.close();
+    
         this.updateBalance.emit(true);
       },
       (err) => {
-        Swal.close();
+    
         console.error(err);
       }
     );

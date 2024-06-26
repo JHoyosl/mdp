@@ -39,20 +39,14 @@ export class ThirdPartiesDetailsComponent implements OnInit {
   }
 
   getHeaderItems(header: ThirdPartyHeaderInfo): void {
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.thirdPartiesService.getThirdPartyItems(header).subscribe(
       (response) => {
         this.dataSource.data = response;
-        Swal.close();
+    
       },
       (err) => {
-        Swal.close();
+    
         console.error(err);
       }
     );

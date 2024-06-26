@@ -25,21 +25,15 @@ export class ThirdPartiesComponent implements OnInit {
   }
 
   getAccountsList(): void {
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.thirdPartiesService.getThirdPartiesAccounts().subscribe(
       (response) => {
         this.accountList = response;
-        Swal.close();
+    
       },
       (err) => {
         console.error(err);
-        Swal.close();
+    
       }
     );
   }

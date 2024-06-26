@@ -11,6 +11,10 @@ use App\Models\BalanceGeneralHeader;
 use Illuminate\Support\Facades\Schema;
 use App\Models\OperativoConvenioHeader;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
+use function PHPSTORM_META\type;
 
 class BalanceSheetReconciliation
 {
@@ -200,8 +204,6 @@ class BalanceSheetReconciliation
     return $info;
   }
 
-
-
   public function uploadBlance($date, $file, $companyId, $user)
   {
     $balanceSheetHeaderTableName = $this->getBalanceSheetHeadersTableName($companyId);
@@ -263,12 +265,85 @@ class BalanceSheetReconciliation
     return 'success';
   }
 
-  //HELPERS 
-
-  private function balanceNaturalezaFileName($companyId, $headerId)
+  public function downloadBalanceNaturaleza($companyId, $date)
   {
 
-    return "{$companyId}/balanceNaturaleza/{$headerId}.json";
+    $headerTableName = $this->getBalanceSheetHeadersTableName($companyId);
+    $header = (new BalanceGeneralHeader($headerTableName))->where('fecha', $date)->first();
+    $fileName = $this->balanceNaturalezaFileName($companyId, $header->id);
+    $jsonFile = Storage::disk('cuadres')->get($fileName);
+
+    $data = json_decode($jsonFile, true);
+    // return $data;
+    $fileName = $this->balanceNaturalezaFileName($companyId, $header->id, 'xlsx');
+
+    $filePath = Storage::disk('cuadres')->path($fileName);
+
+    $this->balanceNaturalezaToXlsx($data, $filePath);
+
+    $fileName = 'balance_naturaleza_' . $date . '.xlsx';
+    $headers = array(
+      'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition' => "attachment; filename='" . $fileName . "'"
+    );
+    return [
+      'fileName' => $fileName,
+      'filePath' => $filePath,
+      'headers' => $headers
+    ];
+  }
+  //HELPERS 
+  private function balanceNaturalezaToXlsx($data, $fileName)
+  {
+    $spreadsheet = new Spreadsheet();
+    $sheet1 = $spreadsheet->getActiveSheet();
+    $sheet1->setTitle('Nautraleza Contable');
+    $sheet1->setCellValue('A1', 'Cuenta');
+    $sheet1->setCellValue('B1', 'Descripción');
+    $sheet1->setCellValue('C1', 'Naturaleza');
+    $sheet1->setCellValue('D1', 'Tipo');
+    $sheet1->setCellValue('E1', 'Saldo');
+
+
+    for ($i = 1; $i < count($data['nautralezaContable']); $i++) {
+      $row = $i + 1;
+      $sheet1->setCellValue('A' . $row, $data['nautralezaContable'][$i]['cuenta_maestro']);
+      $sheet1->setCellValue('B' . $row, $data['nautralezaContable'][$i]['descripcion']);
+      $sheet1->setCellValue('C' . $row, $data['nautralezaContable'][$i]['naturaleza']);
+      $sheet1->setCellValue('D' . $row, $data['nautralezaContable'][$i]['tipo_saldo']);
+      $sheet1->setCellValue('E' . $row, $data['nautralezaContable'][$i]['saldo_actual']);
+    }
+
+    $spreadsheet->createSheet();
+    $sheet2 = $spreadsheet->getSheet(1);
+    $sheet2->setTitle('Nautraleza Operativa');
+    $sheet2->setCellValue('A1', 'Cuenta');
+    $sheet2->setCellValue('B1', 'Descripción');
+    $sheet2->setCellValue('C1', 'Naturaleza');
+    $sheet2->setCellValue('D1', 'Tipo');
+    $sheet2->setCellValue('E1', 'Saldo');
+
+    for ($i = 1; $i < count($data['nautralezaOperativa']); $i++) {
+      $row = $i + 1;
+      $sheet2->setCellValue('A' . $row, $data['nautralezaOperativa'][$i]['cuenta_maestro']);
+      $sheet2->setCellValue('B' . $row, $data['nautralezaOperativa'][$i]['descripcion']);
+      $sheet2->setCellValue('C' . $row, $data['nautralezaOperativa'][$i]['naturaleza']);
+      $sheet2->setCellValue('D' . $row, $data['nautralezaOperativa'][$i]['tipo_saldo']);
+      $sheet2->setCellValue('E' . $row, $data['nautralezaOperativa'][$i]['saldo_actual']);
+    }
+
+    $writer = new Xlsx($spreadsheet);
+    $writer->save($fileName);
+  }
+
+  private function balanceNaturalezaFileName($companyId, $headerId, $type = 'json')
+  {
+    if ($type == 'json') {
+      return "{$companyId}/balanceNaturaleza/{$headerId}.json";
+    }
+    if ($type == 'xlsx') {
+      return "{$companyId}/balanceNaturaleza/{$headerId}.xlsx";
+    }
   }
 
   private function balanceToInsert($file, $headerId)
@@ -307,7 +382,6 @@ class BalanceSheetReconciliation
     return $rows;
   }
 
-  //HELPERS
   private function fixedCurrency($separator, $value)
   {
     $value = str_replace('$', '', $value);
@@ -320,6 +394,7 @@ class BalanceSheetReconciliation
     }
     return floatval($value);
   }
+
 
   // TABLES CEATION
   public function createBalanceSheetHeadersTable($tableName)

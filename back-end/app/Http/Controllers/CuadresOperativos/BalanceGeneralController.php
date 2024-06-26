@@ -170,79 +170,22 @@ class BalanceGeneralController extends ApiController
             'date' => 'required|unique:' . $tableName . ',fecha'
         ]);
 
-        return $this->balanceSheetReconciliation->uploadBlance(
+        $result = $this->balanceSheetReconciliation->uploadBlance(
             $request->date,
             $request->file,
             $this->companyId,
             $this->user
         );
-        return "hola";
-        $user = Auth::user();
-        $header_id = null;
 
+        return $this->showMessage($result);
+    }
 
-        $balanceHeaders = new BalanceGeneralHeader($this->balance_general_headers);
+    public function downloadBalanceNaturaleza(Request $request)
+    {
+        $date = $request->date;
+        $info = $this->balanceSheetReconciliation->downloadBalanceNaturaleza($this->companyId, $date);
 
-        $header = $balanceHeaders->where('fecha', $request->fecha)->first();
-
-        if ($header == null) {
-
-            $headerInsert = new BalanceGeneralHeader($this->balance_general_headers);
-
-            $insertValues = [
-                'fecha' => $request->fecha,
-                'file_name' => $request->file->getClientOriginalName(),
-                'file_path' => $request->file->store($user->current_company . '/balances', 'cuadres'),
-                'status' => BalanceGeneralHeader::OPEN,
-                'user' => $user->id,
-            ];
-
-
-
-            $headerInsert->insert($insertValues);
-
-            $balanceHeaders = new BalanceGeneralHeader($this->balance_general_headers);
-
-            $header = $balanceHeaders->where('fecha', $request->fecha)->first();
-        } else {
-
-            $header->file_path = $request->file->store($user->current_company . '/balances', 'cuadres');
-            $header->save();
-        }
-
-
-        $deleteBalance = new BalanceGeneralItem($this->balance_general_items);
-        $deleteBalance->where('header_id', $header->id)->delete();
-
-        $array = Excel::toArray(new BalanceGeneralImport, storage_path('app/cuadres/' . $header->file_path));
-
-        $insertArray = [];
-
-
-        for ($i = 5; $i < count($array[0]); $i++) {
-
-            $tmpArray = [
-
-                'header_id' => $header->id,
-                'registro' => $array[0][$i][0],
-                'agencia' => $array[0][$i][1],
-                'cuenta' => $array[0][$i][2],
-                'nombre_cuenta' => $array[0][$i][3],
-                'saldo_anterior' => $array[0][$i][4],
-                'debito' => $array[0][$i][5],
-                'credito' => $array[0][$i][6],
-                'saldo_actual' => $array[0][$i][7],
-
-            ];
-
-            $insertArray[] = $tmpArray;
-        }
-
-
-        $tableBalanceItems = new BalanceGeneralItem($this->balance_general_items);
-        $tableBalanceItems->insert($insertArray);
-
-        return $this->showArray($header);
+        return response()->download($info['filePath'], $info['fileName'], $info['headers']);
     }
 
     public function getBalance(Request $request)

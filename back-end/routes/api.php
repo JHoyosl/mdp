@@ -130,6 +130,7 @@ Route::resource('localTxType', 'Masters\TxType\LocalTxTypeController', ['except'
 
 
 Route::group(['prefix' => 'cuadresOperativos'], function () {
+	Route::get('balanceGeneral/downloadBalanceNaturaleza', 'CuadresOperativos\BalanceGeneralController@downloadBalanceNaturaleza');
 	Route::get('balanceGeneral/getBalanceNaturaleza', 'CuadresOperativos\BalanceGeneralController@getBalanceNaturaleza');
 	Route::post('balanceGeneral/uploadBalance', 'CuadresOperativos\BalanceGeneralController@uploadBalance');
 	Route::resource('balanceGeneral', 'CuadresOperativos\BalanceGeneralController');
@@ -138,6 +139,7 @@ Route::group(['prefix' => 'cuadresOperativos'], function () {
 	Route::post('agreements/master/upload', 'CuadresOperativos\AgreementsMasterController@uploadMaster');
 
 	Route::get('agreements/result', 'CuadresOperativos\AgreementsController@agreementsResult');
+	Route::get('agreements/downloadResult', 'CuadresOperativos\AgreementsController@downloadResult');
 	Route::post('agreements/upload', 'CuadresOperativos\AgreementsController@upload');
 	Route::resource('agreements', 'CuadresOperativos\AgreementsController');
 });

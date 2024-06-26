@@ -54,13 +54,7 @@ export class ListExternalTxTypeComponent implements OnInit {
   }
 
   delete(el: ExternalTxType){
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.txTypeService.deleteExternal(el.id).subscribe(
       (_) => {
         this.toastr.success('Tx eliminada');

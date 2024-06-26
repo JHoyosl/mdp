@@ -49,4 +49,12 @@ export class AgreementsRequestService {
       map(response => response.data)
     )
   }
+
+  downloadBalanceResult(date: string){
+    const params = new HttpParams()
+      .append('date', date);
+
+    return this.httpClient
+      .get(`${this.baseUrl}/downloadResult`,{params, responseType:'arraybuffer'});
+  }
 }

@@ -63,12 +63,12 @@ export class ThirdPartiesInfoComponent implements OnInit {
     }
     this.thirdPartiesService.getAccountHeaderInfo(this._account.id).subscribe(
       (response) => {
-        Swal.close();
+    
         this.dataSource.data = response;
       },
       (err) => {
         console.error(err);
-        Swal.close();
+    
       },
     );
   }
@@ -94,13 +94,7 @@ export class ThirdPartiesInfoComponent implements OnInit {
 
   onDelete( header: ThirdPartyHeaderInfo ): void {
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
 
     this.thirdPartiesService.deleteLastUpload(header).subscribe(
       (response) => {

@@ -38,6 +38,7 @@ import { environment } from 'src/environments/environment';
 import { CurrencyPipe } from "@angular/common";
 import { AuthInterceptor } from './Interceptors/aut-hInterceptor';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
+import { LoadingInterceptor } from './Interceptors/loading-Interceptor';
 
 
 const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
@@ -81,6 +82,11 @@ const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: LoadingInterceptor,
       multi: true
     },
     { provide: MAT_DATE_LOCALE, useValue: 'en-GB' },

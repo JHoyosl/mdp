@@ -205,12 +205,12 @@ export class BalanceGeneralComponent implements OnInit {
           .subscribe( (response) => {
             
             this.dateChange();
-            Swal.close();
+        
             
             
           }, (err) => {
             console.error(err);
-            Swal.close();
+        
             Swal.fire(
               'Error',
               err.error.errors.join(),
@@ -246,7 +246,7 @@ export class BalanceGeneralComponent implements OnInit {
     this.apiRequest.uploadFile(formData,'balanceGeneral/uploadBalance')
       .subscribe( (response)=>{
         
-        Swal.close();
+    
         this.showUpload = false;
         this.showConvenios = true;
         // this.dateChange();
@@ -254,7 +254,7 @@ export class BalanceGeneralComponent implements OnInit {
         
       }, (err) =>{
         
-        Swal.close();
+    
         Swal.fire(
           'Error',
           err.error.errors.join(),

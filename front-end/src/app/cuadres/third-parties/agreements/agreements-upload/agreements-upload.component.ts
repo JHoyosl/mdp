@@ -68,13 +68,7 @@ export class AgreementsUploadComponent implements OnInit, OnDestroy {
       file: this.uploadForm.get('file').value,
     }
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
 
     this.agreementsRequestService.uploadAgreements(uploadAgreement).subscribe(
       (response) => {
@@ -84,13 +78,13 @@ export class AgreementsUploadComponent implements OnInit, OnDestroy {
         this.agreementsRequestService.getAgreementsIndex().subscribe(
           (response) => {
             this.agreementsService.setAgreementList(response);
-            Swal.close();
+        
           }
         )
       },
       (err) => {
         console.error(err);
-        Swal.close();
+    
       },
     )
   }

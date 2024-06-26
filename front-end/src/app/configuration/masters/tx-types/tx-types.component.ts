@@ -32,13 +32,7 @@ export class TxTypesComponent implements OnInit {
 
 
   getTxTypeInfo(){
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     zip(
       this.txTypeService.indexExternal(),
       this.txTypeService.indexLocal()
@@ -54,33 +48,21 @@ export class TxTypesComponent implements OnInit {
   }
 
   getLocalTx(){
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.txTypeService.indexLocal().subscribe(
       (response) => {
         this.lTxTypelist = response;
-        Swal.close();
+    
       },
       (err) => {
         console.error(err)
-        Swal.close();
+    
       },
     )
   }
 
   getExternalTx(){
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.txTypeService.indexExternal().subscribe(
       (response) => {
         this.eTxTypeList = response;
@@ -88,7 +70,7 @@ export class TxTypesComponent implements OnInit {
       },
       (err) => {
         console.error(err)
-        Swal.close();
+    
       },
       
     )

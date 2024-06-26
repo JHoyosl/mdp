@@ -51,13 +51,7 @@ export class ListLocalTxTypeComponent implements OnInit {
   }
 
   delete(el: LocalTxType){
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.txTypeService.deleteLocal(el.id).subscribe(
       (_) => {
         this.toastr.success('Tx eliminada');

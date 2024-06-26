@@ -129,13 +129,7 @@ export class AccountsComponent implements OnInit {
       return;
     }
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
 
     this.apiRequest.putAccount( this.updateAccount )
     .subscribe( (response) => {
@@ -150,7 +144,7 @@ export class AccountsComponent implements OnInit {
     }, (err) => {
 
       console.error(err);
-      Swal.close();
+  
       Swal.fire({
         title: 'Procesando',
         imageUrl: 'assets/images/2.gif',
@@ -211,13 +205,7 @@ export class AccountsComponent implements OnInit {
       return;
     }
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
 
     const formData = this.newAccount.toFormData();
 
@@ -226,7 +214,7 @@ export class AccountsComponent implements OnInit {
     this.apiRequest.store(formData, `accounts`)
       .subscribe( (response) => {
 
-        Swal.close();
+    
         this.getAccounts();
         this.tabSet.activeId = 'List';
         this.newAccount = new AccountModel();

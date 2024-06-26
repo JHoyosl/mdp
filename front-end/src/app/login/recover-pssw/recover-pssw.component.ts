@@ -39,7 +39,7 @@ export class RecoverPsswComponent implements OnInit {
     });
     this.auth.recoveryPassword(this.user.email)
       .subscribe( (response)=>{
-        Swal.close();
+    
         Swal.fire({
           type: 'warning',
           text: 'Se envió un mensaje al correo : \n'+this.user.email

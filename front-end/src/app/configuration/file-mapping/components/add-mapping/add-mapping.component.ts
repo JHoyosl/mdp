@@ -52,13 +52,7 @@ export class AddMappingComponent implements OnInit {
   }
 
   getBankList(){
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.bankRequestsService.index().subscribe(
       (response) => {
         const sortByName = response.sort((a,b) => a.name < b.name ? -1 : 1) 
@@ -150,13 +144,7 @@ export class AddMappingComponent implements OnInit {
     if(hasError){
       return;
     }
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.mappingFilesService.store(storeRequest).subscribe(
       (response) => {
         this.mappingResult.emit(true);
@@ -175,13 +163,7 @@ export class AddMappingComponent implements OnInit {
     const file = this.formFileMapping.get('file').value;
     const skipTop = this.formFileMapping.get('skipTop').value;
     const type = this.formFileMapping.get('type').value;
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     zip(
       this.mappingFilesService.mappingFileToArray(skipTop, file),
       this.mappingFilesService.getMapIndex(type)

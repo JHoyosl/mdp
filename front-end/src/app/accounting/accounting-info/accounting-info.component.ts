@@ -25,17 +25,11 @@ export class AccountingInfoComponent implements OnInit {
   }
 
   getAccountingHeaders(): void {
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.accountingService.index().subscribe(
       (response) => {
         this.accountingHeaders = response;
-        Swal.close();
+    
       }
     );
   }
@@ -64,13 +58,7 @@ export class AccountingInfoComponent implements OnInit {
   }
 
   removeHeader(accountingHeader: AccountingHeader): void{
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.accountingService.deleteLastHeader(accountingHeader)
       .subscribe(
         () => {

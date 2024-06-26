@@ -116,11 +116,11 @@ export class ReconciliationBalanceComponent implements OnInit {
     
     this.reconciliationService.uploadBalance(process, data).subscribe(
       (response) => {
-        Swal.close();
+    
         // this.updateBalance.emit(true);
       },
       (err) => {
-        Swal.close();
+    
         console.error(err);
       }
     );

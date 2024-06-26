@@ -4,6 +4,8 @@
         type="button"
         color="primary" 
         class="mr-2 mt-1"
+        (click)="download()"
+        [disabled]="!selectedDate"
       >Descargar</button>
   </div>
   <div class="row">

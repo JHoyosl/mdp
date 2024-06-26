@@ -41,13 +41,7 @@ export class EditTxTypeComponent implements OnInit {
   }
 
   getBankList(){
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.bankRequestsService.index().subscribe(
       (response) => {
         const sortByName = response.sort((a,b) => a.name < b.name ? -1 : 1) 
@@ -87,13 +81,7 @@ export class EditTxTypeComponent implements OnInit {
       ? this.getExternalForm()
       : this.getLocalForm();
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     if(this.isExternal){
       this.txTypeService.updateExternal(this._txType.id, txTypeInfo as UpdateExternalTxRequest).subscribe(
         (_) => {

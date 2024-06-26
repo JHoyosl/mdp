@@ -12,7 +12,7 @@ import { CuadresService } from './cuadres.service';
 })
 export class CuadresRequestsService {
   
-  private baseUrl = `${environment.url}cuadresOperativos`;
+  private baseUrl = `${environment.url}cuadresOperativos/balanceGeneral`;
   
   constructor(
     private httpClient: HttpClient, 
@@ -20,7 +20,7 @@ export class CuadresRequestsService {
   ) { }
 
   getBalanceIndex(): Observable<BalanceList[]> {
-    return this.httpClient.get<GenericResponse>(`${this.baseUrl}/balanceGeneral`).pipe(
+    return this.httpClient.get<GenericResponse>(`${this.baseUrl}`).pipe(
       map(response => {
         this.cuadresService.setBalanceList(response.data);
         return response.data;
@@ -32,7 +32,7 @@ export class CuadresRequestsService {
     const params = new HttpParams()
       .append('date',date);
 
-    return this.httpClient.get<GenericResponse>(`${this.baseUrl}/balanceGeneral/getBalanceNaturaleza`,{params}).pipe(
+    return this.httpClient.get<GenericResponse>(`${this.baseUrl}/getBalanceNaturaleza`,{params}).pipe(
       map( result => result.data));
   }
 
@@ -41,7 +41,7 @@ export class CuadresRequestsService {
     formData.append('date', data.date);
     formData.append('file', data.file);
     
-    const url = `${this.baseUrl}/balanceGeneral/uploadBalance`;
+    const url = `${this.baseUrl}/uploadBalance`;
 
     return this.httpClient.post(url,formData);
   }
@@ -57,5 +57,11 @@ export class CuadresRequestsService {
     )
   }
 
-  
+  downloadBalanceResult(date: string){
+    const params = new HttpParams()
+      .append('date', date);
+
+    return this.httpClient
+      .get(`${this.baseUrl}/downloadBalanceNaturaleza`,{params, responseType:'arraybuffer'});
+  }
 }

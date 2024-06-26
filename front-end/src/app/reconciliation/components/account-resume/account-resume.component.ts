@@ -78,16 +78,10 @@ export class AccountResumeComponent implements OnInit, OnDestroy {
   }
 
   getResume(): void {
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.reconciliationService.getAccountResume().subscribe(
       (response) => {
-        Swal.close();
+    
         this.accounts = response;
         this.dataSource.data = this.accounts;
         if(this.accounts.length === 0){
@@ -95,7 +89,7 @@ export class AccountResumeComponent implements OnInit, OnDestroy {
         }
       },
       (err) => {
-        Swal.close();
+    
         console.error(err);
       }
     );

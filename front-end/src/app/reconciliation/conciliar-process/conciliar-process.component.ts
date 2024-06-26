@@ -141,18 +141,12 @@ export class ConciliarProcessComponent implements OnInit {
   }
 
   isIniConciliar() {
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
 
 
     this.apiRequest.postForm(null, `conciliar/isIniConciliar`)
       .subscribe( (response) => {
-        Swal.close();
+    
         if (!response['status']) {
 
           this.tabSet.activeId = 'inicial';
@@ -165,7 +159,7 @@ export class ConciliarProcessComponent implements OnInit {
         }
 
       }, (err) => {
-        Swal.close();
+    
         console.error(err);
 
       });
@@ -257,16 +251,10 @@ export class ConciliarProcessComponent implements OnInit {
     const formData = this.currentUploadInfoAccount.toFormData();
     formData.append('file', file.item(0));
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
     this.apiRequest.uploadFile(formData, 'conciliar/uploadAccountFile')
       .subscribe((response) => {
-        Swal.close();
+    
         for ( let i = 0; i < this.conciliarBanks.length; i++) {
 
           for ( let j = 0; j < this.conciliarBanks[i].data.length; j++) {
@@ -282,7 +270,7 @@ export class ConciliarProcessComponent implements OnInit {
           }
         }
       }, (err) => {
-        Swal.close();
+    
         Swal.fire(
           'Error',
           err.error.errors.join(),
@@ -355,24 +343,18 @@ export class ConciliarProcessComponent implements OnInit {
 
   uploadContableFile( contableFile: File){
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
 
     const formData = new FormData();
     formData.append('file', contableFile);
 
     this.apiRequest.uploadFile(formData, 'conciliar/uploadConciliarContable')
       .subscribe( (response) => {
-        Swal.close();
+    
         this.getAccounts();
         
       }, (err) => {
-        Swal.close();
+    
         console.error(err);
       });
 
@@ -380,13 +362,7 @@ export class ConciliarProcessComponent implements OnInit {
 
   uploadIni( iniFile: File ) {
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
 
     const formData = new FormData();
     formData.append('file', iniFile);
@@ -394,7 +370,7 @@ export class ConciliarProcessComponent implements OnInit {
     this.apiRequest.uploadFile(formData, 'conciliar/uploadIniFile')
       .subscribe( (response) => {
 
-        Swal.close();
+    
         this.isUploadFile = false;
         this.localIniArray = response.local;
         this.externalIniArray = response.external;
@@ -437,7 +413,7 @@ export class ConciliarProcessComponent implements OnInit {
         this.orderConsolidadoInfo();
       }, (err) => {
 
-        Swal.close();
+    
         Swal.fire(
           'Error',
           err.error.errors.join(),

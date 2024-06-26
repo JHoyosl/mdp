@@ -44,24 +44,18 @@ export class AccountingUploadComponent implements OnInit {
       file: this.uploadForm.get('file').value,
     }
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
 
     this.accountingService.uploadAccountingInfo(uploadAccountingInfo)
       .subscribe(
         (response) => {
-          Swal.close();
+      
           
           this.toastr.success('Cargue exitoso', 'Correcto');
           this.successUpload.emit(true);
           
       }, (err) => {
-        Swal.close();
+    
         Swal.fire({
           type: 'error',
           text: err.error,

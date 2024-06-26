@@ -54,22 +54,16 @@ export class ThirdPartiesUploadComponent implements OnInit {
       file: this.uploadForm.get('file').value,
     }
 
-    Swal.fire({
-      title: 'Procesando',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      imageUrl: 'assets/images/2.gif',
 
-    });
 
     this.thirdPartiesService.uploadThirdPartiesInfo(uploadAccountingInfo).subscribe(
         (response) => {
-          Swal.close();
+      
           this.toastr.success('Cargue exitoso', 'Correcto');
           this.successUpload.emit(0);
           
       }, (err) => {
-        Swal.close();
+    
         console.error(err.error);
       });
   }
