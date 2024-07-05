@@ -119,6 +119,20 @@ class SetAccountinTxService
   }
 
   /**
+   * Return RegType result
+   */
+  public function getTxQueryByRegType($companyId)
+  {
+    $locaTxTypeTableName = $this->getLocalTxTypeTableName($companyId);
+    $locaValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
+
+    $queryStr =  "SELECT * FROM mdp.reconciliation_local_values_2
+    WHERE 
+    tipo_registro IN ('ABONOS POR NOMINA','TRASLADOS') AND 
+    descripcion REGEXP '^([0-9])+[[:space:]]-[[:space:]](\W[[:space:]])*'"
+  }
+
+  /**
    * Return REFERENCE result
    */
   public function getTxQueryByReference($companyId, $localAccountsArray)

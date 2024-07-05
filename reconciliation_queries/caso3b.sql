@@ -33,7 +33,7 @@ LEFT JOIN
          OR `localValues`.`referencia_3` = `reconciliation_external_values_2`.`referencia_1` )
         
 WHERE
-    `localValues`.`local_account`  IN ('11100501','11100502','11100506', '11100507')
+    `localValues`.`local_account`  IN ('11100501','11100502','11100506''11100507')
     AND `localValues`.`valor_debito` > 0
     AND `reconciliation_external_values_2`.`local_account` IS NOT NULL
 	AND `localValues`.`fecha_movimiento` <= '2023-09-30') AS firstRun

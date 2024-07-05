@@ -109,7 +109,13 @@ class ReconciliationService
         // $this->automaticReconciliation->case2b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
         // $this->automaticReconciliation->case2c($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
         // $this->automaticReconciliation->case2d($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
-        // $this->automaticReconciliation->case2e($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case3($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->caseNomina($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // while ($this->automaticReconciliation->case4($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process));
+        // $this->automaticReconciliation->case5($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case5B($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case5C($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // return $this->automaticReconciliation->case6($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
     }
 
 
