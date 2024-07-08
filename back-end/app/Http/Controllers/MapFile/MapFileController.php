@@ -59,7 +59,8 @@ class MapFileController extends ApiController
     public function index(MapFileIndexRequest $request)
     {
         $mapFiles = $this->mappingFileService->index($this->companyId, $request->source);
-        return $this->showArray(new MapFileIndexCollection($mapFiles), 200);
+
+        return $this->showArray(MapFileIndexResource::collection($mapFiles), 200);
     }
 
     /**

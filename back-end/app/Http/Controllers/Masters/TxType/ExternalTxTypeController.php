@@ -39,7 +39,7 @@ class ExternalTxTypeController extends ApiController
     public function index()
     {
         $txs = $this->txTypeService->indexExternalTx();
-        return $this->showMessage(new ExternalTxTypeCollection($txs));
+        return $this->showMessage(ExternalTxTypeResource::collection($txs));
     }
 
     /**

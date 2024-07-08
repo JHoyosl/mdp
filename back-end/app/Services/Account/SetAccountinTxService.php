@@ -29,7 +29,7 @@ class SetAccountinTxService
         mdp." . $locaValuesTableName . ".tx_type_name = mdp." . $locaTxTypeTableName . ".tx
       WHERE 
         mdp." . $locaValuesTableName . ".local_account  IN (" . implode(',', $localAccountsArray) . ") AND
-        mdp." . $locaTxTypeTableName . ".type = 'SIMPLE' AND 
+        mdp." . $locaTxTypeTableName . ".type = '" . LocalTxType::SIMPLE_TYPE . "' AND 
         mdp." . $locaValuesTableName . ".tx_type_id IS NULL";
 
     $result = DB::select($queryStr);
@@ -89,6 +89,31 @@ class SetAccountinTxService
   }
 
   /**
+   * Update values with corresponding txtypes
+   */
+  public function updateSimpleTrTx($companyId, $localAccountsArray)
+  {
+    $locaTxTypeTableName = $this->getLocalTxTypeTableName($companyId);
+    $locaValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
+
+    $queryStr = "UPDATE
+        mdp." . $locaValuesTableName . "
+      LEFT JOIN 
+        mdp." . $locaTxTypeTableName . " ON 
+        mdp." . $locaTxTypeTableName . ".description = mdp." . $locaValuesTableName . ".tipo_registro
+      SET 
+      " . $locaValuesTableName . ".tx_type_id = " . $locaTxTypeTableName . ".id,
+      " . $locaValuesTableName . ".tx_type_name = " . $locaTxTypeTableName . ".tx
+      WHERE 
+        mdp." . $locaValuesTableName . ".local_account  IN (" . implode(',', $localAccountsArray) . ") AND
+        mdp." . $locaTxTypeTableName . ".type = '" . LocalTxType::SIMPLE_TYPE . "' AND 
+        mdp." . $locaValuesTableName . ".tx_type_id IS NULL";
+
+    $result = DB::select($queryStr);
+
+    return $result;
+  }
+  /**
    * Return COMPUESTO result
    */
   public function getCompuestoTxQuery($companyId, $localAccountsArray)
@@ -129,7 +154,7 @@ class SetAccountinTxService
     $queryStr =  "SELECT * FROM mdp.reconciliation_local_values_2
     WHERE 
     tipo_registro IN ('ABONOS POR NOMINA','TRASLADOS') AND 
-    descripcion REGEXP '^([0-9])+[[:space:]]-[[:space:]](\W[[:space:]])*'"
+    descripcion REGEXP '^([0-9])+[[:space:]]-[[:space:]](\W[[:space:]])*'";
   }
 
   /**
@@ -186,6 +211,36 @@ class SetAccountinTxService
         mdp." . $locaValuesTableName . ".tx_type_id IS NULL
       ORDER BY mdp." . $locaValuesTableName . ".id";
 
+    $result = DB::select($queryStr);
+
+    return $result;
+  }
+
+  /**
+   * Return TR result
+   */
+  public function getSimpleTrTxQuery($companyId, $localAccountsArray)
+  {
+    $locaTxTypeTableName = $this->getLocalTxTypeTableName($companyId);
+    $locaValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
+
+    $queryStr = "SELECT 
+        mdp." . $locaTxTypeTableName . ".id,
+        mdp." . $locaValuesTableName . ".id,
+        mdp." . $locaTxTypeTableName . ".description as txDescription,
+        mdp." . $locaValuesTableName . ".descripcion as valueDescription,
+        mdp." . $locaTxTypeTableName . ".tx
+      FROM
+          mdp." . $locaValuesTableName . "
+      LEFT JOIN 
+        mdp." . $locaTxTypeTableName . " ON 
+          mdp." . $locaTxTypeTableName . ".description = mdp." . $locaValuesTableName . ".tipo_registro
+      WHERE 
+        mdp." . $locaValuesTableName . ".local_account  IN (" . implode(',', $localAccountsArray) . ") AND
+        mdp." . $locaTxTypeTableName . ".type = '" . LocalTxType::SIMPLE_TYPE . "' AND 
+        mdp." . $locaValuesTableName . ".tx_type_id IS NULL
+      ORDER BY mdp." . $locaValuesTableName . ".id";
+    return $queryStr;
     $result = DB::select($queryStr);
 
     return $result;

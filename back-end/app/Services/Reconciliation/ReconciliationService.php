@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\ReconciliationLocalValues;
 use Illuminate\Database\Schema\Blueprint;
 use App\Models\ReconciliationExternalValues;
+use App\Models\ReconciliationHeader;
 use App\Services\Account\AccountingService;
 use App\Services\Account\SetAccountinTxService;
 use App\Services\ThirdParties\ThirdPartiesService;
@@ -73,7 +74,7 @@ class ReconciliationService
         $localValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
         $externalValuesTableName = $this->getReconciliationExternalValuesTableName($companyId);
 
-        $itemsTable = new ReconciliationItem($itemsTableName);
+        $itemsTable = new ReconciliationItem();
         $localValuesTable = new ReconciliationLocalValues($localValuesTableName);
         $externalValuesTable = new ReconciliationExternalValues($localValuesTableName);
 
@@ -95,7 +96,8 @@ class ReconciliationService
     {
         $pitvotTableName = $this->getReconciliationPivotTableName($companyId);
         $itemTableName = $this->getReconciliationItemTableName($companyId);
-        $itemTable = new ReconciliationItem($itemTableName);
+        $itemTable = new ReconciliationItem();
+        $itemTable->setTable($itemTableName);
         $items = $itemTable->where('process', $process)->with('account')->get();
 
         $accounts = $items->map(function ($value) {
@@ -111,11 +113,12 @@ class ReconciliationService
         // $this->automaticReconciliation->case2d($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
         // $this->automaticReconciliation->case3($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
         // $this->automaticReconciliation->caseNomina($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+
         // while ($this->automaticReconciliation->case4($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process));
         // $this->automaticReconciliation->case5($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
         // $this->automaticReconciliation->case5B($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
         // $this->automaticReconciliation->case5C($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
-        // return $this->automaticReconciliation->case6($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        return $this->automaticReconciliation->case6($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
     }
 
 
@@ -348,7 +351,8 @@ class ReconciliationService
     {
 
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
-        $itemsTable = new ReconciliationItem($itemsTableName);
+        $itemsTable = new ReconciliationItem();
+        $itemsTable->setTable($itemsTableName);
         $items = [];
         $invalidItems = [];
         foreach ($accounts as $value) {
@@ -423,7 +427,8 @@ class ReconciliationService
     public function getAccountResume($companyId)
     {
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
-        $itemsTable = new ReconciliationItem($itemsTableName);
+        $itemsTable = new ReconciliationItem();
+        $itemsTable->setTable($itemsTableName);
 
         if (is_Null($itemsTable->first())) {
             return collect([]);
@@ -475,14 +480,15 @@ class ReconciliationService
 
     public function setBalance($companyId, $balanceInfo, $process)
     {
-        $tableName = $this->getReconciliationItemTableName($companyId);
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
         $itemsIds = [];
         foreach ($balanceInfo as $value) {
             $itemsIds[] = $value['id'];
         }
 
-        $itemsTable = new ReconciliationItem($tableName);
-        $items = $itemsTable->where($tableName . '.process', $process)
+        $itemsTable = new ReconciliationItem();
+        $itemsTable->setTable($itemsTableName);
+        $items = $itemsTable->where($itemsTableName . '.process', $process)
             ->whereIn('id', $itemsIds)
             ->get();
         $invalidItems = [];
@@ -519,14 +525,15 @@ class ReconciliationService
 
     public function setInitBalance($companyId, $balanceInfo, $process)
     {
-        $tableName = $this->getReconciliationItemTableName($companyId);
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
         $itemsIds = [];
         foreach ($balanceInfo as $value) {
             $itemsIds[] = $value['id'];
         }
 
-        $itemsTable = new ReconciliationItem($tableName);
-        $items = $itemsTable->where($tableName . '.process', $process)
+        $itemsTable = new ReconciliationItem();
+        $itemsTable->setTable($itemsTableName);
+        $items = $itemsTable->where($itemsTableName . '.process', $process)
             ->whereIn('id', $itemsIds)
             ->get();
 
@@ -598,18 +605,19 @@ class ReconciliationService
     public function getAccountProcess($companyId)
     {
 
-        $ItemstableName = $this->getReconciliationItemTableName($companyId);
-        if (!Schema::hasTable($ItemstableName)) {
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
+        if (!Schema::hasTable($itemsTableName)) {
             return [];
         }
-        $itemTable = new ReconciliationItem($ItemstableName);
-        return $itemTable->join('accounts', $ItemstableName . '.account_id', 'accounts.id')
+        $itemsTable = new ReconciliationItem();
+        $itemsTable->setTable($itemsTableName);
+        return $itemsTable->join('accounts', $itemsTableName . '.account_id', 'accounts.id')
             ->join('banks', 'banks.id', 'accounts.bank_id')
             ->where('company_id', $companyId)
             ->orderBy('start_date', 'DESC')
             ->orderBy('account_id', 'DESC')
             ->get();
-        $items = Account::join($ItemstableName, 'accounts.id', $ItemstableName . '.id')
+        $items = Account::join($itemsTableName, 'accounts.id', $itemsTableName . '.id')
             ->join('banks', 'banks.id', 'accounts.bank_id')
             ->where('company_id', $companyId)
             ->orderBy('start_date', 'DESC')
@@ -633,7 +641,8 @@ class ReconciliationService
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
 
         foreach ($balance as $value) {
-            $item = (new ReconciliationItem($itemsTableName))
+            $item = (new ReconciliationItem())
+                ->setTable($itemsTableName)
                 ->where('id', $value['item_id'])
                 ->first();
 
@@ -650,7 +659,8 @@ class ReconciliationService
     {
 
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
-        $ids = (new ReconciliationItem($itemsTableName))
+        $ids = (new ReconciliationItem())
+            ->setTable($itemsTableName)
             ->where('process', $process)
             ->pluck('id')
             ->toArray();
@@ -704,10 +714,10 @@ class ReconciliationService
 
     public function createInitReconciliationItem($account, $companyId, $startDate, $endDate, $process)
     {
-        $tableName = $this->getReconciliationItemTableName($companyId);
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
 
-        $itemsTable = new ReconciliationItem($tableName);
-
+        $itemsTable = new ReconciliationItem();
+        $itemsTable->setTable($itemsTableName);
         $item = $itemsTable->where('account_id', $account->id)
             ->orderBy('start_date', 'ASC')
             ->first();
@@ -740,7 +750,9 @@ class ReconciliationService
                 'updated_at' => $now
             ];
 
-            $newItem = (new ReconciliationItem($tableName))->insertGetId($newData);
+            $newItem = (new ReconciliationItem())
+                ->setTable($itemsTableName)
+                ->insertGetId($newData);
             return $newItem;
         } else {
             $item->process = $process;
@@ -991,17 +1003,18 @@ class ReconciliationService
 
     public function balanceCloseAccount($externalBalance, $localBalance, $accountId, $companyId)
     {
-        $conciliarItemsTable = 'conciliar_items_' . $companyId;
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
         $conciliarHeaderTable = 'conciliar_headers_' . $companyId;
 
-        $itemTable = new ReconciliationItem($conciliarItemsTable);
-        $headers = new ReconciliationItem($conciliarHeaderTable);
+        $itemsTable = new ReconciliationItem();
+        $itemsTable->setTable($itemsTableName);
+        $headers = new ReconciliationHeader($conciliarHeaderTable);
 
         $openHeader = $headers->where('status', ReconciliationItem::OPEN_STATUS)
             ->orderBy('id', 'desc')->first();
 
 
-        $openItemTable = $itemTable->where('header_id', '=', $openHeader->id)
+        $openItemTable = $itemsTable->where('header_id', '=', $openHeader->id)
             ->where('account_id', '=', $accountId)
             ->first();
 
@@ -1033,13 +1046,13 @@ class ReconciliationService
 
         $conciliarHeaderTableName = 'conciliar_headers_' . $companyId;
         $conciliarItemsTableName = 'conciliar_items_' . $companyId;
-        $conciliarHeaderTable = new ReconciliationItem($conciliarHeaderTableName);
+        $conciliarHeaderTable = new ReconciliationItem();
 
         $conciliarHeaderClose = $conciliarHeaderTable->where('status', '=', ReconciliationItem::CLOSE_STATUS)
             ->orderBy('id', 'desc')
             ->first();
 
-        $conciliarItemsTable = new ReconciliationItem($conciliarItemsTableName);
+        $conciliarItemsTable = new ReconciliationItem();
 
         $conciliarItemsClose = $conciliarItemsTable
             ->where('header_id', '=', $conciliarHeaderClose->id)
@@ -1061,7 +1074,7 @@ class ReconciliationService
         $externalTable = new ReconciliationExternalValues($externalTableName);
         $localTable = new ReconciliationLocalValues($localTableName);
 
-        $items = (new ReconciliationItem($itemTableName))
+        $items = (new ReconciliationItem())
             ->where('process', $process)
             ->get();
         DB::beginTransaction();
@@ -1070,7 +1083,7 @@ class ReconciliationService
             $externalTable->where('item_id', $value->id)->delete();
             $localTable->where('item_id', $value->id)->delete();
         }
-        $items = (new ReconciliationItem($itemTableName))
+        $items = (new ReconciliationItem())
             ->where('process', $process)
             ->delete();
 
@@ -1086,7 +1099,7 @@ class ReconciliationService
     public function hasReconciliationBefore($startDate, $endDate, $companyId, $accountId = NULL)
     {
         $itemTableName = $this->getReconciliationItemTableName($companyId);
-        $itemsTable = new ReconciliationItem($itemTableName);
+        $itemsTable = new ReconciliationItem();
         if ($accountId !=  NULL) {
             $item = $itemsTable
                 ->where('account_id', $accountId)
@@ -1145,7 +1158,7 @@ class ReconciliationService
     public function getProcessStep($process, $companyId)
     {
         $tableName = $this->getReconciliationItemTableName($companyId);
-        $itemTable = new ReconciliationItem($tableName);
+        $itemTable = new ReconciliationItem();
         $item = $itemTable->where('process', $process)->first();
         return $item->step;
     }
@@ -1157,7 +1170,7 @@ class ReconciliationService
     public function getAccountingMaxDate($companyId)
     {
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
-        $table = new ReconciliationItem($itemsTableName);
+        $table = new ReconciliationItem();
         $info = $table->orderBy('end_date', 'DESC')->first();
         return $info->end_date;
     }

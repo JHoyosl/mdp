@@ -63,7 +63,7 @@ class AutomaticReconciliation
         GROUP BY externalId) as T2
         WHERE vdLocal = vcExternal";
 
-    return $queryStr;
+    // return $queryStr;
     $result = DB::select($queryStr);
   }
 
@@ -239,11 +239,6 @@ class AutomaticReconciliation
     $localValuesTable = $this->getReconciliationLocalValuesTableName($companyId);
     $pivotTable = $this->getReconciliationPivotTableName($companyId);
 
-    $pivot = DB::select("SELECT * FROM " . $pivotTable . " WHERE `case` = 'CASE4' AND process = '" . $process . "'");
-    if (count($pivot) > 0) {
-      throw new Exception('Ya existe un CASE4 para este procesos', '400');
-    }
-
     $queryStr = "SELECT 
         GROUP_CONCAT(localValues.id) AS localId,
         " . $externalValuesTable . ".id AS externalId,
@@ -281,10 +276,10 @@ class AutomaticReconciliation
     $result = DB::select($queryStr);
 
     if (count($result) == 0) {
-      $pivot = DB::select("SELECT * FROM " . $pivotTable . " WHERE `case` = 'CASE4' AND process = '" . $process . "'");
-      if (count($pivot) > 0) {
-        throw new Exception('Ya existe un Caso 4 para este procesos', '400');
-      }
+      // $pivot = DB::select("SELECT * FROM " . $pivotTable . " WHERE `case` = 'CASE4' AND process = '" . $process . "'");
+      // if (count($pivot) > 0) {
+      //   throw new Exception('Ya existe un Caso 4 para este procesos', '400');
+      // }
       return false;
     }
 

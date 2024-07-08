@@ -45,7 +45,7 @@ class LocalTxTypeController extends ApiController
     public function index()
     {
         $txs = $this->txTypeService->indexLocalTx($this->companyId);
-        return $this->showMessage(new LocalTxTypeCollection($txs), 200);
+        return $this->showMessage(LocalTxTypeResource::collection($txs), 200);
     }
 
     /**
