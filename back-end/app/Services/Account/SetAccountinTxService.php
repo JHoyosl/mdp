@@ -11,6 +11,39 @@ class SetAccountinTxService
 
   use TableNamming;
 
+  public function setAllTx($companyId, $localAccountsArray)
+  {
+    // order mandatory
+    $this->updateTrasladosRecTxQuery($companyId, $localAccountsArray);
+    $this->updateSimpleTrTx($companyId, $localAccountsArray);
+    $this->updateSimpleTx($companyId, $localAccountsArray);
+    $this->updateTxByReference($companyId, $localAccountsArray);
+    $this->updateCompuestoTx($companyId, $localAccountsArray);
+  }
+
+  public function updateTrasladosRecTxQuery($companyId, $localAccountsArray)
+  {
+    $locaTxTypeTableName = $this->getLocalTxTypeTableName($companyId);
+    $locaValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
+
+    $localTx = (new LocalTxType())->setTable($locaTxTypeTableName)
+      ->where('reference', 'TRASLADO NOMBRE CEDULA')->first();
+
+    $queryStr = "UPDATE " . $locaValuesTableName . "
+      SET 
+        " . $locaValuesTableName . ".tx_type_id = " . $localTx->id . ",
+        " . $locaValuesTableName . ".tx_type_name = '" . $localTx->tx . "'
+      WHERE
+        tipo_registro = 'TRASLADOS'
+        AND " . $locaValuesTableName . ".tx_type_id IS NULL
+        AND " . $locaValuesTableName . ".nombre_tercero NOT LIKE '%COMPENSAR%'
+        AND " . $locaValuesTableName . ".descripcion REGEXP '\d*[[:space:]]-[[:space:]]\W*'
+        AND " . $locaValuesTableName . ".local_account  IN (" . implode(',', $localAccountsArray) . ")";
+
+    $result = DB::select($queryStr);
+    return $result;
+  }
+
   /**
    * Return case one result
    */
@@ -144,20 +177,6 @@ class SetAccountinTxService
   }
 
   /**
-   * Return RegType result
-   */
-  public function getTxQueryByRegType($companyId)
-  {
-    $locaTxTypeTableName = $this->getLocalTxTypeTableName($companyId);
-    $locaValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
-
-    $queryStr =  "SELECT * FROM mdp.reconciliation_local_values_2
-    WHERE 
-    tipo_registro IN ('ABONOS POR NOMINA','TRASLADOS') AND 
-    descripcion REGEXP '^([0-9])+[[:space:]]-[[:space:]](\W[[:space:]])*'";
-  }
-
-  /**
    * Return REFERENCE result
    */
   public function getTxQueryByReference($companyId, $localAccountsArray)
@@ -240,7 +259,31 @@ class SetAccountinTxService
         mdp." . $locaTxTypeTableName . ".type = '" . LocalTxType::SIMPLE_TYPE . "' AND 
         mdp." . $locaValuesTableName . ".tx_type_id IS NULL
       ORDER BY mdp." . $locaValuesTableName . ".id";
-    return $queryStr;
+
+    $result = DB::select($queryStr);
+
+    return $result;
+  }
+
+  /**
+   * Return NUMERO CEDULA TRASLADO
+   */
+  public function getTrasladosRecTxQuery($companyId, $localAccountsArray)
+  {
+    $locaTxTypeTableName = $this->getLocalTxTypeTableName($companyId);
+    $locaValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
+
+    $queryStr = "SELECT 
+        *
+      FROM
+          " . $locaValuesTableName . "
+      WHERE
+      tipo_registro = 'TRASLADOS'
+      AND " . $locaValuesTableName . ".tx_type_id IS NULL
+      AND " . $locaValuesTableName . ".nombre_tercero NOT LIKE '%COMPENSAR%'
+      AND " . $locaValuesTableName . ".descripcion REGEXP '\d*[[:space:]]-[[:space:]]\W*'
+      AND " . $locaValuesTableName . ".local_account  IN (" . implode(',', $localAccountsArray) . ")";
+
     $result = DB::select($queryStr);
 
     return $result;

@@ -121,10 +121,12 @@ class AccountingController extends ApiController
         ]);
         $accounts = json_decode($request->accounts);
 
-        $this->setAccountinTxService->updateSimpleTrTx($this->companyId, $accounts);
-        $this->setAccountinTxService->updateSimpleTx($this->companyId, $accounts);
-        $this->setAccountinTxService->updateTxByReference($this->companyId, $accounts);
-        $this->setAccountinTxService->updateCompuestoTx($this->companyId, $accounts);
-        // return $this->setAccountinTxService->getSimpleTrTxQuery($this->companyId, $accounts);
+        // $this->setAccountinTxService->updateSimpleTrTx($this->companyId, $accounts);
+        // $this->setAccountinTxService->updateSimpleTx($this->companyId, $accounts);
+        // $this->setAccountinTxService->updateTrasladosRecTxQuery($this->companyId, $accounts);
+        // $this->setAccountinTxService->updateTxByReference($this->companyId, $accounts);
+        // $this->setAccountinTxService->updateCompuestoTx($this->companyId, $accounts);
+
+        $this->setAccountinTxService->setAllTx($this->companyId, $accounts);
     }
 }

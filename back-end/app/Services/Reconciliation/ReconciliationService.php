@@ -22,6 +22,11 @@ use App\Services\ThirdParties\ThirdPartiesService;
 
 class ReconciliationService
 {
+    public const TYPE_LE = 'LE';
+    public const TYPE_EL = 'EL';
+    public const TYPE_LL = 'LL';
+    public const TYPE_EE = 'EE';
+
     private ThirdPartiesService $thirdPartiesService;
     private AccountingService $accountingService;
     private SetAccountinTxService $setAccountinTxService;
@@ -104,21 +109,50 @@ class ReconciliationService
             return $value->account->local_account;
         });
 
+        // // CASOS CON REFERENCIA
         // $this->automaticReconciliation->case1($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
         // $this->automaticReconciliation->case1b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
         // $this->automaticReconciliation->case1c($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case3($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case4($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case4b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->caseNomina($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case5($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case5b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+
+        // // TIPO DE TX
         // $this->automaticReconciliation->case2($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
         // $this->automaticReconciliation->case2b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
         // $this->automaticReconciliation->case2c($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
         // $this->automaticReconciliation->case2d($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
-        // $this->automaticReconciliation->case3($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
-        // $this->automaticReconciliation->caseNomina($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
 
-        // while ($this->automaticReconciliation->case4($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process));
-        // $this->automaticReconciliation->case5($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
-        // $this->automaticReconciliation->case5B($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
-        // $this->automaticReconciliation->case5C($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
-        return $this->automaticReconciliation->case6($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case6($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case6b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case6c($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case6d($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+
+        // $this->automaticReconciliation->case7($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case7b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+
+        // $this->automaticReconciliation->case8($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case8b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+
+        // $this->automaticReconciliation->case9($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case9b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case9c($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case9d($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+
+        // $this->automaticReconciliation->case11($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case11b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case11c($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        $this->automaticReconciliation->case11d($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case13($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case13b($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+
+        // $this->automaticReconciliation->case5c($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+        // $this->automaticReconciliation->case5d($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
+
+        // return $this->automaticReconciliation->case6($accounts, $companyId, $items[0]->start_date, $items[0]->end_date, $process);
     }
 
 
@@ -1429,10 +1463,12 @@ class ReconciliationService
     {
 
         Schema::create($pivotTableName, function (Blueprint $table) {
-            $table->foreignId('external_value');
-            $table->foreignId('local_value');
+            $table->foreignId('source_id');
+            $table->foreignId('target_id');
+            $table->string('type');
             $table->string('case');
-            $table->primary(['external_value', 'local_value']);
+            $table->string('process');
+            $table->primary(['source_id', 'target_id']);
         });
     }
 }
