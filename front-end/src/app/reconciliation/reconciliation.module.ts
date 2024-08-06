@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Routes, RouterModule } from '@angular/router';
-import { ConciliarMapComponent } from './conciliar-map/conciliar-map.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConciliarProcessComponent } from './conciliar-process/conciliar-process.component';
@@ -24,7 +23,6 @@ import { ReconciliationBalanceComponent } from './components/reconciliation-bala
 
 @NgModule({
   declarations: [
-    ConciliarMapComponent,
     ConciliarProcessComponent,
     TxTypesComponent,
     AccountBalanceTableComponent,

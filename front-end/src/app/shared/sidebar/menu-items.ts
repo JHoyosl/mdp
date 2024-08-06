@@ -153,25 +153,6 @@ export const ROUTES: RouteInfo[] = [
   },
   {
     path: '',
-    title: 'Conf. de Archivos',
-    icon: 'icon-Folder-Organizing',
-    class: 'has-arrow',
-    extralink: false,
-    submenu: [
-      {
-        path: '/conciliar/conciliarMap',
-        title: 'Conciliaciónes',
-        icon: '',
-        class: '',
-        extralink: false,
-        submenu: []
-      },
-      
-      
-    ]
-  },
-  {
-    path: '',
     title: 'Configuración',
     icon: 'icon-Equalizer',
     class: 'has-arrow',

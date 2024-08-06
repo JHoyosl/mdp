@@ -1,38 +1,38 @@
 version: "3"
 
 services:
-  mdp-mysql:
-    image: mysql:8.0
-    container_name: mdp-mysql
-    cap_add:
-      - SYS_NICE # CAP_SYS_NICE
-    ports:
-      - "3004:3306"
-    volumes:
-      - ./run/var:/var/lib/mysql
-    networks:
-      - network_mdp
-    environment:
-      # Usar random por defecto para prd
-      - MYSQL_ROOT_PASSWORD=securerootpassword
-      - MYSQL_DATABASE=${DB_DATABASE}
-      - MYSQL_USER=${DB_USERNAME}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
+  # mdp-mysql-update:
+  #   image: mysql:8.0
+  #   container_name: mdp-mysql-update
+  #   cap_add:
+  #     - SYS_NICE # CAP_SYS_NICE
+  #   ports:
+  #     - "3010:3306"
+  #   volumes:
+  #     - ./run/var:/var/lib/mysql
+  #   networks:
+  #     - network_mdp
+  #   environment:
+  #     # Usar random por defecto para prd
+  #     - MYSQL_ROOT_PASSWORD=securerootpassword
+  #     - MYSQL_DATABASE=${DB_DATABASE}
+  #     - MYSQL_USER=${DB_USERNAME}
+  #     - MYSQL_PASSWORD=${DB_PASSWORD}
 
-  mdp-laravel:
+  mdp-laravel-update:
     build: ./back-end
-    container_name: mdp-laravel
+    container_name: mdp-laravel-update
     ports:
-      - "9004:80"
+      - "9010:80"
     networks:
       - network_mdp
     volumes:
       - ./back-end:/var/www/html/
       - ./vhost.conf:/etc/apache2/sites-available/000-default.conf
-    depends_on:
-      - mdp-mysql
-    links:
-      - mdp-mysql
+    # depends_on:
+    #   - mdp-mysql-update
+    # links:
+    #   - mdp-mysql-update
     command: >
       bash -c "cd /var/www/html/
       && php artisan storage:link
@@ -45,7 +45,7 @@ services:
   #   ports:
   #     - "4204:80"
   #   depends_on:
-  #     - mdp-laravel
+  #     - mdp-laravel-update
   #   networks:
   #     - network_mdp
   #   volumes:
@@ -54,7 +54,7 @@ services:
   #     - ./front-end/nginx/nginx.conf:/etc/nginx/nginx.conf
   #     - ./front-end/nginx/blockips.conf:/etc/nginx/blockips.conf
   #   links:
-  #     - mdp-laravel
+  #     - mdp-laravel-update
 
 networks:
   network_mdp:

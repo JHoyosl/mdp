@@ -22,7 +22,7 @@ class TxTypeService
       TableServices::createLocalTxTypeTable($companyId);
     }
 
-    $txTypes = (new LocalTxType($tableName))->get();
+    $txTypes = (new LocalTxType())->setTable($tableName)->get();
     return $txTypes;
   }
 
@@ -55,7 +55,7 @@ class TxTypeService
   public function storeLocalTx($companyId, $description, $tx, $reference, $type, $sign)
   {
     $tableName = $this->getLocalTxTableName($companyId);
-    $table = new LocalTxType($tableName);
+    $table = (new LocalTxType())->setTable($tableName);
     $txTypeCheck = $table->where('description', $description)
       ->where('tx', $tx)
       ->where('type', $type)
@@ -67,7 +67,7 @@ class TxTypeService
       throw  new \Exception('Ya existe el tipo de tx');
     }
 
-    $newTxTypes = new LocalTxType($tableName);
+    $newTxTypes = (new LocalTxType())->setTable($tableName);
     $newTxTypes->description = $description;
     $newTxTypes->tx = $tx;
     $newTxTypes->reference = $reference;
@@ -82,7 +82,7 @@ class TxTypeService
   public  function updateLocalTx($id, $companyId, $description, $tx, $reference, $type, $sign)
   {
     $tableName = $this->getLocalTxTableName($companyId);
-    $txType = (new LocalTxType($tableName))->findOrFail($id);
+    $txType = (new LocalTxType())->setTable($tableName)->findOrFail($id);
 
     $txType->description = $description;
     $txType->tx = $tx;
@@ -111,7 +111,7 @@ class TxTypeService
   public function deleteLocalTx($companyId, $id)
   {
     $tableName = $this->getLocalTxTableName($companyId);
-    $table = (new LocalTxType($tableName))->where('id', $id)->delete();
+    $table = (new LocalTxType())->setTable($tableName)->where('id', $id)->delete();
 
     return $table;
   }

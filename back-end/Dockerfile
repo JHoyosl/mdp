@@ -1,45 +1,28 @@
-FROM php:7.4-apache
+# Use an official PHP image with Apache as the base image.
+FROM php:8.2.0-apache
 
-# 1. Install development packages and clean up apt cache.
+# Set environment variables.
+ENV ACCEPT_EULA=Y
+LABEL maintainer="jhoyosl@globalsys.co"
+
+# Install system dependencies.
 RUN apt-get update && apt-get install -y \
-    cron \
-    nano \
-    curl \
-    g++ \
-    git \
-    libbz2-dev \
-    libfreetype6-dev \
-    libicu-dev \
-    libjpeg-dev \
-    libmcrypt-dev \
     libpng-dev \
-    libreadline-dev \
-    sudo \
-    unzip \
+    libjpeg-dev \
+    libfreetype6-dev \
     zip \
+    unzip \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Apache configs + document root.
-RUN echo "ServerName laravel-app.local" >> /etc/apache2/apache2.conf
+# Enable Apache modules required for Laravel.
+RUN a2enmod rewrite
 
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# Set the Apache document root
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 
-# 3. mod_rewrite for URL rewrite and mod_headers for .htaccess extra headers like Access-Control-Allow-Origin-
-RUN a2enmod rewrite headers
-
-# 4. Start with base PHP config, then add extensions.
-RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
-
-RUN docker-php-ext-install \
-    bcmath \
-    bz2 \
-    calendar \
-    iconv \
-    intl \
-    opcache \
-    pdo_mysql 
+# Update the default Apache site configuration
+COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 
 # PHP
 # Install intl extension
@@ -53,14 +36,14 @@ RUN apt-get update \
     && apt-get install -y libzip-dev \
     && docker-php-ext-install zip
 
+RUN docker-php-ext-install \
+    pdo_mysql 
 # Install mbstring extension
 RUN apt-get update \
     && apt-get install -y \
-    libxml2-dev \
     libxslt-dev \
     && docker-php-ext-install -j$(nproc) \
     dom \
-    xmlrpc \
     xsl
 
 # Install SOAP extension
@@ -77,22 +60,31 @@ RUN apt-get update \
 # Install gd extension
 RUN docker-php-ext-install gd
 
+# Install Composer globally.
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# 5. Composer.
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Create a directory for your Laravel application.
+WORKDIR /var/www/html
 
-# 6. Set timezone
+# Copy the Laravel application files into the container.
+COPY . .
+
+# Install Laravel dependencies using Composer.
+# RUN composer install --no-interaction --optimize-autoloader
+
+# Set permissions for Laravel.
+RUN chown -R www-data:www-data storage bootstrap/cache
+
+# Set timezone
 RUN apt-get update && apt-get install -y tzdata
 ENV TZ=America/Bogota
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Copy laravel proyect
-# COPY . /var/www/html/
+# Expose port 80 for Apache.
+EXPOSE 80
 
-WORKDIR /var/www/html/
+# Start Apache web server.
+CMD ["php artisan storage:link"]
+# CMD ["php artisan storage:link","apache2-foreground"]
 
-
-# Instalar proyecto y dependencias
-#RUN composer update
-#RUN composer install
-
+# You can add any additional configurations or commands required for Laravel 10 here.

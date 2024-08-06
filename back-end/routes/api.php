@@ -264,10 +264,11 @@ Route::name('getUserRoles')
 	->get('user/getUserRoles/{userId}', 'User\UserSecurityController@getUserRoles');
 
 
+// Oauth
+Route::group(['prefix' => 'oauthController'], function () {
+	Route::get('clients', 'Security\OauthController@clients');
+});
 
-Passport::routes(function ($router) {
-	$router->forClients();
-}, ['middleware' => 'auth:api']);
 
 // Route::name('verify')->get('users/verify/{token}','User\UserController@verify');
 //Oauth

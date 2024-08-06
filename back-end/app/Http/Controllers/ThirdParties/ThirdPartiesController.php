@@ -125,6 +125,9 @@ class ThirdPartiesController extends ApiController
         ]);
         $accounts = json_decode($request->accounts);
 
-        return $this->setThirdPartiesTxService->updateCompuestoTx($this->companyId, $accounts);
+        $this->setThirdPartiesTxService->updateSimpleTx($this->companyId, $accounts);
+        $this->setThirdPartiesTxService->updateCompuestoTx($this->companyId, $accounts);
+        $this->setThirdPartiesTxService->updateReferenceByRFGuionQuery($this->companyId, $accounts);
+        // return $this->setThirdPartiesTxService->updateCompuestoTx($this->companyId, $accounts);
     }
 }

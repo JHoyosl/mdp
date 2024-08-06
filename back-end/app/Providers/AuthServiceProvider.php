@@ -30,7 +30,7 @@ class AuthServiceProvider extends ServiceProvider
         /*Route::group([ 'middleware' => 'cors'], function() {
             Passport::routes();
         });*/
-        Passport::routes();
+
         Passport::tokensExpireIn(Carbon::now()->addDays(30));
         Passport::refreshTokensExpireIn(Carbon::now()->addDays(30));
 
@@ -39,5 +39,4 @@ class AuthServiceProvider extends ServiceProvider
             'search-user' => 'Get user list base on user type'
         ]);
     }
-    
 }

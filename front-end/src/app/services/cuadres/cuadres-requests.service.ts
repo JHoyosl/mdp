@@ -47,7 +47,7 @@ export class CuadresRequestsService {
   }
 
   deletBalanceUploaded(id: string):Observable<boolean>{
-    return this.httpClient.delete<GenericResponse>(`${this.baseUrl}/balanceGeneral/${id}`).pipe(
+    return this.httpClient.delete<GenericResponse>(`${this.baseUrl}/${id}`).pipe(
       map((response) => {
         if(response.data === 'success'){
           return true;

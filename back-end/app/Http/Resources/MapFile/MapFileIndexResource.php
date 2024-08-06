@@ -2,11 +2,10 @@
 
 namespace App\Http\Resources\MapFile;
 
+use Illuminate\Http\Request;
 use App\Http\Resources\Bank\BankResource;
-use App\Http\Resources\Company\CompanyResource;
 use App\Http\Resources\User\UserResource;
-use App\Models\Bank;
-use App\Models\User;
+use App\Http\Resources\Company\CompanyResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class MapFileIndexResource extends JsonResource
@@ -14,10 +13,9 @@ class MapFileIndexResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,

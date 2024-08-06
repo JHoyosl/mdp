@@ -4,6 +4,7 @@ import { UsersComponent } from './users.component';
 import { Routes, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { UsersListComponent } from './components/users-list/users-list.component';
 
 const routes: Routes = [
   {
@@ -13,7 +14,8 @@ const routes: Routes = [
 ];
 @NgModule({
   declarations: [
-    UsersComponent
+    UsersComponent,
+    UsersListComponent
   ],
   imports: [
     CommonModule,
