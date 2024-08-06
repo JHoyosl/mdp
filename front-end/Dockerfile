@@ -9,7 +9,7 @@ WORKDIR /app
 # Copy all files from current directory to working dir in image
 COPY . .
 # install node modules and build assets
-RUN npm i && npm run build -- --output-hashing=all
+RUN npm i && npm rebuild node-sass && npm run build --output-hashing=all
 
 # nginx state for serving content
 FROM nginx:alpine

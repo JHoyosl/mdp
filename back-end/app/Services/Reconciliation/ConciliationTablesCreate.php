@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Services\Reconciliation;
+
 use Illuminate\Support\Facades\Schema;
 
 class ConciliationTablesCreate
