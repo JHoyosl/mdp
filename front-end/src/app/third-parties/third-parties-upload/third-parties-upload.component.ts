@@ -33,7 +33,7 @@ export class ThirdPartiesUploadComponent implements OnInit {
   ngOnInit() {
   }
   
-  onSubmit(form, event){
+  onSubmit(event){
     event.preventDefault();
 
     if(!this.uploadForm.valid){

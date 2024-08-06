@@ -43,8 +43,6 @@ services:
   mdp-ng:
     container_name: mdp-ng
     build: ./front-end
-    expose:
-      - 4002
     ports:
       - "4204:80"
     depends_on:

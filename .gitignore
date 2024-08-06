@@ -1,1 +1,3 @@
 run/
+.vscode/
+front-end/src/environment/environment.ts

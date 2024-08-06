@@ -1,11 +1,11 @@
 
 <mat-horizontal-stepper [linear]="isLinear" [selectedIndex]="stepperIndex" #stepper>
-  <mat-step [stepControl]="firstFormGroup">
+  <mat-step >
     <ng-container>
       <app-balance-accounts></app-balance-accounts>
     </ng-container>
   </mat-step>
-  <mat-step [stepControl]="secondFormGroup">
+  <mat-step >
     <app-reconciliation-balance 
       [reconciliationItem]="items"
     ></app-reconciliation-balance>

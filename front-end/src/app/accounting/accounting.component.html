@@ -24,7 +24,7 @@
                   <app-accounting-upload (successUpload)="successUpload($event)"></app-accounting-upload>
                 </ng-template>
               </ngb-tab>
-              <ngb-tab title="Detalle"  id='detail' [disabled]="updateDisabled">
+              <ngb-tab title="Detalle"  id='detail' >
                   <ng-template ngbTabContent>
                       <app-accounting-detail [accountingHeader]="selectedAccountingHeader"></app-accounting-detail>
                   </ng-template>
