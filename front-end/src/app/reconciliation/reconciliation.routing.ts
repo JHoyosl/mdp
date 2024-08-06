@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { ConciliarMapComponent } from './conciliar-map/conciliar-map.component';
 import { ConciliarProcessComponent } from './conciliar-process/conciliar-process.component';
 import { TxTypesComponent } from './tx-types/tx-types.component';
 
@@ -71,17 +70,6 @@ export const reconciliationRoutes: Routes = [
       component: ReconciliationHisotryComponent,
       data: {
         title: 'Historial'
-      }
-    },
-    {
-      path: 'conciliarMap',
-      component: ConciliarMapComponent,
-      data: {
-        title: 'Mapeo Conciliación',
-        urls: [
-          { title: 'Dashboard', url: '/dashboard' },
-          { title: 'Mapeo de Archivos' }
-        ]
       }
     },
     {
