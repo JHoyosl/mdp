@@ -11,10 +11,8 @@ class AgreementsHeader extends Model
     const OPEN = 'open';
     const CLOSE = 'close';
 
-    public function __construct($tableName)
+    public function __construct()
     {
-
-        $this->table = $tableName;
     }
     /**
      * The attributes that are mass assignable.

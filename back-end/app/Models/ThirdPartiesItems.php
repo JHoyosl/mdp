@@ -12,10 +12,8 @@ class ThirdPartiesItems extends Model
     protected $table = "third_parties_items_";
     protected $dates = ['deleted_at'];
 
-    public function __construct($tableName)
+    public function __construct()
     {
-
-        $this->table = $tableName;
     }
     /**
      * The attributes that are mass assignable.

@@ -87,4 +87,4 @@ EXPOSE 80
 CMD ["php artisan storage:link"]
 # CMD ["php artisan storage:link","apache2-foreground"]
 
-# You can add any additional configurations or commands required for Laravel 10 here.
+# You can add any additional configurations or commands required for Laravel 11 here.

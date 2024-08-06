@@ -9,20 +9,21 @@ use App\Models\Account;
 use App\Models\Company;
 use App\Models\LocalTxType;
 use Illuminate\Http\Request;
-use App\Models\ConciliarItem;
 use App\Models\ExternalTxType;
+use App\Models\ReconciliationItem;
 use Illuminate\Support\Facades\DB;
-use App\Models\ConciliarLocalValues;
 use App\Models\ReconciliationHeader;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ApiController;
-use App\Models\ReconciliationItem;
 use Illuminate\Support\Facades\Session;
 
 use Illuminate\Support\Facades\Storage;
+use App\Models\ReconciliationLocalValues;
+use App\Models\ReconciliationExternalValues;
 use App\Services\Reconciliation\ReconciliationService;
 use App\Services\Reconciliation\UploadConciliarContableService;
 use App\Services\Reconciliation\UploadConciliationExternalService;
+use App\Traits\TableNamming;
 
 ini_set('memory_limit', '1000M');
 
@@ -34,6 +35,7 @@ define("RECAUDO_COLS", 13);
 
 class ReconciliationController extends ApiController
 {
+    use TableNamming;
     protected $conciliar_headers_table = '';
     protected $conciliar_items_table = '';
     protected $conciliar_items_tmp_table = '';
@@ -311,8 +313,8 @@ class ReconciliationController extends ApiController
 
         $this->createTableConciliarHeaders();
         $this->createTableConciliarLocalTxType();
-        $this->createTableConciliarItems();
-        $this->createTableConciliarExternalValues();
+        $this->createTableReconciliationItems();
+        $this->createTableReconciliationExternalValues();
         $this->createTableConciliarLocalValues();
 
         return true;
@@ -378,7 +380,7 @@ class ReconciliationController extends ApiController
                 'balance_externo' => $infoArray[$i]['saldoExtracto'],
                 'balance_local' => $infoArray[$i]['saldoContable'],
                 'total' => $infoArray[$i]['total'],
-                'status' => ConciliarItem::CLOSE_STATUS,
+                'status' => ReconciliationItem::CLOSE_STATUS,
 
             ];
 
@@ -399,7 +401,8 @@ class ReconciliationController extends ApiController
         $header->file_path = 'app/conciliaciones/' . $user->current_company . '/' . $header->file_name;
         $header->save();
         rename($fromPath, $toPath);
-        $itemTable = new ConciliarItem($this->conciliar_items_table);
+        $itemTable = new ReconciliationItem();
+        $itemTable->setTable($this->conciliar_items_table);
         $itemTable->insert($itemsArray);
 
 
@@ -430,11 +433,11 @@ class ReconciliationController extends ApiController
             }
         }
 
-        $localTable = new ConciliarLocalValues($this->conciliar_local_values_table);
+        $localTable = new ReconciliationLocalValues($this->conciliar_local_values_table);
         $localTable->insert($localInfo);
 
 
-        $externalTable = new ConciliarExternalValues($this->conciliar_external_values_table);
+        $externalTable = new ReconciliationExternalValues($this->conciliar_external_values_table);
         $externalTable->insert($externalInfo);
         return $header;
     }
@@ -475,6 +478,21 @@ class ReconciliationController extends ApiController
     }
 
 
+    public function referencesFileUpload(Request $request)
+    {
+        $itemsTableName = $this->getReconciliationItemTableName($this->companyId);
+        $itemsTable = (new ReconciliationItem())->setTable($itemsTableName)->where('process', $request->process)->first();
+        if (!$itemsTable) {
+            throw new Exception('No valid process', 500);
+        }
+
+        $request->validate([
+            'files' => 'required'
+        ]);
+
+        return $this->reconciliationService->referencesFileUpload($request->files->all(), $request->process, $this->companyId);
+        return $request->files->all();
+    }
 
 
 
@@ -659,9 +677,9 @@ class ReconciliationController extends ApiController
             ->first();
 
 
-        $conciliarItemsTable = new ConciliarItem($this->conciliar_items_table);
+        $ReconciliationItemsTable = new ReconciliationItem($this->conciliar_items_table);
 
-        $conciliarItemsClose = $conciliarItemsTable->where('header_id', '=', $conciliarHeaderClose->id)
+        $ReconciliationItemsClose = $ReconciliationItemsTable->where('header_id', '=', $conciliarHeaderClose->id)
             ->with(['account', 'account.companies', 'account.banks' => function ($q) {
                 $q->orderBy('banks.name', 'desc');
             }])
@@ -669,34 +687,34 @@ class ReconciliationController extends ApiController
 
         if ($conciliarHeaderOpen == NULL) {
 
-            for ($j = 0; $j < $conciliarItemsClose->count(); $j++) {
+            for ($j = 0; $j < $ReconciliationItemsClose->count(); $j++) {
 
-                $conciliarItemsClose[$j]->ant_externo = $conciliarItemsClose[$j]->balance_externo;
-                $conciliarItemsClose[$j]->ant_local = $conciliarItemsClose[$j]->balance_local;
+                $ReconciliationItemsClose[$j]->ant_externo = $ReconciliationItemsClose[$j]->balance_externo;
+                $ReconciliationItemsClose[$j]->ant_local = $ReconciliationItemsClose[$j]->balance_local;
             }
 
-            return $this->showArray($conciliarItemsClose);
+            return $this->showArray($ReconciliationItemsClose);
         } else {
 
-            $conciliarItemsOpen = $conciliarItemsTable->where('header_id', '=', $conciliarHeaderOpen->id)
+            $ReconciliationItemsOpen = $ReconciliationItemsTable->where('header_id', '=', $conciliarHeaderOpen->id)
                 ->with(['account', 'account.companies', 'account.banks' => function ($q) {
                     $q->orderBy('banks.name', 'desc');
                 }])
                 ->get();
 
-            for ($i = 0; $i < $conciliarItemsOpen->count(); $i++) {
+            for ($i = 0; $i < $ReconciliationItemsOpen->count(); $i++) {
 
-                for ($j = 0; $j < $conciliarItemsClose->count(); $j++) {
+                for ($j = 0; $j < $ReconciliationItemsClose->count(); $j++) {
 
-                    if ($conciliarItemsOpen[$i]->account_id == $conciliarItemsClose[$j]->account_id) {
+                    if ($ReconciliationItemsOpen[$i]->account_id == $ReconciliationItemsClose[$j]->account_id) {
 
-                        $conciliarItemsOpen[$i]->ant_externo = $conciliarItemsClose[$j]->balance_externo;
-                        $conciliarItemsOpen[$i]->ant_local = $conciliarItemsClose[$j]->balance_local;
+                        $ReconciliationItemsOpen[$i]->ant_externo = $ReconciliationItemsClose[$j]->balance_externo;
+                        $ReconciliationItemsOpen[$i]->ant_local = $ReconciliationItemsClose[$j]->balance_local;
                     }
                 }
             }
 
-            return $this->showArray($conciliarItemsOpen);
+            return $this->showArray($ReconciliationItemsOpen);
         }
     }
 
@@ -780,7 +798,7 @@ class ReconciliationController extends ApiController
         });
     }
 
-    public function createTmpTableConciliarItems()
+    public function createTmpTableReconciliationItems()
     {
 
         Schema::create($this->conciliar_items_tmp_table, function ($table) {
@@ -806,7 +824,7 @@ class ReconciliationController extends ApiController
         });
     }
 
-    public function createTableConciliarItems()
+    public function createTableReconciliationItems()
     {
 
         Schema::create($this->conciliar_items_table, function ($table) {
@@ -831,7 +849,7 @@ class ReconciliationController extends ApiController
         });
     }
 
-    public function createTableConciliarExternalValues()
+    public function createTableReconciliationExternalValues()
     {
 
         Schema::create($this->conciliar_external_values_table, function ($table) {
@@ -875,7 +893,7 @@ class ReconciliationController extends ApiController
         });
     }
 
-    public function createTmpTableConciliarExternalValues()
+    public function createTmpTableReconciliationExternalValues()
     {
 
         Schema::dropIfExists($this->conciliar_tmp_external_values_table);
@@ -1379,7 +1397,7 @@ class ReconciliationController extends ApiController
 
         $externalInsert = $this->getIniInsertExternalArray($file);
 
-        $this->createTmpTableConciliarExternalValues();
+        $this->createTmpTableReconciliationExternalValues();
 
         DB::table($this->conciliar_tmp_external_values_table)->insert($externalInsert);
 

@@ -12,10 +12,8 @@ class BalanceGeneralHeader extends Model
     const OPEN = 'open';
     const CLOSE = 'close';
 
-    public function __construct($tableName){
-
-        $this->table = $tableName;
-
+    public function __construct()
+    {
     }
     /**
      * The attributes that are mass assignable.
@@ -23,18 +21,19 @@ class BalanceGeneralHeader extends Model
      * @var array
      */
     protected $fillable = [
-        
-        'fecha', 
+
+        'fecha',
         'file_name',
         'file_path',
         'status',
         'user',
-        
+
     ];
 }
 
 
-function user(){
+function user()
+{
 
-	return $this->hasOne(User::class, 'id','user');
+    return $this->hasOne(User::class, 'id', 'user');
 }

@@ -975,6 +975,12 @@ class ReconciliationService
         $externalValuesTable->insert($externalInsert);
     }
 
+    public function referencesFileUpload($files, $process, $companyId)
+    {
+
+        return count($files);
+    }
+
     public function fileToArray($filePath, $sheet = 0, $extenssion = 'Xlsx')
     {
         $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
@@ -1124,12 +1130,8 @@ class ReconciliationService
         DB::commit();
         return $items;
     }
+
     // HELPERS
-
-    //if accountId != null, looking for account
-
-
-
     public function hasReconciliationBefore($startDate, $endDate, $companyId, $accountId = NULL)
     {
         $itemTableName = $this->getReconciliationItemTableName($companyId);

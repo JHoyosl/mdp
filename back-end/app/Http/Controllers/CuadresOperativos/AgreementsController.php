@@ -19,6 +19,7 @@ class AgreementsController extends ApiController
     function __construct(
         AgreementsService $agreementsService
     ) {
+        $this->middleware('auth:api');
         $this->middleware(function ($request, $next) {
             $this->companyId = Auth::user()->current_company;
             $this->user = Auth::user();
@@ -128,7 +129,7 @@ class AgreementsController extends ApiController
     public function upload(Request $request)
     {
         ini_set('memory_limit', '-1');
-        ini_set('max_execution_time', '300');
+        ini_set('max_execution_time', '500');
 
         $agreementsHeader = $this->getAgreemenetsHeadersTableName($this->companyId);
         $balanceHeader = $this->getBalanceSheetHeadersTableName($this->companyId);

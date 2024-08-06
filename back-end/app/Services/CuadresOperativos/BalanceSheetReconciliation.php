@@ -32,7 +32,7 @@ class BalanceSheetReconciliation
       $this->createBalanceSheetHeadersTable($balanceSheetHeadersTableName);
     }
 
-    $headerTable = new BalanceGeneralHeader($balanceSheetHeadersTableName);
+    $headerTable = (new BalanceGeneralHeader())->setTable($balanceSheetHeadersTableName);
     $headers = $headerTable->orderBy('fecha', 'desc')->get();
 
     return $headers;
@@ -42,7 +42,7 @@ class BalanceSheetReconciliation
   {
 
     $tableName = $this->getBalanceSheetHeadersTableName($companyId);
-    $headerTable = new BalanceGeneralHeader($tableName);
+    $headerTable = (new BalanceGeneralHeader())->setTable($tableName);
     $balanceHeader = $headerTable->where('fecha', $date)->first();
     $headerId = $balanceHeader->id;
 
@@ -151,7 +151,7 @@ class BalanceSheetReconciliation
   {
 
     $tableName = $this->getBalanceSheetHeadersTableName($companyId);
-    $headerTable = new BalanceGeneralHeader($tableName);
+    $headerTable = (new BalanceGeneralHeader())->$tableName;
 
     $balanceHeader = $headerTable->where('fecha', $date)->first();
 
@@ -207,7 +207,7 @@ class BalanceSheetReconciliation
   public function uploadBlance($date, $file, $companyId, $user)
   {
     $balanceSheetHeaderTableName = $this->getBalanceSheetHeadersTableName($companyId);
-    $balanceHeaderTable = new BalanceGeneralHeader($balanceSheetHeaderTableName);
+    $balanceHeaderTable = (new BalanceGeneralHeader())->setTable($balanceSheetHeaderTableName);
     $header = $balanceHeaderTable->where('fecha', $date)->first();
 
     DB::beginTransaction();
@@ -243,7 +243,9 @@ class BalanceSheetReconciliation
   public function deleteBalance($companyId, $id)
   {
     $balanceSheetHeaderTableName = $this->getBalanceSheetHeadersTableName($companyId);
-    $balanceHeader = (new BalanceGeneralHeader($balanceSheetHeaderTableName))->where('id', $id)->first();
+    $balanceHeader = (new BalanceGeneralHeader())
+      ->setTable($balanceSheetHeaderTableName)
+      ->where('id', $id)->first();
 
     if (!$balanceHeader) {
       throw new Exception('Model not found');
@@ -260,7 +262,7 @@ class BalanceSheetReconciliation
     $balanceItemsTableName = $this->getBalanceSheetItemsTableName($companyId);
     (new BalanceGeneralItem($balanceItemsTableName))->where('header_id', $headerId)->delete();
 
-    (new BalanceGeneralHeader($balanceSheetHeaderTableName))->where('id', $id)->delete();
+    (new BalanceGeneralHeader())->setTable($balanceSheetHeaderTableName)->where('id', $id)->delete();
 
     return 'success';
   }
@@ -269,7 +271,9 @@ class BalanceSheetReconciliation
   {
 
     $headerTableName = $this->getBalanceSheetHeadersTableName($companyId);
-    $header = (new BalanceGeneralHeader($headerTableName))->where('fecha', $date)->first();
+    $header = (new BalanceGeneralHeader())
+      ->setTable($headerTableName)
+      ->where('fecha', $date)->first();
     $fileName = $this->balanceNaturalezaFileName($companyId, $header->id);
     $jsonFile = Storage::disk('cuadres')->get($fileName);
 
