@@ -24,8 +24,7 @@ use App\Models\OperativoConvenioHeader;
 use App\Services\BalanceClearedService;
 use App\Imports\OperativoConvenioImport;
 use App\Exports\CuadreBalanceGeneralExport;
-
-use App\Http\Resources\Cuadres\BalanceSheetCollection;
+use App\Http\Resources\Cuadres\BalanceSheetResource;
 use App\Services\CuadresOperativos\BalanceSheetReconciliation;
 
 class BalanceGeneralController extends ApiController
@@ -71,6 +70,7 @@ class BalanceGeneralController extends ApiController
         $this->middleware('auth:api')->only(
             [
                 'index',
+                'destroy',
                 'createTables',
                 'uploadBalance',
                 'uploadConvenios',
@@ -79,7 +79,8 @@ class BalanceGeneralController extends ApiController
                 'downloadBalance',
                 'downloadConvenioResultado',
                 'uploadOperativoMaster',
-                'uploadConvenioCuentasMaster'
+                'uploadConvenioCuentasMaster',
+                'getBalanceNaturaleza'
             ]
         );
         $this->balanceCleared = $balanceCleared;
@@ -95,7 +96,7 @@ class BalanceGeneralController extends ApiController
         $headers = $this->balanceSheetReconciliation
             ->getBalanceSheetHeaders($this->companyId);
 
-        return new BalanceSheetCollection($headers);
+        return BalanceSheetResource::collection($headers);
     }
 
     /**
@@ -209,7 +210,7 @@ class BalanceGeneralController extends ApiController
         $companyId = $this->companyId;
 
 
-        $balanceHeaderTable = new BalanceGeneralHeader($this->balance_general_headers); //hereda de header funciones, variables, etc
+        $balanceHeaderTable = (new BalanceGeneralHeader())->setTable($this->balance_general_headers); //hereda de header funciones, variables, etc
 
         $balanceHeader = $balanceHeaderTable->where('fecha', $fechaRequest)->first(); //se hace uso del objeto para buscar en la bd
 
@@ -610,7 +611,7 @@ class BalanceGeneralController extends ApiController
     public function downloadBalance(Request $request)
     {
 
-        $balanceHeaders = new BalanceGeneralHeader($this->balance_general_headers);
+        $balanceHeaders = (new BalanceGeneralHeader())->setTable($this->balance_general_headers);
 
         $header = $balanceHeaders->where('fecha', $request->fecha)->first();
 

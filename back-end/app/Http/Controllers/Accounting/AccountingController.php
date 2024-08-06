@@ -108,6 +108,7 @@ class AccountingController extends ApiController
         $company =  Company::find($this->user->current_company);
         try {
             $items = $this->accountingService->getHeaderItems($request->headerId, $company->id);
+            return $items;
             return $this->showAll($items);
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());

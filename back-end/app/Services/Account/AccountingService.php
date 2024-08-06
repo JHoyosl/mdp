@@ -31,7 +31,7 @@ class AccountingService
     public function getAccInfoToReconciliate($companyId, $localAccount, $startDate, $endDate)
     {
         $tableName  = $this->getAccountinItemsTableName($companyId);
-        $tableAccItems = new AccountingItems($tableName);
+        $tableAccItems = (new AccountingItems())->setTable($tableName);
         $info  = $tableAccItems
             ->where('local_account', $localAccount)
             ->whereBetween('fecha_movimiento', [$startDate, $endDate])
@@ -422,7 +422,7 @@ class AccountingService
 
         $accountingItemsTable = $this->getAccountinItemsTableName($companyId);
 
-        $items = new AccountingItems($accountingItemsTable);
+        $items = (new AccountingItems())->setTable($accountingItemsTable);
 
         DB::beginTransaction();
         try {
@@ -452,7 +452,7 @@ class AccountingService
 
         if ($header) {
             $tableName = $this->getAccountinItemsTableName($companyId);
-            $accountingItems = new AccountingItems($tableName);
+            $accountingItems = (new AccountingItems())->setTable($tableName);
             return $accountingItems->where('header_id', $header->id)->get();
         }
         throw new Exception('No existen items para el encabezado', 400);

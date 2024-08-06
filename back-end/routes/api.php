@@ -84,6 +84,7 @@ Route::resource('reconciliation', 'Reconciliation\ReconciliationController')->on
 		'getReconciliationAccounts',
 		'getAccountResume',
 		'newProcess',
+		'referencesFileUpload',
 		'autoReconciliation'
 	]
 );
@@ -99,6 +100,7 @@ Route::post('reconciliation/setBalance', 'Reconciliation\ReconciliationControlle
 Route::post('reconciliation/startNewProcess', 'Reconciliation\ReconciliationController@startNewProcess');
 Route::post('reconciliation/deleteProceess/{process}', 'Reconciliation\ReconciliationController@deleteProcess');
 Route::post('reconciliation/autoReconciliation/{process}', 'Reconciliation\ReconciliationController@autoReconciliation');
+Route::post('reconciliation/referencesFileUpload/{process}', 'Reconciliation\ReconciliationController@referencesFileUpload');
 
 
 // TODO: OLD ROUTES REMOVE

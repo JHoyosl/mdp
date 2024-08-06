@@ -32,7 +32,7 @@ class ThirdPartiesService
     public function getAccInfoToReconciliate($accountId, $startDate, $endDate)
     {
         $tableName = $this->getThirdPartiesItemsTableName($accountId);
-        $itemsTable = new ThirdPartiesItems($tableName);
+        $itemsTable = (new ThirdPartiesItems())->setTable($tableName);
 
         $items  = $itemsTable
             ->whereBetween('fecha_movimiento', [$startDate, $endDate])
@@ -87,7 +87,7 @@ class ThirdPartiesService
         }
 
         $tableName = $this->getThirdPartiesItemsTableName($header->account_id);
-        $itemsTable = new ThirdPartiesItems($tableName);
+        $itemsTable = (new ThirdPartiesItems())->setTable($tableName);;
 
         $items = $itemsTable->where('header_id', $header->id)->get();
 
@@ -119,7 +119,7 @@ class ThirdPartiesService
 
         $tableName = $this->getThirdPartiesItemsTableName($lastHeader->account_id);
 
-        $items = new ThirdPartiesItems($tableName);
+        $items = (new ThirdPartiesItems())->setTable($tableName);
 
         DB::beginTransaction();
         try {

@@ -31,7 +31,7 @@ class AgreementsService
     $balanceSheetHeaderTableName = $this->getBalanceSheetHeadersTableName($companyId);
     $agreementsHeader = $this->getAgreemenetsHeadersTableName($companyId);
 
-    $balanceSheetHeaderTable = new BalanceGeneralHeader($balanceSheetHeaderTableName);
+    $balanceSheetHeaderTable = (new BalanceGeneralHeader())->setTable($balanceSheetHeaderTableName);
 
     $info = $balanceSheetHeaderTable
       ->select(
@@ -52,7 +52,8 @@ class AgreementsService
   function deleteAgreement($companyId, $id)
   {
     $agreementsHeaderTableName = $this->getAgreemenetsHeadersTableName($companyId);
-    $agreementsHeadersTable = (new AgreementsHeader($agreementsHeaderTableName))
+    $agreementsHeadersTable = (new AgreementsHeader())
+      ->setTable($agreementsHeaderTableName)
       ->where('id', $id)->first();
 
     if (!$agreementsHeadersTable) {
@@ -75,7 +76,7 @@ class AgreementsService
   function getAgreementsResult($companyId, $date, $overwrite = false)
   {
     $tableName = $this->getBalanceSheetHeadersTableName($companyId);
-    $headerTable = new BalanceGeneralHeader($tableName);
+    $headerTable = (new BalanceGeneralHeader())->setTable($tableName);
 
     $balanceHeader = $headerTable->where('fecha', $date)->first();
 
@@ -84,7 +85,7 @@ class AgreementsService
     }
 
     $agreementsHeadersTableName =  $this->getAgreemenetsHeadersTableName($companyId);
-    $agreementsHeadersTable = new AgreementsHeader($agreementsHeadersTableName);
+    $agreementsHeadersTable = (new AgreementsHeader())->setTable($agreementsHeadersTableName);
     $agreementsHeader = $agreementsHeadersTable->where('date', $date)->first();
 
     if (!$agreementsHeader) {
@@ -132,17 +133,19 @@ class AgreementsService
   public function uploadAgreement($companyId, $user, $file, $date)
   {
     $agreementsHeaderTableName = $this->getAgreemenetsHeadersTableName($companyId);
-    $agreementsTable = new AgreementsHeader($agreementsHeaderTableName);
+    $agreementsTable = (new AgreementsHeader())->setTable($agreementsHeaderTableName);
     $header = $agreementsTable->where('date', $date)->first();
 
     if (!$header) {
 
-      (new AgreementsHeader($agreementsHeaderTableName))->insert([
-        'date' => $date,
-        'status' => AgreementsHeader::OPEN,
-        'user' => $user->id,
-        'created_at' => now()
-      ]);
+      (new AgreementsHeader($agreementsHeaderTableName))
+        ->setTable($agreementsHeaderTableName)
+        ->insert([
+          'date' => $date,
+          'status' => AgreementsHeader::OPEN,
+          'user' => $user->id,
+          'created_at' => now()
+        ]);
 
       $header = $agreementsTable->where('date', $date)->first();
     }
@@ -218,7 +221,10 @@ class AgreementsService
   public function downloadResult($companyId, $date)
   {
     $agreementsHeadersTableName = $this->getAgreemenetsHeadersTableName($companyId);
-    $header = (new AgreementsHeader($agreementsHeadersTableName))->where('date', $date)->first();
+    $header = (new AgreementsHeader())
+      ->setTable($agreementsHeadersTableName)
+      ->where('date', $date)
+      ->first();
     $fileName = $this->agreementsFileName($companyId, $header->id);
 
     if (!Storage::disk('cuadres')->exists($fileName)) {
@@ -294,7 +300,6 @@ class AgreementsService
       $cellIterator = $row->getCellIterator();
       $cellIterator->setIterateOnlyExistingCells(FALSE); // This loops through all cells,
       $cells = [];
-
       foreach ($cellIterator as $keyCell => $cell) {
         $cells[] = $worksheet->getCell($keyCell . $keyRow)->getValue();
       }
