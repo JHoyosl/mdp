@@ -5,9 +5,10 @@ import { SecurityRoutes } from './security.routing';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { RolesComponent } from './roles/roles.component';
 
 @NgModule({
-  declarations: [],
+  declarations: [RolesComponent],
   imports: [
     CommonModule,
     RouterModule.forChild(SecurityRoutes),

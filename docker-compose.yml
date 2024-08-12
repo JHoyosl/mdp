@@ -36,8 +36,6 @@ services:
       - mdp-mysql
     command: >
       bash -c "cd /var/www/html/
-      && composer install
-      && composer update
       && php artisan storage:link
       && apache2-foreground"
   mdp-ng:

@@ -225,7 +225,7 @@ export const ROUTES: RouteInfo[] = [
         submenu: []
       },
       {
-        path: '/security/config',
+        path: '/security',
         title: 'Seguridad',
         icon: '',
         class: '',

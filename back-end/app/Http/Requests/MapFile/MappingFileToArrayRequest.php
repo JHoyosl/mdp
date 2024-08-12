@@ -24,7 +24,7 @@ class MappingFileToArrayRequest extends FormRequest
     public function rules()
     {
         return [
-            'file' => ['required', 'mimes:xls,xlsx,csv'],
+            'file' => ['required', 'mimes:xls,xlsx,csv,txt'],
             'skipTop' => ['required', 'integer']
         ];
     }

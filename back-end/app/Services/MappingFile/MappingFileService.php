@@ -39,15 +39,20 @@ class MappingFileService
 
   public function MappingFileToArray($file, $skipTop)
   {
-    ini_set('memory_limit', '-1');
-    set_time_limit(300);
+
     $ext = $file->extension() == 'txt' ? 'csv' : $file->extension();
     $filePath = rand() . '.' . $ext;
     $fullPath = storage_path('tmp') . '/' . $filePath;
 
     Storage::disk('tmp')->put($filePath, file_get_contents($file));
 
-    $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader('Xlsx');
+
+    if ($ext === 'csv') {
+      $reader = new \PhpOffice\PhpSpreadsheet\Reader\Csv();
+    } else {
+      $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($ext);
+    }
+
     $spreadsheet = $reader->load($fullPath);
     $spreadsheet->setActiveSheetIndex(0);
     $worksheet = $spreadsheet->getActiveSheet();

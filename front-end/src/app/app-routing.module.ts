@@ -24,6 +24,7 @@ export const Approutes: Routes = [
     component: FullComponent,
     children: [
       { path: '', redirectTo: '/users', pathMatch: 'full' },
+      { path: 'dashboard', loadChildren: './dashboard/dashboard.module#DashboardModule' },
       { path: 'banks', loadChildren: './banks/banks.module#BanksModule' },
       { path: 'accounting/thirdParties', loadChildren: './third-parties/third-parties.module#ThirdPartiesModule'},
       { path: 'accounting', loadChildren: './accounting/accounting.module#AccountingModule'},
@@ -39,6 +40,6 @@ export const Approutes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'conciliar/conciliarMap'
+    redirectTo: 'dashboard'
   }
 ];
