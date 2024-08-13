@@ -18,7 +18,7 @@ export class FileMappingComponent implements OnInit {
   @ViewChild('detailModal') 
   private detailModa: ElementRef;
 
-  sourceFilter: 'thirdParty' | 'accounting' | 'all' = 'accounting';
+  sourceFilter: 'thirdParty' | 'accounting' | 'all' = 'all';
   selectedIndex = 0;
   mappingInfo: MappingFileIndex[];
   detailMap: Map[];
@@ -49,7 +49,7 @@ export class FileMappingComponent implements OnInit {
   }
 
   getMappingInfo(){
-
+    console.log(this.sourceFilter);
     this.mappingFileService.index(this.sourceFilter).subscribe(
       (response) => this.mappingInfo = response,
       (err) => console.error(err),

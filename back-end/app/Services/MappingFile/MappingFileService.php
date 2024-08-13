@@ -5,6 +5,7 @@ namespace App\Services\MappingFile;
 use App\Models\Account;
 use App\Models\Company;
 use App\Models\MapFile;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -46,11 +47,18 @@ class MappingFileService
 
     Storage::disk('tmp')->put($filePath, file_get_contents($file));
 
-
-    if ($ext === 'csv') {
-      $reader = new \PhpOffice\PhpSpreadsheet\Reader\Csv();
-    } else {
-      $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($ext);
+    switch ($ext) {
+      case 'csv':
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Csv();
+        break;
+      case 'xls':
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xls();
+        break;
+      case 'xlsx':
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xls();
+        break;
+      default:
+        throw new Exception("Incorrect format: {$ext}", 422);
     }
 
     $spreadsheet = $reader->load($fullPath);
