@@ -55,7 +55,7 @@ class MappingFileService
         $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xls();
         break;
       case 'xlsx':
-        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xls();
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
         break;
       default:
         throw new Exception("Incorrect format: {$ext}", 422);
