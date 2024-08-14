@@ -106,8 +106,6 @@ class AgreementsController extends ApiController
 
     public function agreementsResult(Request $request)
     {
-        ini_set('memory_limit', '-1');
-        ini_set('max_execution_time', '300');
 
         $agreementsHeader = $this->getAgreemenetsHeadersTableName($this->companyId);
         $balanceHeader = $this->getBalanceSheetHeadersTableName($this->companyId);
@@ -128,9 +126,6 @@ class AgreementsController extends ApiController
 
     public function upload(Request $request)
     {
-        ini_set('memory_limit', '-1');
-        ini_set('max_execution_time', '500');
-
         $agreementsHeader = $this->getAgreemenetsHeadersTableName($this->companyId);
         $balanceHeader = $this->getBalanceSheetHeadersTableName($this->companyId);
 

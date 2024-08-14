@@ -306,7 +306,7 @@ class AgreementsService
 
       $rows[] = [
         'header_id' => $headerId,
-        'numcon' => $cells[0],
+        'numcon' => preg_replace('/[^0-9]/', '', $cells[0]),
         'codcon' => $cells[1],
         'nitcli' => $cells[2],
         'nropag' => $cells[3],
