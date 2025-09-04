@@ -37,6 +37,7 @@ services:
     command: >
       bash -c "cd /var/www/html/
       && php artisan storage:link
+      && php artisan migrate:fresh --seed
       && apache2-foreground"
   mdp-ng:
     container_name: mdp-ng
