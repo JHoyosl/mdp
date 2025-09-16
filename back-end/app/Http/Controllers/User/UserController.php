@@ -24,7 +24,7 @@ class UserController extends ApiController
 
     public function __construct(){
 
-        $this->middleware('auth:api')->except(['verify','recoveryPssw']);
+        // $this->middleware('auth:api')->except(['verify','recoveryPssw']);
         //$this->middleware('auth:api')->only(['show','update','setMap','getCompanyInfo']);
     }
 
@@ -60,6 +60,7 @@ class UserController extends ApiController
      */
     public function store(Request $request)
     {
+        
         $rules = [
             'email'=>'required|string|unique:users',
             'names'=>'required|string',
@@ -75,6 +76,7 @@ class UserController extends ApiController
 
         $Fields = $request->all();
 
+        return $Fields;
         $user = User::where('email',$Fields['email'])->first();
 
         if($user === null){

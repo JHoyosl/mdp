@@ -14,8 +14,6 @@ class AddFieldsToMapFiles extends Migration
     public function up()
     {
         Schema::table('map_files', function (Blueprint $table) {
-            
-            $table->text('separator')->nullable;
             $table->text('extension');
         });
     }
@@ -28,7 +26,6 @@ class AddFieldsToMapFiles extends Migration
     public function down()
     {
         Schema::table('map_files', function (Blueprint $table) {
-            $table->dropColumn('separator');
             $table->dropColumn('extension');
         });
     }

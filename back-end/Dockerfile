@@ -70,7 +70,10 @@ WORKDIR /var/www/html
 COPY . .
 
 # Install Laravel dependencies using Composer.
-# RUN composer install --no-interaction --optimize-autoloader
+RUN composer install --no-interaction --optimize-autoloader
+
+# Update spatie/laravel-permission package
+RUN composer update spatie/laravel-permission
 
 # Set permissions for Laravel.
 RUN chown -R www-data:www-data storage bootstrap/cache
@@ -84,7 +87,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 EXPOSE 80
 
 # Start Apache web server.
-CMD ["php artisan storage:link"]
-# CMD ["php artisan storage:link","apache2-foreground"]
+# CMD ["php artisan storage:link"]
+CMD ["php artisan storage:link","apache2-foreground"]
 
 # You can add any additional configurations or commands required for Laravel 11 here.
