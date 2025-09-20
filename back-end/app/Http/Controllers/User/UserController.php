@@ -75,10 +75,9 @@ class UserController extends ApiController
 
 
         $Fields = $request->all();
-
-        return $Fields;
+        
         $user = User::where('email',$Fields['email'])->first();
-
+        
         if($user === null){
 
             $Fields['verification_token'] = User::genVerificationToken();
@@ -87,15 +86,16 @@ class UserController extends ApiController
             $Fields['type'] = $Fields['type'];
             $Fields['password'] = bcrypt(Str::random(6));
             
+            
             $user = User::create($Fields);
 
             $company = Company::findOrFail((int)$Fields['current_company'])->first();
-
+            
             $company->users()->syncWithoutDetaching([$user->id]);
 
-            Mail::to($user)->send(new newUser($user));    
+            // Mail::to($user)->send(new newUser($user));    
 
-            
+            // return $company;
 
         }else{
 

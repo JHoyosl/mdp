@@ -16,6 +16,21 @@ services:
       - MYSQL_DATABASE=${DB_DATABASE}
       - MYSQL_USER=${DB_USERNAME}
       - MYSQL_PASSWORD=${DB_PASSWORD}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-psecurerootpassword",
+        ]
+      interval: 3s
+      timeout: 1s
+      retries: 5
 
   mdp-laravel:
     build: ./back-end
@@ -29,11 +44,13 @@ services:
       - ./vhost.conf:/etc/apache2/sites-available/000-default.conf
       - ./conf/php-conf.ini:/usr/local/etc/php/conf.d/php-conf.ini
     depends_on:
-      - mdp-mysql
+      mdp-mysql:
+        condition: service_healthy
     links:
       - mdp-mysql
     command: >
       bash -c "cd /var/www/html/
+      && php artisan migrate:fresh --seed
       && php artisan storage:link
       && apache2-foreground"
   mdp-ng:

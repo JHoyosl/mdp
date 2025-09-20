@@ -13,7 +13,7 @@ class LocalTxSeeder extends Seeder
     {
         // php artisan db:seed --class=LocalTxSeeder
         DB::table('reconciliation_local_tx_types_1')->delete();
-
+        // ELIMINAR ESTAS TX
         $local_tx = array(
 
             array('description' => 'Ab ajuste grav mov financieors', 'tx' => 'DGMF', 'company_id' => 1, 'reference' => 'Ab ajuste gr', 'sign' => 'D'),

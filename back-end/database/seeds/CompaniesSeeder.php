@@ -20,23 +20,8 @@ class CompaniesSeeder extends Seeder
 
     	$companies = array(
 
-    		array('nit' => '860007327-5',
-    			'name' => 'FINCOMERCIO',
-    			'sector' => '6711',
-    			'address' => 'CARRERA 12B # 8A-30 PISO 11',
-    			'location_id' => '1',
-    			'phone' => '3078330',
 
-    		),
-    		array('nit' => '830143476-7',
-    			'name' => 'COOPERATIVA UNIMOS',
-    			'sector' => '6711',
-    			'address' => 'CRA 23 NO 13-52',
-    			'location_id' => '2',
-    			'phone' => '33333333',
-
-    		),
-
+				// SOLO ADMIN 
 			array('nit' => '830142376-7',
     			'name' => 'GLOBALSYS',
     			'sector' => '6721',

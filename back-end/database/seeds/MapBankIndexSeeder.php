@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class MapLocalIndexSeeder extends Seeder
+class MapBankIndexSeeder extends Seeder
 {
     /**
      * Run the database seeds.

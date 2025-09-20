@@ -24,7 +24,7 @@ class CompanyUserSeeder extends Seeder
             ),
             array(
                 'company_id' => '1',
-                'user_id' => '3'
+                'user_id' => '2'
             ),
 
         );

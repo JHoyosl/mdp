@@ -24,11 +24,11 @@ class DatabaseSeeder extends Seeder
          $this->call(\CompaniesSeeder::class);
          $this->call(\BancSeeder::class);
          $this->call(\CompanyUserSeeder::class);
-        // $this->call(MapBankIndexSeeder::class);
+        $this->call(MapBankIndexSeeder::class);
         // $this->call(MapLocalIndexSeeder::class);
-         $this->call(\oauthSeeds::class);
+        //  $this->call(\oauthSeeds::class);
         //  $this->call(\LocalTxSeeder::class);
-        //  $this->call(\ExternalTxSeeder::class);
+         $this->call(\ExternalTxSeeder::class);
          $this->call(\AccountsSeeder::class);
 
     }

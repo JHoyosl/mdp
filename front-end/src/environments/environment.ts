@@ -6,8 +6,8 @@ export const environment = {
   production: false,
   // url: 'https://mdp-api.globalsys.co/',
   url: "http://localhost:9004/",
-  clientId: "ee1afb98-1752-4df6-b676-abd50b1f045e",
-  appKey: "te503HGetaYFzclEcVkmgygCGzLaR8k9h7Zr8eE2",
+  clientId: "8f9651d0-2874-4853-9aae-e0b796068bd5",
+  appKey: "VWnWZVJSnSMlYu4AQVYn6PY0yM7rAPGwghl5ys6L",
 };
 // appKey: '4W4UDtYprj8DV9f5PbdozEtKnig53ebZRTHVIqhg',
 //   clientId: '9129b2e3-a874-46f0-950e-6d1602a38cac',
