@@ -116,7 +116,7 @@ export class AuthServiceService {
       .set("username", userLogin.email)
       .set("password", userLogin.password);
 
-    console.log(body.toString());
+    // console.log(body.toString());
     // Swal.fire({
     //   allowOutsideClick: false,
     //   type: "info",

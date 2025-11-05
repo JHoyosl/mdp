@@ -83,7 +83,7 @@ RUN apt-get update && apt-get install -y tzdata
 ENV TZ=America/Bogota
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN composer install && composer update && php artisan storage:link && php artisan cache:clear && php artisan config:clear
+RUN composer install && composer update && php artisan storage:link && php artisan cache:clear && php artisan config:clear && composer dump-autoload
 # Expose port 80 for Apache.
 EXPOSE 80
 
