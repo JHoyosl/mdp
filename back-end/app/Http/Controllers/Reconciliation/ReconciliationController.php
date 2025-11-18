@@ -252,7 +252,7 @@ class ReconciliationController extends ApiController
                 $this->user,
                 $this->companyId
             );
-            return $initReconciliation;
+
             return $this->showAll($initReconciliation);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
