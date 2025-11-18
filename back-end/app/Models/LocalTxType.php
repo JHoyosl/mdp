@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Company;
+use App\Models\Company;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -17,8 +17,10 @@ class LocalTxType extends Model
     protected $dates = ['deleted_at'];
 
 
-    public function __construct()
+    public function __construct($tableName = '')
     {
+
+        $this->table = $tableName;
     }
 
     /**
