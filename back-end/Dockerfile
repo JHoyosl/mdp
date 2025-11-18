@@ -72,8 +72,14 @@ COPY . .
 # Install Laravel dependencies using Composer.
 RUN composer install --no-interaction --optimize-autoloader
 
+# Update composer to latest version
+RUN composer update
+
 # Update spatie/laravel-permission package
 RUN composer update spatie/laravel-permission
+
+#create storage and cache directories
+RUN mkdir storage bootstrap/cache -p 
 
 # Set permissions for Laravel.
 RUN chown -R www-data:www-data storage bootstrap/cache

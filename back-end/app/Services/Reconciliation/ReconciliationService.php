@@ -52,19 +52,22 @@ class ReconciliationService
         $endDate = Carbon::createFromFormat('Y-m-d', $date);
         $startDate = Carbon::createFromFormat('Y-m-d', $date)->subDay();
 
-        //ID to group reconciliation under ad ID
+        //ID to group reconciliation under ID
         $process = Str::random(9);
 
+        
         $filePath = $this->saveIniReconciliationFile($file, $companyId);
-
-        $externalInfo = $this->fileToArray($filePath);
+        
+        $externalInfo = $this->fileToArray($filePath, 0);
         $localInfo = $this->fileToArray($filePath, 1);
-
+        
+        
         $this->insertLocalIni($localInfo, $companyId, $startDate, $endDate, $process);
+        
         $this->insertExternalIni($externalInfo, $user, $companyId, $startDate, $endDate, $process);
 
         $balance =  $this->getProcessBalance($process, $companyId);
-
+        
         $this->setReconciliationBalance($balance, $companyId);
 
         DB::commit();
@@ -691,7 +694,6 @@ class ReconciliationService
 
     public function getProcessBalance($process, $companyId)
     {
-
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
         $ids = (new ReconciliationItem())
             ->setTable($itemsTableName)
@@ -748,10 +750,13 @@ class ReconciliationService
 
     public function createInitReconciliationItem($account, $companyId, $startDate, $endDate, $process)
     {
+        
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
-
+        
         $itemsTable = new ReconciliationItem();
+        
         $itemsTable->setTable($itemsTableName);
+        
         $item = $itemsTable->where('account_id', $account->id)
             ->orderBy('start_date', 'ASC')
             ->first();
@@ -760,8 +765,8 @@ class ReconciliationService
             throw new Exception(`Ya existe una conciliación para la cuenta {$account->bank_account} del banco {$account->banks->name}`, 400);
         }
 
-
         if (!$item) {
+            
             $now = Carbon::now();
             $newData = [
                 'account_id' => $account->id,
@@ -783,10 +788,11 @@ class ReconciliationService
                 'created_at' => $now,
                 'updated_at' => $now
             ];
-
+            
             $newItem = (new ReconciliationItem())
                 ->setTable($itemsTableName)
                 ->insertGetId($newData);
+
             return $newItem;
         } else {
             $item->process = $process;
@@ -799,18 +805,21 @@ class ReconciliationService
     {
         $now = Carbon::now();
         $tableName = $this->getLocalTxTypeTableName($companyId);
+        
         $localTxTypeTable = new LocalTxType($tableName);
-
+        
         $localInsert = [];
-        $accountNumber = $localInfo[0][0];
+        $accountNumber = $localInfo[1][0];
 
         $account = Account::where('local_account', $accountNumber)
             ->with('banks')
             ->first();
-
+        
         $itemId = $this->createInitReconciliationItem($account, $companyId, $startDate, $endDate, $process);
+
         $itemsIdList[] = $itemId;
 
+        
         if (!$account) {
             throw new Exception(`No existe la cuenta {$accountNumber}`);
         }
@@ -834,7 +843,7 @@ class ReconciliationService
 
             $txTypeId = null;
             $txTypeName = null;
-
+            
             $txType = $localTxTypeTable->select(
                 DB::raw(
                     "id,
@@ -854,12 +863,12 @@ class ReconciliationService
             if (!$txType) {
                 throw new Exception('No existe una transacción con descripción: ' . $row[8], 400);
             }
-
+            
             if ($txType) {
                 $txTypeId = $txType->id;
                 $txTypeName = $txType->tx;
             }
-
+            
             $localInsert[] = [
                 'item_id' => $itemId,
                 'tx_type_id' => $txTypeId,
@@ -877,11 +886,11 @@ class ReconciliationService
                 'updated_at' => $now,
             ];
         }
-
+        
         $tableName = $this->getReconciliationLocalValuesTableName($companyId);
         $localValuesTable =  new ReconciliationLocalValues($tableName);
         $localValuesTable->whereIn('item_id', $itemsIdList)->delete();
-
+        
         $localValuesTable->insert($localInsert);
     }
 
@@ -891,12 +900,12 @@ class ReconciliationService
 
         $externalInsert = [];
         $itemsIdList = [];
-        $accountNumber = $externalInfo[0][2];
+        $accountNumber = $externalInfo[1][2];
 
         $account = Account::where('bank_account', $accountNumber)
             ->with('banks')
             ->first();
-
+        
         $itemId = $this->createInitReconciliationItem($account, $companyId, $startDate, $endDate, $process);
         $itemsIdList[] = $itemId;
 
@@ -966,12 +975,14 @@ class ReconciliationService
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
+            
         }
-
+        
+        
         $tableName = $this->getReconciliationExternalValuesTableName($companyId);
         $externalValuesTable =  new ReconciliationExternalValues($tableName);
         $externalValuesTable->whereIn('item_id', $itemsIdList)->delete();
-
+        
         $externalValuesTable->insert($externalInsert);
     }
 
@@ -988,7 +999,7 @@ class ReconciliationService
         $spreadsheet->setActiveSheetIndex($sheet);
         $worksheet = $spreadsheet->getActiveSheet();
 
-        $startRow = 2;
+        $startRow = 3;
 
         $data = [];
 

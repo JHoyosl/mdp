@@ -209,7 +209,6 @@ class ReconciliationController extends ApiController
                 $this->companyId,
                 $this->user
             );
-            return $items;
             return $this->showAll($items);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
@@ -240,6 +239,7 @@ class ReconciliationController extends ApiController
 
     public function iniReconciliation(Request $request)
     {
+        
         $request->validate([
             'file' => 'required',
             'date' => 'required'
@@ -252,6 +252,7 @@ class ReconciliationController extends ApiController
                 $this->user,
                 $this->companyId
             );
+            return $initReconciliation;
             return $this->showAll($initReconciliation);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());

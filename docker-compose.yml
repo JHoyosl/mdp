@@ -50,7 +50,6 @@ services:
       - mdp-mysql
     command: >
       bash -c "cd /var/www/html/
-      && php artisan migrate:fresh --seed
       && php artisan storage:link
       && apache2-foreground"
   mdp-ng:
