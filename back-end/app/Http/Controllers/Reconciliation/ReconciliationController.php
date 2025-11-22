@@ -233,7 +233,6 @@ class ReconciliationController extends ApiController
     {
 
         $data = $this->reconciliationService->getAccountProcess($this->companyId);
-        return $data;
         return $this->showAll($data);
     }
 
