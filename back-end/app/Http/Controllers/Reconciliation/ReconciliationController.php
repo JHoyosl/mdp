@@ -233,7 +233,6 @@ class ReconciliationController extends ApiController
     {
 
         $data = $this->reconciliationService->getAccountProcess($this->companyId);
-        return $data;
         return $this->showAll($data);
     }
 
@@ -272,13 +271,15 @@ class ReconciliationController extends ApiController
             'process' => 'required'
         ]);
 
+        
         $balanceInfo = json_decode($request->balance, true);
 
         if (!$balanceInfo) {
             return $this->errorResponse('Invalid Json', 400);
         }
-
+        
         $step = $this->reconciliationService->getProcessStep($request->process, $this->companyId);
+
         try {
             switch ($step) {
                 case ReconciliationItem::STEP_UPLOADED:

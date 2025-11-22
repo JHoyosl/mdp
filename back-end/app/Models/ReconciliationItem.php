@@ -26,10 +26,11 @@ class ReconciliationItem extends Model
     protected $table = "conciliar_items";
     protected $dates = ['deleted_at'];
 
-    public function __construct()
+    public function __construct($tableName = null)
     {
 
-        // $this->table = $tableName;
+        $this->table = $tableName;
+        
     }
     /**
      * The attributes that are mass assignable.
