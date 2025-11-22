@@ -517,6 +517,7 @@ class ReconciliationService
 
     public function setBalance($companyId, $balanceInfo, $process)
     {
+        return "hola";
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
         $itemsIds = [];
         foreach ($balanceInfo as $value) {
@@ -1205,7 +1206,7 @@ class ReconciliationService
     public function getProcessStep($process, $companyId)
     {
         $tableName = $this->getReconciliationItemTableName($companyId);
-        $itemTable = new ReconciliationItem();
+        $itemTable = new ReconciliationItem($tableName);
         $item = $itemTable->where('process', $process)->first();
         return $item->step;
     }
@@ -1217,7 +1218,7 @@ class ReconciliationService
     public function getAccountingMaxDate($companyId)
     {
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
-        $table = new ReconciliationItem();
+        $table = new ReconciliationItem($itemsTableName);
         $info = $table->orderBy('end_date', 'DESC')->first();
         return $info->end_date;
     }
