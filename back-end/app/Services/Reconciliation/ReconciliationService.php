@@ -1147,7 +1147,7 @@ class ReconciliationService
     public function hasReconciliationBefore($startDate, $endDate, $companyId, $accountId = NULL)
     {
         $itemTableName = $this->getReconciliationItemTableName($companyId);
-        $itemsTable = new ReconciliationItem();
+        $itemsTable = new ReconciliationItem($itemTableName);
         if ($accountId !=  NULL) {
             $item = $itemsTable
                 ->where('account_id', $accountId)

@@ -10,6 +10,6 @@ class OauthController extends ApiController
 {
     function getClients(Request $requst)
     {
-        return "hola";
+
     }
 }
