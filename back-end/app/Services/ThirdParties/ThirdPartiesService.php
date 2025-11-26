@@ -143,7 +143,7 @@ class ThirdPartiesService
         $this->dateValidation($accountId, $startDate);
 
         DB::beginTransaction();
-
+        
         try {
             $newHeader = $this->getAccountItemInfo(
                 $user,
@@ -153,12 +153,11 @@ class ThirdPartiesService
                 $endDate,
                 $file
             );
-
+            
             $this->getInsertData($accountId, $newHeader, $file, $startDate, $endDate);
 
             DB::commit();
 
-            return $newHeader;
         } catch (Exception $e) {
             DB::rollBack();
             throw new Exception($e->getMessage(), 500);
@@ -218,15 +217,16 @@ class ThirdPartiesService
         if (!Schema::hasTable($this->getThirdPartiesItemsTableName($accountId))) {
             $this->createThirdPartiesItems($accountId);
         }
-
+        
         // Get mapping  model
         $mappedInfo = $this->mapInfo($account, $header, $file, $startDate, $endDate);
 
         $header->rows = count($mappedInfo);
+        
         $header->save();
         $this->insertInfo($mappedInfo, $account->id, $startDate, $endDate);
 
-
+        
         return $account;
     }
 
@@ -235,6 +235,7 @@ class ThirdPartiesService
         $tableName = $this->getThirdPartiesItemsTableName($accountId);
 
         foreach (array_chunk($mappedInfo, 500) as $t) {
+            
             DB::table($tableName)->insert($t);
         }
     }
@@ -254,7 +255,7 @@ class ThirdPartiesService
         $carbonEnd = Carbon::parse($endDate)->addDay();
 
         $mappedInfo = [];
-
+        
         foreach ($fileArray as $fileKey => $fileValue) {
             $row = [];
             foreach ($map as $value) {
@@ -281,18 +282,21 @@ class ThirdPartiesService
             }
             $row['FECHA DEL MOVIMIENTO'] = $row['FECHA DEL MOVIMIENTO']->format('Y/m/d');
 
+            
+            
+            if(array_key_exists('VALOR (Debito/Credito)', $row)){
+                if($row['VALOR (Debito/Credito)'] > 0){
+                    $row['VALOR DEBITO'] = $row['VALOR (Debito/Credito)'];
+                    $row['VALOR CREDITO'] = 0;
+                }else{
+                    $row['VALOR DEBITO'] = 0;
+                    $row['VALOR CREDITO'] = abs($row['VALOR (Debito/Credito)']);
+                }
+            }
             // fix currency and decimal separtor
             $row['VALOR DEBITO'] = $this->fixedCurrency($separator, $row['VALOR DEBITO']);
             $row['VALOR CRÉDITO'] = $this->fixedCurrency($separator, $row['VALOR CRÉDITO']);
-
-            if (array_key_exists('VALOR (DEBITO/CREDITO)', $row)) {
-                $row['VALOR (DEBITO/CREDITO'] = $this->fixedCurrency($separator, $row['VALOR (DEBITO/CREDITO']);
-                if ($row['VALOR (DEBITO/CREDITO'] > 0) {
-                    $mappedRow['VALOR CRÉDITO'] =  $row['VALOR (DEBITO/CREDITO'];
-                } else {
-                    $mappedRow['VALOR DEBITO'] =  abs($row['VALOR (DEBITO/CREDITO']);
-                }
-            }
+            
             $mappedInfo[] = $this->cellToInsertExterno($row,  $header->id);
         }
 

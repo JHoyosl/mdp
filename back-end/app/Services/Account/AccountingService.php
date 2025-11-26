@@ -66,6 +66,7 @@ class AccountingService
 
     public function uploadAccountInfo($user, $file, $startDate, $endDate, $company)
     {
+        
         ini_set('memory_limit', '-1');
         set_time_limit(300);
 
@@ -78,7 +79,7 @@ class AccountingService
         foreach ($accounts as $account) {
             $accArray[$account->local_account] = $account->bank_account;
         }
-
+        
         DB::beginTransaction();
 
         try {
@@ -90,12 +91,12 @@ class AccountingService
                 $startDate,
                 $endDate
             );
-
+            
             $mapped = $this->getInsertConciliarLocal($file, $company->map_id, $startDate, $endDate, $newHeader->id, $accArray);
-
+            
             $newHeader->rows = count($mapped);
             $newHeader->save();
-
+            
             foreach (array_chunk($mapped, 500) as $t) {
                 DB::table($this->accountingItemsTable)->insert($t);
             }
@@ -174,13 +175,14 @@ class AccountingService
         $carbonStart = Carbon::parse($startDate)->subDay();
         $carbonEnd = Carbon::parse($endDate)->addDay();
 
+        
         $fileArray = $this->fileToArray($file);
         $mapIndex = $this->mappingFileService->getMapIndex(MapFile::TYPE_INTERNAL);
         $mapModel = MapFile::find($map_id);
         $map = json_decode($mapModel->map, true);
         $separator = $mapModel->separator;
         $dateFormat = str_replace('aaaa', 'yyyy', $mapModel->date_format);
-
+        
         $row = [];
         foreach ($fileArray as $fileKey => $fileValue) {
 
@@ -199,18 +201,30 @@ class AccountingService
             if (strtotime($row['FECHA DE MOVIMIENTO']) === false) {
                 throw new Exception("Fecha de movimiento inválida en {$fileKey}" . json_encode($row), 400);
             }
-
+            
             $row['CUENTA EXTERNA'] = array_key_exists(strVal($row['NUMERO CUENTA CONTABLE']), $accArray)
                 ? $accArray[$row['NUMERO CUENTA CONTABLE']]
                 : $row['NUMERO CUENTA CONTABLE'];
-
-
+            
+            if(array_key_exists('VALOR (Debito/Credito)', $row)){
+                if($row['VALOR (Debito/Credito)'] > 0){
+                    $row['VALOR DEBITO'] = $row['VALOR (Debito/Credito)'];
+                    $row['VALOR CREDITO'] = 0;
+                }else{
+                    $row['VALOR DEBITO'] = 0;
+                    $row['VALOR CREDITO'] = abs($row['VALOR (Debito/Credito)']);
+                }
+            }
+            
+            if(array_key_exists('SALDO ACTUAL', $row)){
+                $row['SALDO ACTUAL'] = $this->fixedCurrency($separator, $row['SALDO ACTUAL']);
+            }
             $row['VALOR DEBITO'] = $this->fixedCurrency($separator, $row['VALOR DEBITO']);
             $row['VALOR CREDITO'] = $this->fixedCurrency($separator, $row['VALOR CREDITO']);
-            $row['SALDO ACTUAL'] = $this->fixedCurrency($separator, $row['SALDO ACTUAL']);
-
+            
             $mapped[] = $this->rowToInsert($row, $headerId, $carbonStart, $carbonEnd, $fileKey, $dateFormat);
         }
+        
         return $mapped;
     }
 
@@ -230,11 +244,14 @@ class AccountingService
 
     private function rowToInsert($row, $headerId, $startDate, $endDate, $fileKey, $dateFormat)
     {
+        
         $carbonCompare = $this->transformDate($dateFormat, $row['FECHA DE MOVIMIENTO']);
+        
         if ($carbonCompare->gte($endDate)) {
             throw new Exception("Fecha de movimiento mayor del rango en {$fileKey}" . json_encode($row), 400);
         }
         if ($carbonCompare->lte($startDate)) {
+            throw new Exception("start: {$startDate}, end: {$endDate}, fecha: {$carbonCompare}, {$row['FECHA DE MOVIMIENTO']} ".json_encode($row), 400);
             throw new Exception("Fecha de movimiento menor de rango en {$fileKey} - " . json_encode($row), 400);
         }
         $row['FECHA DE MOVIMIENTO'] = $carbonCompare->format('Y-m-d');

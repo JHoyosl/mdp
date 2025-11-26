@@ -219,7 +219,6 @@ class CompanyController extends ApiController
 
     private function createTables($id){
 
-        //return 'hola';
 
         $user = Auth::user();
 
