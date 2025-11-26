@@ -98,7 +98,7 @@ class ThirdPartiesController extends ApiController
                 $request->startDate,
                 $request->endDate
             );
-            return $header;
+
             return $this->showOne($header);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());

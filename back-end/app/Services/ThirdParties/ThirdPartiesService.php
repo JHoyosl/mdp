@@ -158,6 +158,8 @@ class ThirdPartiesService
 
             DB::commit();
 
+            return $newHeader;
+
         } catch (Exception $e) {
             DB::rollBack();
             throw new Exception($e->getMessage(), 500);
