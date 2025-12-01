@@ -199,8 +199,8 @@ class ReconciliationService
     {
         foreach ($items as $item) {
             $tableName = $this->getReconciliationItemTableName($companyId);
-            $itemsTable =  new ReconciliationLocalValues($tableName);
-
+            $itemsTable =  new ReconciliationItem($tableName);
+            
             $newProcess = $itemsTable->insertGetId($item->newProcess);
             $item->newProcess = $itemsTable->where('id', $newProcess)->first();
 
