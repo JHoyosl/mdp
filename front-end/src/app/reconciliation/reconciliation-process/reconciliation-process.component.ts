@@ -22,7 +22,7 @@ export class ReconciliationProcessComponent implements OnInit, OnDestroy {
   constructor(
     private activatedroute: ActivatedRoute,
     private reconciliationService: ReconciliationService,
-    private reconciliationProcess: ReconciliationProcessService
+    private reconciliationProcess: ReconciliationProcessService,
   ) {}
 
   ngOnInit() {
@@ -45,7 +45,7 @@ export class ReconciliationProcessComponent implements OnInit, OnDestroy {
     });
 
     const process = this.reconciliationProcess.process$.subscribe(
-      (process) => process && this.setStep(process)
+      (process) => process && this.setStep(process),
     );
 
     //if process on URL set process
@@ -64,7 +64,7 @@ export class ReconciliationProcessComponent implements OnInit, OnDestroy {
       this.reconciliationProcess.getAccounts.length === 0
     ) {
       console.error(
-        "if not process id and not account, error and return to accresume"
+        "if not process id and not account, error and return to accresume",
       );
       return;
     }

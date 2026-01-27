@@ -101,7 +101,7 @@ class ThirdPartiesService
             ->where('status', HeaderThirdPartiesInfo::STATUS_OPEN)
             ->Orderby('end_date', 'desc')
             ->first();
-
+        
         if (!$lastHeader) {
             throw new Exception('No existe cargues para eliminar', 400);
         }
@@ -153,7 +153,7 @@ class ThirdPartiesService
                 $endDate,
                 $file
             );
-            
+                
             $this->getInsertData($accountId, $newHeader, $file, $startDate, $endDate);
 
             DB::commit();
@@ -257,7 +257,7 @@ class ThirdPartiesService
         $carbonEnd = Carbon::parse($endDate)->addDay();
 
         $mappedInfo = [];
-        
+
         foreach ($fileArray as $fileKey => $fileValue) {
             $row = [];
             foreach ($map as $value) {
@@ -276,6 +276,8 @@ class ThirdPartiesService
 
             // Validate dates
             $row['FECHA DEL MOVIMIENTO'] = Carbon::parse($row['FECHA DEL MOVIMIENTO']);
+            $row['FECHA DEL ARCHIVO'] = Carbon::parse($row['FECHA DEL ARCHIVO']);
+            
             if ($row['FECHA DEL MOVIMIENTO']->gt($carbonEnd)) {
                 throw new Exception("Fecha de movimiento mayor del rango en {$row['FECHA DEL MOVIMIENTO']->format('Y/m/d')} - " . json_encode($row), 400);
             }
@@ -284,8 +286,6 @@ class ThirdPartiesService
             }
             $row['FECHA DEL MOVIMIENTO'] = $row['FECHA DEL MOVIMIENTO']->format('Y/m/d');
 
-            
-            
             if(array_key_exists('VALOR (Debito/Credito)', $row)){
                 if($row['VALOR (Debito/Credito)'] > 0){
                     $row['VALOR DEBITO'] = $row['VALOR (Debito/Credito)'];
@@ -296,9 +296,9 @@ class ThirdPartiesService
                 }
             }
             // fix currency and decimal separtor
-            $row['VALOR DEBITO'] = $this->fixedCurrency($separator, $row['VALOR DEBITO']);
-            $row['VALOR CRÉDITO'] = $this->fixedCurrency($separator, $row['VALOR CRÉDITO']);
-            
+            // return [$separator,$row];
+            // $row['VALOR DEBITO'] = $this->fixedCurrency($separator, $row['VALOR DEBITO']);
+            // $row['VALOR CRÉDITO'] = $this->fixedCurrency($separator, $row['VALOR CRÉDITO']);
             $mappedInfo[] = $this->cellToInsertExterno($row,  $header->id);
         }
 

@@ -1,29 +1,27 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { NgbTabset, NgbAccordion } from '@ng-bootstrap/ng-bootstrap';
-import { ApiRequestService } from 'src/app/services/api-request.service';
-import Swal from 'sweetalert2';
-import { ConciliarModel } from 'src/app/models/conciliar.model';
-import { ToastrService } from 'ngx-toastr';
-import { AccountModel } from 'src/app/models/account.model';
+import { Component, OnInit, ViewChild } from "@angular/core";
+import { NgbTabset, NgbAccordion } from "@ng-bootstrap/ng-bootstrap";
+import { ApiRequestService } from "src/app/services/api-request.service";
+import Swal from "sweetalert2";
+import { ConciliarModel } from "src/app/models/conciliar.model";
+import { ToastrService } from "ngx-toastr";
+import { AccountModel } from "src/app/models/account.model";
 
 @Component({
-  selector: 'app-conciliar-process',
-  templateUrl: './conciliar-process.component.html',
-  styleUrls: ['./conciliar-process.component.css']
+  selector: "app-conciliar-process",
+  templateUrl: "./conciliar-process.component.html",
+  styleUrls: ["./conciliar-process.component.css"],
 })
 export class ConciliarProcessComponent implements OnInit {
-
-
-  @ViewChild('tabSet')
+  @ViewChild("tabSet")
   private tabSet: NgbTabset;
 
-  @ViewChild('acc')
+  @ViewChild("acc")
   private acc: NgbAccordion;
 
-  constructor(private apiRequest: ApiRequestService, private toastr: ToastrService ) {
-
-
-  }
+  constructor(
+    private apiRequest: ApiRequestService,
+    private toastr: ToastrService,
+  ) {}
 
   currentUploadInfoAccount: AccountModel;
   isConciliarIni = true;
@@ -31,7 +29,7 @@ export class ConciliarProcessComponent implements OnInit {
   procesList = [];
   conciliarAccounts = [];
   conciliarBanks = [];
-  fechaCierre = '';
+  fechaCierre = "";
 
   externalIniArray = [];
   localIniArray = [];
@@ -48,286 +46,248 @@ export class ConciliarProcessComponent implements OnInit {
   hasIniDisplay = true;
   isUploadFile = true;
 
-
   ngOnInit() {
-
+    console.log("hola");
     this.isIniConciliar();
 
     this.getProcessList();
-
   }
 
-
-
   setViewConciliar() {
-
     let currentBank = this.viewItemList[0].account.banks.name;
     let bankArray = [];
 
     bankArray.push(this.viewItemList[0]);
 
     if (this.viewItemList.length === 1) {
-
       const tmpArray = [];
-      tmpArray['name'] = currentBank;
-      tmpArray['data'] = bankArray;
+      tmpArray["name"] = currentBank;
+      tmpArray["data"] = bankArray;
       this.banksViewIniInfo.push(tmpArray);
       return;
     }
 
     for (let i = 1; i < this.viewItemList.length; i++) {
-
       if (this.viewItemList[i].account.banks.name == currentBank) {
-
         bankArray.push(this.viewItemList[i]);
-        if (this.viewItemList.length == (i + 1)) {
-
+        if (this.viewItemList.length == i + 1) {
           const tmpArray = [];
-          tmpArray['name'] = currentBank;
-          tmpArray['data'] = bankArray;
+          tmpArray["name"] = currentBank;
+          tmpArray["data"] = bankArray;
 
           this.banksViewIniInfo.push(tmpArray);
         }
-
       } else {
-
         const tmpArray = [];
-        tmpArray['name'] = currentBank;
-        tmpArray['data'] = bankArray;
+        tmpArray["name"] = currentBank;
+        tmpArray["data"] = bankArray;
 
         this.banksViewIniInfo.push(tmpArray);
         currentBank = this.viewItemList[i].account.banks.name;
         bankArray = [];
         bankArray.push(this.viewItemList[i]);
 
-        if (this.viewItemList.length == (i + 1)) {
-
+        if (this.viewItemList.length == i + 1) {
           const tmpArray = [];
-          tmpArray['name'] = currentBank;
-          tmpArray['data'] = bankArray;
+          tmpArray["name"] = currentBank;
+          tmpArray["data"] = bankArray;
 
           this.banksViewIniInfo.push(tmpArray);
         }
       }
     }
-    this.tabSet.activeId = 'detalle';
-
+    this.tabSet.activeId = "detalle";
   }
 
   viewConciliacion(process) {
-
     this.banksViewIniInfo = [];
 
-    this.apiRequest.getCollection(`headers/getHeaderItems/${process.id}`)
-      .subscribe( (response) => {
-        this.viewItemList = response;
-        this.setViewConciliar();
-        
-        this.tabSet.activeId = 'detalle';
-      }, (err) => {
+    this.apiRequest
+      .getCollection(`headers/getHeaderItems/${process.id}`)
+      .subscribe(
+        (response) => {
+          this.viewItemList = response;
+          this.setViewConciliar();
 
-        console.error(err);
-      });
+          this.tabSet.activeId = "detalle";
+        },
+        (err) => {
+          console.error(err);
+        },
+      );
   }
 
   getProcessList() {
-
-    this.apiRequest.getCollection('headers')
-      .subscribe( (response) => {
+    this.apiRequest.getCollection("headers").subscribe(
+      (response) => {
         this.procesList = response;
-      }, (err) => {
+      },
+      (err) => {
         console.error(err);
-      })
+      },
+    );
   }
 
   isIniConciliar() {
-
-
-
-    this.apiRequest.postForm(null, `conciliar/isIniConciliar`)
-      .subscribe( (response) => {
-    
-        if (!response['status']) {
-
-          this.tabSet.activeId = 'inicial';
-
+    this.apiRequest.postForm(null, `conciliar/isIniConciliar`).subscribe(
+      (response) => {
+        if (!response["status"]) {
+          this.tabSet.activeId = "inicial";
         } else {
-
           this.disableInicial = true;
-          this.tabSet.activeId = 'conciliar'
+          this.tabSet.activeId = "conciliar";
           this.getAccounts();
         }
-
-      }, (err) => {
-    
+      },
+      (err) => {
         console.error(err);
-
-      });
+      },
+    );
   }
 
-  groupBankAccount( toOrder: AccountModel[]) {
-    if(toOrder.length === 0){
+  groupBankAccount(toOrder: AccountModel[]) {
+    if (toOrder.length === 0) {
       return;
     }
     const orderBanks = [];
     toOrder
       .map((account) => account.bank_id)
       .reduce((acc, curr) => {
-        if(!acc.includes(curr)){
+        if (!acc.includes(curr)) {
           acc.push(curr);
         }
-          return acc;
-        }, [])
+        return acc;
+      }, [])
       .forEach((value) => {
-          orderBanks.push(toOrder
-            .filter((account)=> account.bank_id == value)
-        )});
+        orderBanks.push(toOrder.filter((account) => account.bank_id == value));
+      });
 
     return orderBanks;
   }
 
   getAccounts() {
-
     this.conciliarAccounts = [];
-    this.apiRequest.getPostCollection(`conciliar/getCuentasToConciliar`)
-      .subscribe( (response) => {
+    this.apiRequest
+      .getPostCollection(`conciliar/getCuentasToConciliar`)
+      .subscribe(
+        (response) => {
+          let tmp: any = [];
+          tmp = response["data"];
 
-        let tmp: any = [];
-        tmp = response['data'];
+          for (let i = 0; i < tmp.length; i++) {
+            const tmpAccount = new AccountModel();
+            const tmpConciliar = new ConciliarModel();
 
-        for (let i = 0; i < tmp.length; i++) {
+            tmpConciliar.setValues(tmp[i]);
+            tmpAccount.conciliarInfo = tmpConciliar;
 
-          const tmpAccount = new AccountModel();
-          const tmpConciliar = new ConciliarModel();
+            tmpAccount.setValues(tmp[i].account);
+            this.conciliarAccounts.push(tmpAccount);
+          }
 
-          tmpConciliar.setValues(tmp[i]);
-          tmpAccount.conciliarInfo = tmpConciliar;
-
-          tmpAccount.setValues(tmp[i].account);
-          this.conciliarAccounts.push(tmpAccount);
-
-        }
-
-        this.conciliarBanks = this.groupBankAccount(this.conciliarAccounts);
-
-      }, (err) => {
-
-        console.error(err);
-
-      });
+          this.conciliarBanks = this.groupBankAccount(this.conciliarAccounts);
+        },
+        (err) => {
+          console.error(err);
+        },
+      );
   }
 
   hasIni() {
-
-    this.apiRequest.getCollection('conciliar')
-      .subscribe( (response) => {
-
+    this.apiRequest.getCollection("conciliar").subscribe(
+      (response) => {
         if (response.length === 0) {
-
           this.hasIniDisplay = false;
-          this.tabSet.activeId = 'inicial';
+          this.tabSet.activeId = "inicial";
         } else {
-
           this.hasIniDisplay = true;
         }
-        
-      }, (err) => {
-
+      },
+      (err) => {
         console.error(err);
-      })
-
-
+      },
+    );
   }
 
   chooseUploadFile(account: AccountModel) {
-
     this.currentUploadInfoAccount = account;
-    $('#uploadAccountFile').click();
-
+    $("#uploadAccountFile").click();
   }
 
   uploadAccountFile(file: FileList) {
-
     const formData = this.currentUploadInfoAccount.toFormData();
-    formData.append('file', file.item(0));
+    formData.append("file", file.item(0));
 
-
-    this.apiRequest.uploadFile(formData, 'conciliar/uploadAccountFile')
-      .subscribe((response) => {
-    
-        for ( let i = 0; i < this.conciliarBanks.length; i++) {
-
-          for ( let j = 0; j < this.conciliarBanks[i].data.length; j++) {
-            if (this.conciliarBanks[i].data[j].id === response.account_id) {
-              this.conciliarBanks[i].data[j].conciliarInfo.balanceExternal = response.balance_externo;
-              this.conciliarBanks[i].data[j].conciliarInfo.balanceLocal = response.balance_local;
-              this.conciliarBanks[i].data[j].conciliarInfo.creditExternal = response.credit_externo;
-              this.conciliarBanks[i].data[j].conciliarInfo.creditLocal = response.credit_local;
-              this.conciliarBanks[i].data[j].conciliarInfo.debitExternal = response.debit_externo;
-              this.conciliarBanks[i].data[j].conciliarInfo.debitLocal = response.debit_local;
+    this.apiRequest
+      .uploadFile(formData, "conciliar/uploadAccountFile")
+      .subscribe(
+        (response) => {
+          for (let i = 0; i < this.conciliarBanks.length; i++) {
+            for (let j = 0; j < this.conciliarBanks[i].data.length; j++) {
+              if (this.conciliarBanks[i].data[j].id === response.account_id) {
+                this.conciliarBanks[i].data[j].conciliarInfo.balanceExternal =
+                  response.balance_externo;
+                this.conciliarBanks[i].data[j].conciliarInfo.balanceLocal =
+                  response.balance_local;
+                this.conciliarBanks[i].data[j].conciliarInfo.creditExternal =
+                  response.credit_externo;
+                this.conciliarBanks[i].data[j].conciliarInfo.creditLocal =
+                  response.credit_local;
+                this.conciliarBanks[i].data[j].conciliarInfo.debitExternal =
+                  response.debit_externo;
+                this.conciliarBanks[i].data[j].conciliarInfo.debitLocal =
+                  response.debit_local;
+              }
             }
-
           }
-        }
-      }, (err) => {
-    
-        Swal.fire(
-          'Error',
-          err.error.errors.join(),
-          'warning'
-        )
+        },
+        (err) => {
+          Swal.fire("Error", err.error.errors.join(), "warning");
 
-        console.error(err);
-      })
+          console.error(err);
+        },
+      );
   }
 
   orderConsolidadoInfo() {
-
     let currentBank = this.iniAcounts[0].bank_name;
     let bankArray = [];
 
     bankArray.push(this.iniAcounts[0]);
 
     if (this.iniAcounts.length == 1) {
-
       const tmpArray = [];
-      tmpArray['name'] = currentBank;
-      tmpArray['data'] = bankArray;
+      tmpArray["name"] = currentBank;
+      tmpArray["data"] = bankArray;
       this.banksIniInfo.push(tmpArray);
 
       return;
     }
 
     for (let i = 1; i < this.iniAcounts.length; i++) {
-
       if (this.iniAcounts[i].bank_name == currentBank) {
-
         bankArray.push(this.iniAcounts[i]);
-        if (this.iniAcounts.length == (i + 1)) {
-
+        if (this.iniAcounts.length == i + 1) {
           const tmpArray = [];
-          tmpArray['name'] = currentBank;
-          tmpArray['data'] = bankArray;
+          tmpArray["name"] = currentBank;
+          tmpArray["data"] = bankArray;
 
           this.banksIniInfo.push(tmpArray);
         }
-
       } else {
-
         const tmpArray = [];
-        tmpArray['name'] = currentBank;
-        tmpArray['data'] = bankArray;
+        tmpArray["name"] = currentBank;
+        tmpArray["data"] = bankArray;
 
         this.banksIniInfo.push(tmpArray);
         currentBank = this.iniAcounts[i].bank_name;
         bankArray = [];
         bankArray.push(this.iniAcounts[i]);
 
-        if (this.iniAcounts.length == (i + 1)) {
-
+        if (this.iniAcounts.length == i + 1) {
           const tmpArray = [];
-          tmpArray['name'] = currentBank;
-          tmpArray['data'] = bankArray;
+          tmpArray["name"] = currentBank;
+          tmpArray["data"] = bankArray;
 
           this.banksIniInfo.push(tmpArray);
         }
@@ -336,198 +296,167 @@ export class ConciliarProcessComponent implements OnInit {
   }
 
   calcTotal(account: ConciliarModel) {
-
     account.getTotal();
-
   }
 
-  uploadContableFile( contableFile: File){
-
-
-
+  uploadContableFile(contableFile: File) {
     const formData = new FormData();
-    formData.append('file', contableFile);
+    formData.append("file", contableFile);
 
-    this.apiRequest.uploadFile(formData, 'conciliar/uploadConciliarContable')
-      .subscribe( (response) => {
-    
-        this.getAccounts();
-        
-      }, (err) => {
-    
-        console.error(err);
-      });
-
+    this.apiRequest
+      .uploadFile(formData, "conciliar/uploadConciliarContable")
+      .subscribe(
+        (response) => {
+          this.getAccounts();
+        },
+        (err) => {
+          console.error(err);
+        },
+      );
   }
 
-  uploadIni( iniFile: File ) {
-
-
-
+  uploadIni(iniFile: File) {
     const formData = new FormData();
-    formData.append('file', iniFile);
+    formData.append("file", iniFile);
 
-    this.apiRequest.uploadFile(formData, 'conciliar/uploadIniFile')
-      .subscribe( (response) => {
-
-    
+    this.apiRequest.uploadFile(formData, "conciliar/uploadIniFile").subscribe(
+      (response) => {
         this.isUploadFile = false;
         this.localIniArray = response.local;
         this.externalIniArray = response.external;
 
         if (this.localIniArray.length !== this.externalIniArray.length) {
-
           Swal.fire(
-            'Error',
-            'La cantidad de cuentaas externas e internas no coinciden',
-            'warning'
-          )
+            "Error",
+            "La cantidad de cuentaas externas e internas no coinciden",
+            "warning",
+          );
           return;
         }
 
         for (let i = 0; i < this.externalIniArray.length; i++) {
           const accountMatch = false;
           for (let j = 0; j < this.localIniArray.length; j++) {
-            if (this.externalIniArray[i].local_account === this.localIniArray[j].local_account) {
-
+            if (
+              this.externalIniArray[i].local_account ===
+              this.localIniArray[j].local_account
+            ) {
               const accountConciliar = new ConciliarModel();
               accountConciliar.creditExternal = this.externalIniArray[i].credit;
               accountConciliar.creditLocal = this.localIniArray[j].credit;
               accountConciliar.debitExternal = this.externalIniArray[i].debit;
               accountConciliar.debitLocal = this.localIniArray[j].debit;
-              accountConciliar.local_account = this.localIniArray[j].local_account;
-              accountConciliar.external_account = this.externalIniArray[i].numero_cuenta;
+              accountConciliar.local_account =
+                this.localIniArray[j].local_account;
+              accountConciliar.external_account =
+                this.externalIniArray[i].numero_cuenta;
               accountConciliar.bank_name = this.externalIniArray[i].name;
               accountConciliar.getTotal();
 
               this.iniAcounts.push(accountConciliar);
-
-
             }
-
-
           }
         }
 
-
         this.orderConsolidadoInfo();
-      }, (err) => {
-
-    
-        Swal.fire(
-          'Error',
-          err.error.errors.join(),
-          'warning'
-        );
+      },
+      (err) => {
+        Swal.fire("Error", err.error.errors.join(), "warning");
         console.error(err);
-
-      });
+      },
+    );
   }
 
-  onFileChange( file: FileList ) {
-
+  onFileChange(file: FileList) {
     if (file.length > 0) {
       this.uploadIni(file.item(0));
     }
-
   }
 
-  onContableFileChange( file: FileList ) {
-
+  onContableFileChange(file: FileList) {
     if (file.length > 0) {
       this.uploadContableFile(file.item(0));
     }
-
   }
 
   confirmConciliar() {
-
     const tmpList: ConciliarModel[] = [];
     for (let i = 0; i < this.iniAcounts.length; i++) {
-
       this.iniAcounts[i].getTotal();
 
       if (!this.iniAcounts[i].isDirt) {
-
         tmpList.push(this.iniAcounts[i]);
-
       }
 
       if (Number(this.iniAcounts[i].cuadre.toFixed(2)) != 0) {
         Swal.fire(
-          'Error',
+          "Error",
           `La cuenta: '${this.iniAcounts[i].bank_name}  - ${this.iniAcounts[i].external_account} no cuadran debidamente`,
-          'error'
-        )
+          "error",
+        );
         return;
       }
-
-
     }
 
     if (tmpList.length > 0) {
-
-      let stringAccounts = '';
-      for (let i = 0; i < tmpList.length; i ++) {
-
+      let stringAccounts = "";
+      for (let i = 0; i < tmpList.length; i++) {
         stringAccounts += `${tmpList[i].bank_name} - ${tmpList[i].external_account} <br>`;
       }
 
       Swal.fire({
-        title: '¿Desea Continuar?',
+        title: "¿Desea Continuar?",
         html: `Las siguientes cuentas están cuadradas pero no fueron ingresados saldos,
                   ¿Desea igual continuar con la conciliación? <br>${stringAccounts}`,
-        type: 'warning',
+        type: "warning",
         showCancelButton: true,
         // confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Continuar'
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Continuar",
       }).then((result) => {
         if (result.value) {
           this.closeIniConciliar();
-
         }
       });
-
     }
 
     this.closeIniConciliar();
   }
 
   closeIniConciliar() {
-
-    if (this.fechaCierre === '' || this.fechaCierre == null) {
-
-      Swal.fire(
-        'Error',
-        `Debe Ingresar una fecha de cierre`,
-        'error'
-      );
+    if (this.fechaCierre === "" || this.fechaCierre == null) {
+      Swal.fire("Error", `Debe Ingresar una fecha de cierre`, "error");
 
       return;
     }
 
-    const lastDay = new Date(this.fechaCierre['year'], this.fechaCierre['month'], 0);
+    const lastDay = new Date(
+      this.fechaCierre["year"],
+      this.fechaCierre["month"],
+      0,
+    );
 
     const formData = new FormData();
-    formData.set('info', JSON.stringify(this.iniAcounts));
-    formData.set('fecha_cierre', `${this.fechaCierre['year']}/${this.fechaCierre['month']}/${lastDay.getDate()}`);
+    formData.set("info", JSON.stringify(this.iniAcounts));
+    formData.set(
+      "fecha_cierre",
+      `${this.fechaCierre["year"]}/${this.fechaCierre["month"]}/${lastDay.getDate()}`,
+    );
 
-    this.apiRequest.postForm(formData, `conciliar/closeIniConciliar`)
-      .subscribe((response) => {
+    this.apiRequest.postForm(formData, `conciliar/closeIniConciliar`).subscribe(
+      (response) => {
         this.getProcessList();
-        this.toastr.success('Conciliación cerrada correctamente', 'Success!');
+        this.toastr.success("Conciliación cerrada correctamente", "Success!");
         this.getProcessList();
-        this.tabSet.activeId = 'List';
-      }, (err) => {
-
+        this.tabSet.activeId = "List";
+      },
+      (err) => {
         console.error(err);
-      })
+      },
+    );
   }
 
-
   cancelIniConciliar() {
-
     this.isUploadFile = true;
     this.externalIniArray = [];
     this.localIniArray = [];
