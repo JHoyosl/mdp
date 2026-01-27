@@ -23,7 +23,7 @@ class ReconciliationItem extends Model
     const STEP_MANUAL = 'MANUAL';
     const STEP_DONE = 'DONE';
 
-    protected $table = "conciliar_items";
+    protected $table = "";
     protected $dates = ['deleted_at'];
 
     public function __construct($tableName = null)

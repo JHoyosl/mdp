@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  // url: 'https://mdp-api.globalsys.co/',
+  // url: "https://mdp-api.globalsys.co/",
   url: "http://localhost:9004/",
   clientId: "3a5ae6f5-8c6b-4bd6-bce0-c78ce9e050ba",
   appKey: "S2YSfLAHRyq9C53LuKc7gr3Apt8IcJjhX9eeWAcP",
