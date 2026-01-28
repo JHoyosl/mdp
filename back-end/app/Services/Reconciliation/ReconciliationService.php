@@ -158,24 +158,60 @@ class ReconciliationService
     }
 
 
+    public function removePreviewOpenProcess($companyId, $accounts){
 
+        $itemsTableName = $this->getReconciliationItemTableName($companyId);
+        $externalValuesTableName = $this->getReconciliationExternalValuesTableName($companyId);
+        $localValuesTableName = $this->getReconciliationLocalValuesTableName($companyId);
+        
+        $itemsTable = new ReconciliationItem();
+        $externalValuesTable = new ReconciliationExternalValues($externalValuesTableName);
+        $localValuesTable = new ReconciliationLocalValues($localValuesTableName);
+
+        $itemsTable->setTable($itemsTableName); 
+        
+        $openProcesses = $itemsTable->whereIn('account_id', $accounts)
+            ->where('status', ReconciliationItem::OPEN_STATUS)
+            ->get();
+
+        if ($openProcesses->isEmpty()) {
+            return;
+        }
+
+        $itemIds = $openProcesses->pluck('id')->toArray();
+
+        DB::beginTransaction();
+        
+        // Delete from external values table
+        $externalValuesTable->whereIn('item_id', $itemIds)->delete();
+        
+        // Delete from local values table
+        $localValuesTable->whereIn('item_id', $itemIds)->delete();
+        
+        // Delete the process items
+        $itemsTable->whereIn('id', $itemIds)->delete();
+        
+        DB::commit();
+    }
 
     public function newProcess($date, $accounts, $companyId, $user)
     {
-
+        //remove previous open process for the accounts
+        $this->removePreviewOpenProcess($companyId, $accounts);
+        
         $items = $this->getReconciliationItems($companyId, $accounts);
-
+        
         $this->checkThirdPartiesInfo($items, $companyId, $date);
         $this->checkAccountingInfo($companyId, $date);
 
-        $items = $this->createReconciliationItem($items, $date);
-
-        $items = $this->getInfoToReconciliate($companyId, $items, $date);
-
+        $reconciliationItems = $this->createReconciliationItem($items, $date);
+        
+        $reconciliateItems = $this->getInfoToReconciliate($companyId, $reconciliationItems, $date);
+        
         DB::beginTransaction();
 
-        $this->insertInfoToReconciliate($companyId,  $items);
-
+        $this->insertInfoToReconciliate($companyId,  $reconciliateItems);
+    
         $balance = $this->getProcessBalance($items[0]->newProcess->process, $companyId);
 
         $this->setReconciliationBalance($balance, $companyId);
@@ -204,6 +240,10 @@ class ReconciliationService
             $item->newProcess = $itemsTable->where('id', $newProcess)->first();
 
             foreach ($item->accountingInfo as $row) {
+                if($row->valor_debito_credito){
+                    $row->valor_credito = $row->valor_debito_credito < 0 ? $row->valor_debito_credito : 0;
+                    $row->valor_debito = $row->valor_debito_credito > 0 ? abs($row->valor_debito_credito) : 0;
+                }
                 $accountingInfo[] = [
                     'item_id' => $item->newProcess->id,
                     'tx_type_id' => $row->tx_type_id,
@@ -242,9 +282,14 @@ class ReconciliationService
                     'beneficiario' => $row->beneficiario,
                     'created_at' => Carbon::now(),
                 ];
+                
             }
 
             foreach ($item->thirdPartyInfo as $row) {
+                if($row->valor_debito_credito){
+                    $row->valor_credito = $row->valor_debito_credito > 0 ? $row->valor_debito_credito : 0;
+                    $row->valor_debito = $row->valor_debito_credito < 0 ? abs($row->valor_debito_credito) : 0;
+                }
                 $thirdPartyInfo[] = [
                     'item_id' => $item->newProcess->id,
                     'tx_type_id' => $row->tx_type_id,
@@ -252,7 +297,7 @@ class ReconciliationService
                     'descripcion' => $row->descripcion,
                     'local_account' => $item->local_account,
                     'operador' => $row->operador,
-                    'valor_credito' => $row->valor_credito,
+                    'valor_credito' =>  $row->valor_credito,
                     'valor_debito' => $row->valor_debito,
                     'valor_debito_credito' => $row->valor_debito_credito,
                     'fecha_movimiento' => $row->fecha_movimiento,
@@ -383,6 +428,8 @@ class ReconciliationService
         return array_unique($accHeadersIds);
     }
 
+
+
     public function getReconciliationItems($companyId, $accounts)
     {
 
@@ -394,9 +441,9 @@ class ReconciliationService
         foreach ($accounts as $value) {
             $item = $itemsTable->where($itemsTableName . '.account_id', $value)
                 ->join('accounts', $itemsTableName . '.account_id', 'accounts.id')
-                ->orderBy($itemsTableName . '.created_at')
+                ->orderBy($itemsTableName . '.created_at', 'DESC')
                 ->first();
-
+            
             if ($item->step != ReconciliationItem::STEP_DONE) {
                 $invalidItems[] = [
                     'bankAccount' => $item->bank_account,
@@ -427,6 +474,8 @@ class ReconciliationService
         if (!$carbonDate->lte($endDate)) {
             throw new  Exception('No existe información contable para la fecha .' . $date);
         }
+
+        return true;
     }
 
     public function checkThirdPartiesInfo($items, $companyId, $date)
@@ -458,6 +507,8 @@ class ReconciliationService
         if (count($invalidDates) > 0) {
             throw new Exception(json_encode($invalidDates), 400);
         }
+
+        return true;
     }
 
     public function getAccountResume($companyId)
@@ -646,19 +697,19 @@ class ReconciliationService
         }
         $itemsTable = new ReconciliationItem();
         $itemsTable->setTable($itemsTableName);
-        return $itemsTable->join('accounts', $itemsTableName . '.account_id', 'accounts.id')
-            ->join('banks', 'banks.id', 'accounts.bank_id')
-            ->where('company_id', $companyId)
-            ->orderBy('start_date', 'DESC')
-            ->orderBy('account_id', 'DESC')
-            ->get();
-        // $items = Account::join($itemsTableName, 'accounts.id', $itemsTableName . '.id')
+        // return $itemsTable->join('accounts', $itemsTableName . '.account_id', 'accounts.id')
         //     ->join('banks', 'banks.id', 'accounts.bank_id')
         //     ->where('company_id', $companyId)
         //     ->orderBy('start_date', 'DESC')
         //     ->orderBy('account_id', 'DESC')
         //     ->get();
-        // return $items;
+        $items = Account::join($itemsTableName, 'accounts.id', $itemsTableName . '.id')
+            ->join('banks', 'banks.id', 'accounts.bank_id')
+            ->where('company_id', $companyId)
+            ->orderBy('start_date', 'DESC')
+            ->orderBy('account_id', 'DESC')
+            ->get();
+        return $items;
     }
 
     public function getReconciliationAccounts($companyId)
@@ -693,13 +744,27 @@ class ReconciliationService
     public function getProcessBalance($process, $companyId)
     {
         $itemsTableName = $this->getReconciliationItemTableName($companyId);
-        $ids = (new ReconciliationItem())
-            ->setTable($itemsTableName)
+        $itemsTable = new ReconciliationItem();
+        $itemsTable->setTable($itemsTableName);
+
+        $ids = $itemsTable
             ->where('process', $process)
             ->pluck('id')
             ->toArray();
-
+        
         $externalValuesTableName = $this->getReconciliationExternalValuesTableName($companyId);
+        DB::table($externalValuesTableName)
+            ->select(DB::raw(
+                "
+                {$externalValuesTableName}.item_id, 
+                {$externalValuesTableName}.local_account, 
+                SUM({$externalValuesTableName}.valor_credito) as externalCredit, 
+                SUM({$externalValuesTableName}.valor_debito) as externalDebit"
+            ))
+            ->whereIn("{$externalValuesTableName}.item_id", $ids)
+            ->groupBy("{$externalValuesTableName}.local_account", "{$externalValuesTableName}.item_id")
+            ->orderBy('local_account', 'ASC')
+            ->get();
         $eBalance = DB::table($externalValuesTableName)
             ->select(DB::raw(
                 "

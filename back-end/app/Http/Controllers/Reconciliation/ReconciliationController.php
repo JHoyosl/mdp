@@ -209,6 +209,7 @@ class ReconciliationController extends ApiController
                 $this->companyId,
                 $this->user
             );
+
             return $this->showAll($items);
         } catch (Exception $e) {
             return $this->errorResponse($e->getMessage(), $e->getCode());
@@ -231,8 +232,9 @@ class ReconciliationController extends ApiController
 
     public function getAccountProcess()
     {
-
+        
         $data = $this->reconciliationService->getAccountProcess($this->companyId);
+        return $data;
         return $this->showAll($data);
     }
 
