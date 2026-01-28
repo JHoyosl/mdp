@@ -241,7 +241,7 @@ class ReconciliationService
 
             foreach ($item->accountingInfo as $row) {
                 if($row->valor_debito_credito){
-                    $row->valor_credito = $row->valor_debito_credito < 0 ? $row->valor_debito_credito : 0;
+                    $row->valor_credito = $row->valor_debito_credito < 0 ? abs($row->valor_debito_credito) : 0;
                     $row->valor_debito = $row->valor_debito_credito > 0 ? abs($row->valor_debito_credito) : 0;
                 }
                 $accountingInfo[] = [
@@ -753,18 +753,7 @@ class ReconciliationService
             ->toArray();
         
         $externalValuesTableName = $this->getReconciliationExternalValuesTableName($companyId);
-        DB::table($externalValuesTableName)
-            ->select(DB::raw(
-                "
-                {$externalValuesTableName}.item_id, 
-                {$externalValuesTableName}.local_account, 
-                SUM({$externalValuesTableName}.valor_credito) as externalCredit, 
-                SUM({$externalValuesTableName}.valor_debito) as externalDebit"
-            ))
-            ->whereIn("{$externalValuesTableName}.item_id", $ids)
-            ->groupBy("{$externalValuesTableName}.local_account", "{$externalValuesTableName}.item_id")
-            ->orderBy('local_account', 'ASC')
-            ->get();
+
         $eBalance = DB::table($externalValuesTableName)
             ->select(DB::raw(
                 "
