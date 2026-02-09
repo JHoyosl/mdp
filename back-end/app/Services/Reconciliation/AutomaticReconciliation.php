@@ -19,28 +19,28 @@ class AutomaticReconciliation
 
     $queryStr = "SELECT
       localId,
-      GROUP_CONCAT(reconciliation_external_values_2.id) AS externalId
+      GROUP_CONCAT(" . $externalValuesTable . ".id) AS externalId
       FROM
       (SELECT
-      GROUP_CONCAT(reconciliation_local_values_2.id) AS localId,
-      reconciliation_local_values_2.referencia_1,
-      reconciliation_local_values_2.fecha_movimiento,
-      reconciliation_local_values_2.local_account,
+      GROUP_CONCAT(" . $localValuesTable . ".id) AS localId,
+      " . $localValuesTable . ".referencia_1,
+      " . $localValuesTable . ".fecha_movimiento,
+      " . $localValuesTable . ".local_account,
       SUM(valor_debito) AS valor_debito
       FROM
-      reconciliation_local_values_2
-      LEFT JOIN reconciliation_pivot_2 ON reconciliation_local_values_2.id = reconciliation_pivot_2.local_value
+      " . $localValuesTable . "
+      LEFT JOIN " . $pivotTable . " ON " . $localValuesTable . ".id = " . $pivotTable . ".local_value
       WHERE
-      reconciliation_pivot_2.local_value IS NULL
+      " . $pivotTable . ".local_value IS NULL
       AND tx_type_name IN ('REC')
       AND valor_debito > 0
-      GROUP BY reconciliation_local_values_2.referencia_1 , reconciliation_local_values_2.fecha_movimiento,
-      reconciliation_local_values_2.local_account) AS localValues
+      GROUP BY " . $localValuesTable . ".referencia_1 , " . $localValuesTable . ".fecha_movimiento,
+      " . $localValuesTable . ".local_account) AS localValues
       LEFT JOIN
-      reconciliation_external_values_2 ON localValues.fecha_movimiento = reconciliation_external_values_2.fecha_movimiento
-      AND localValues.local_account = reconciliation_external_values_2.local_account
-      AND localValues.valor_debito = reconciliation_external_values_2.valor_credito
-      WHERE reconciliation_external_values_2.id IS NOT NULL
+      " . $externalValuesTable . " ON localValues.fecha_movimiento = " . $externalValuesTable . ".fecha_movimiento
+      AND localValues.local_account = " . $externalValuesTable . ".local_account
+      AND localValues.valor_debito = " . $externalValuesTable . ".valor_credito
+      WHERE " . $externalValuesTable . ".id IS NOT NULL
       GROUP BY localId";
 
     return $queryStr;
@@ -489,6 +489,8 @@ class AutomaticReconciliation
     $localValuesTable = $this->getReconciliationLocalValuesTableName($companyId);
     $pivotTable = $this->getReconciliationPivotTableName($companyId);
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "SELECT 
         reconciliation_local_pending.id AS localId,
         GROUP_CONCAT(reconciliation_external_pending.id) AS externalId,
@@ -502,8 +504,8 @@ class AutomaticReconciliation
         AND reconciliation_local_pending.valor_debito = reconciliation_external_pending.valor_credito
         AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
       WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-        AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+        AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
         AND reconciliation_local_pending.valor_debito > 0
       GROUP BY reconciliation_local_pending.id
       HAVING count(*) > 1";
@@ -521,6 +523,8 @@ class AutomaticReconciliation
     $localValuesTable = $this->getReconciliationLocalValuesTableName($companyId);
     $pivotTable = $this->getReconciliationPivotTableName($companyId);
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "INSERT INTO " . $pivotTable . " (source_id, target_id,`type`,`case`, process)
       SELECT 
         reconciliation_local_pending.id AS localId,
@@ -536,8 +540,8 @@ class AutomaticReconciliation
         AND reconciliation_local_pending.valor_debito = reconciliation_external_pending.valor_credito
         AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
       WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-        AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+        AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
         AND reconciliation_local_pending.valor_debito > 0
       GROUP BY reconciliation_local_pending.id
       HAVING count(*) = 1";
@@ -551,6 +555,8 @@ class AutomaticReconciliation
     $localValuesTable = $this->getReconciliationLocalValuesTableName($companyId);
     $pivotTable = $this->getReconciliationPivotTableName($companyId);
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "SELECT 
         reconciliation_local_pending.id AS localId,
         GROUP_CONCAT(reconciliation_external_pending.id) AS externalId,
@@ -563,8 +569,8 @@ class AutomaticReconciliation
         AND reconciliation_local_pending.valor_debito = reconciliation_external_pending.valor_credito
         AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
       WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-        AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+        AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
         AND reconciliation_local_pending.valor_debito > 0
       GROUP BY reconciliation_local_pending.id
       HAVING count(*) > 1";
@@ -582,6 +588,8 @@ class AutomaticReconciliation
     $localValuesTable = $this->getReconciliationLocalValuesTableName($companyId);
     $pivotTable = $this->getReconciliationPivotTableName($companyId);
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "INSERT INTO " . $pivotTable . " (source_id, target_id,`type`,`case`, process)
       SELECT 
         reconciliation_local_pending.id AS localId,
@@ -596,8 +604,8 @@ class AutomaticReconciliation
         AND reconciliation_local_pending.valor_debito = reconciliation_external_pending.valor_credito
         AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
       WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-        AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+        AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
         AND reconciliation_local_pending.valor_debito > 0
       GROUP BY reconciliation_local_pending.id
       HAVING count(*) = 1";
@@ -611,6 +619,8 @@ class AutomaticReconciliation
     $localValuesTable = $this->getReconciliationLocalValuesTableName($companyId);
     $pivotTable = $this->getReconciliationPivotTableName($companyId);
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "SELECT
         GROUP_CONCAT(reconciliation_local_pending.id) AS localId,
         reconciliation_external_pending.id AS externalId,
@@ -623,14 +633,14 @@ class AutomaticReconciliation
         AND reconciliation_local_pending.local_account = reconciliation_external_pending.local_account
         AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
       WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-        AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+        AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
         AND reconciliation_local_pending.valor_debito > 0
         GROUP BY reconciliation_local_pending.referencia_1, reconciliation_external_pending.id
         HAVING vdLocal = vcExternal";
 
     $result = DB::select($queryStr);
-
+    
     $data = $this->oneExternalToManyLocal($result, ReconciliationService::TYPE_LE, 'CASE8B', $process);
 
     DB::table($pivotTable)->insert($data);
@@ -641,6 +651,8 @@ class AutomaticReconciliation
     $externalValuesTable = $this->getReconciliationExternalValuesTableName($companyId);
     $localValuesTable = $this->getReconciliationLocalValuesTableName($companyId);
     $pivotTable = $this->getReconciliationPivotTableName($companyId);
+
+    $accountsStr = $accounts->toArray();
 
     $queryStr = "SELECT
         GROUP_CONCAT(reconciliation_local_pending.id) AS localId,
@@ -653,8 +665,8 @@ class AutomaticReconciliation
         AND reconciliation_local_pending.local_account = reconciliation_external_pending.local_account
         AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
       WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-        AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+        AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
         AND reconciliation_local_pending.valor_debito > 0
         GROUP BY reconciliation_local_pending.referencia_1, reconciliation_external_pending.id
         HAVING vdLocal = vcExternal";
@@ -678,6 +690,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un caso7b para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "SELECT 
         reconciliation_local_pending.id AS localId,
         GROUP_CONCAT(reconciliation_external_pending.id) AS externalId
@@ -688,8 +702,8 @@ class AutomaticReconciliation
         AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
         AND reconciliation_local_pending.tx_type_name = 'COM'
         WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-        AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+        AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
         AND reconciliation_local_pending.valor_credito > 0
         GROUP BY 
         reconciliation_local_pending.id
@@ -713,6 +727,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un caso7 para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "INSERT INTO " . $pivotTable . " (source_id, target_id,`type`,`case`, process)
         SELECT 
         reconciliation_local_pending.id AS localId,
@@ -727,8 +743,8 @@ class AutomaticReconciliation
         AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
         AND reconciliation_local_pending.tx_type_name = 'COM'
         WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-        AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+        AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
         AND reconciliation_local_pending.valor_credito > 0
         GROUP BY 
         reconciliation_local_pending.id
@@ -749,6 +765,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un caso6D para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "SELECT
         reconciliation_local_pending.id AS localId,
         GROUP_CONCAT(reconciliation_external_pending.id) AS externalId
@@ -760,8 +778,8 @@ class AutomaticReconciliation
         AND reconciliation_local_pending.valor_credito = reconciliation_external_pending.valor_debito
         AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
         WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-        AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+        AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
         AND reconciliation_local_pending.valor_credito > 0
         GROUP BY reconciliation_local_pending.id";
 
@@ -782,6 +800,8 @@ class AutomaticReconciliation
     if (count($pivot) > 0) {
       throw new Exception('Ya existe un caso6C para este procesos', '400');
     }
+
+    $accountsStr = $accounts->toArray();
     // deja reciduo
     $queryStr = "INSERT INTO " . $pivotTable . " (source_id, target_id,`type`,`case`, process)
         SELECT
@@ -798,8 +818,8 @@ class AutomaticReconciliation
           AND reconciliation_local_pending.valor_credito = reconciliation_external_pending.valor_debito
           AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
         WHERE
-          reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-          AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+          reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+          AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
           AND reconciliation_local_pending.valor_credito > 0
         GROUP BY reconciliation_local_pending.id
         HAVING COUNT(*) = 1";
@@ -817,6 +837,8 @@ class AutomaticReconciliation
     if (count($pivot) > 0) {
       throw new Exception('Ya existe un caso6B para este procesos', '400');
     }
+
+    $accountsStr = $accounts->toArray();
     // deja reciduo
     $queryStr = "SELECT 
       reconciliation_local_pending.id AS localId,
@@ -828,8 +850,8 @@ class AutomaticReconciliation
       AND reconciliation_local_pending.valor_credito = reconciliation_external_pending.valor_debito
       AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
       WHERE
-      reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-      AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+      reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+      AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
       AND reconciliation_local_pending.valor_credito > 0
       GROUP BY 
       reconciliation_local_pending.id
@@ -853,6 +875,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un caso6 para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "INSERT INTO " . $pivotTable . " (source_id, target_id,`type`,`case`, process)
       SELECT 
       reconciliation_local_pending.id AS localId,
@@ -867,8 +891,8 @@ class AutomaticReconciliation
       AND reconciliation_local_pending.valor_credito = reconciliation_external_pending.valor_debito
       AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
       WHERE
-      reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-      AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+      reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+      AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
       AND reconciliation_local_pending.valor_credito > 0
       GROUP BY 
       reconciliation_local_pending.id
@@ -889,6 +913,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un caso5D para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "SELECT
         GROUP_CONCAT(reconciliation_local_pending.id) AS localId,
         reconciliation_external_pending.id AS externalId,
@@ -901,8 +927,8 @@ class AutomaticReconciliation
       AND reconciliation_local_pending.local_account = reconciliation_external_pending.local_account
       AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
       WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-      AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+      AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
       AND reconciliation_local_pending.valor_credito > 0
       AND reconciliation_external_pending.valor_debito > 0
       GROUP BY reconciliation_local_pending.referencia_1, reconciliation_external_pending.id
@@ -924,6 +950,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un caso5C para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "SELECT
         GROUP_CONCAT(reconciliation_local_pending.id) AS localId,
         reconciliation_external_pending.id AS externalId,
@@ -935,8 +963,8 @@ class AutomaticReconciliation
       AND reconciliation_local_pending.local_account = reconciliation_external_pending.local_account
       AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
       WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-      AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+      AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
       AND reconciliation_local_pending.valor_credito > 0
       AND reconciliation_external_pending.valor_debito > 0
       GROUP BY reconciliation_local_pending.referencia_1, reconciliation_external_pending.id
@@ -958,6 +986,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un caso5B para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "INSERT INTO " . $pivotTable . " (source_id, target_id,`type`,`case`, process)
       SELECT
         reconciliation_local_pending.id AS localId,
@@ -975,8 +1005,8 @@ class AutomaticReconciliation
       OR reconciliation_local_pending.referencia_2 = reconciliation_external_pending.referencia_2
       OR reconciliation_local_pending.referencia_3 = reconciliation_external_pending.referencia_2)
       WHERE
-      reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-      AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+      reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+      AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
       AND reconciliation_local_pending.valor_credito > 0";
 
     return DB::select($queryStr);
@@ -992,6 +1022,8 @@ class AutomaticReconciliation
     if (count($pivot) > 0) {
       throw new Exception('Ya existe un caso5 para este procesos', '400');
     }
+
+    $accountsStr = $accounts->toArray();
 
     $queryStr = "INSERT INTO " . $pivotTable . " (source_id, target_id,`type`,`case`, process)
       SELECT
@@ -1009,8 +1041,8 @@ class AutomaticReconciliation
       OR reconciliation_local_pending.referencia_2 = reconciliation_external_pending.referencia_2
       OR reconciliation_local_pending.referencia_3 = reconciliation_external_pending.referencia_2)
       WHERE
-      reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-      AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+      reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+      AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
       AND reconciliation_local_pending.valor_credito > 0";
 
     return DB::select($queryStr);
@@ -1037,6 +1069,8 @@ class AutomaticReconciliation
     $localValuesTable = $this->getReconciliationLocalValuesTableName($companyId);
     $pivotTable = $this->getReconciliationPivotTableName($companyId);
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "SELECT
         GROUP_CONCAT(reconciliation_local_pending.id) AS localId,
         reconciliation_external_pending.id AS externalId,
@@ -1051,8 +1085,8 @@ class AutomaticReconciliation
           OR reconciliation_local_pending.referencia_2 = reconciliation_external_pending.referencia_1
           OR reconciliation_local_pending.referencia_3 = reconciliation_external_pending.referencia_1)
       WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-        AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+        AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
         AND reconciliation_local_pending.valor_debito > 0
         GROUP BY reconciliation_external_pending.id
         HAVING vdLocal = vcExternal";
@@ -1075,6 +1109,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un NOMINA para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "INSERT INTO " . $pivotTable . " (`source_id`,`target_id`,`type`,`case`, process)
         SELECT
         reconciliation_local_pending.id AS localId,
@@ -1090,8 +1126,8 @@ class AutomaticReconciliation
           AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
           AND reconciliation_local_pending.tx_type_name = 'NOMINA'
         WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-        AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+        AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
         AND reconciliation_local_pending.valor_debito > 0
         GROUP BY reconciliation_local_pending.id, reconciliation_external_pending.id";
 
@@ -1100,6 +1136,7 @@ class AutomaticReconciliation
 
   public function case3($accounts, $companyId, $startDate, $endDate, $process)
   {
+    
     $externalValuesTable = $this->getReconciliationExternalValuesTableName($companyId);
     $localValuesTable = $this->getReconciliationLocalValuesTableName($companyId);
     $pivotTable = $this->getReconciliationPivotTableName($companyId);
@@ -1108,6 +1145,8 @@ class AutomaticReconciliation
     if (count($pivot) > 0) {
       throw new Exception('Ya existe un caso3 para este procesos', '400');
     }
+
+    $accountsStr = $accounts->toArray();
 
     $queryStr = "SELECT
       reconciliation_local_pending.id AS localId,
@@ -1124,14 +1163,14 @@ class AutomaticReconciliation
       OR reconciliation_local_pending.referencia_2 = reconciliation_external_pending.referencia_1
       OR reconciliation_local_pending.referencia_3 = reconciliation_external_pending.referencia_1)
       WHERE
-      reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-      AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+      reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+      AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
       AND reconciliation_local_pending.valor_debito > 0
       GROUP BY reconciliation_local_pending.id, reconciliation_external_pending.referencia_1
       HAVING vdLocal = vcExternal";
 
     $result = DB::select($queryStr);
-
+  
     $data = $this->oneLocalToManyExternal($result, ReconciliationService::TYPE_LE, 'CASE3', $process);
 
     return DB::table($pivotTable)->insert($data);
@@ -1148,6 +1187,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un caso2D para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "SELECT
         reconciliation_local_pending.id AS localId,
         GROUP_CONCAT(reconciliation_external_pending.id) AS externalId
@@ -1159,13 +1200,13 @@ class AutomaticReconciliation
         AND reconciliation_local_pending.valor_debito = reconciliation_external_pending.valor_credito
         AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
         WHERE
-        reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-        AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+        reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+        AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
         AND reconciliation_local_pending.valor_debito > 0
         GROUP BY reconciliation_local_pending.id";
 
     $result = DB::select($queryStr);
-
+    
     $data = $this->reduceExternalToLocal($result, ReconciliationService::TYPE_LE, 'CASE2D', $process);
 
     return DB::table($pivotTable)->insert($data);
@@ -1182,6 +1223,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un caso2C para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "INSERT INTO " . $pivotTable . " (source_id, target_id,`type`,`case`, process)
         SELECT
           reconciliation_local_pending.id AS localId,
@@ -1197,8 +1240,8 @@ class AutomaticReconciliation
           AND reconciliation_local_pending.valor_debito = reconciliation_external_pending.valor_credito
           AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
         WHERE
-          reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-          AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+          reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+          AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
           AND reconciliation_local_pending.valor_debito > 0
         GROUP BY reconciliation_local_pending.id
         HAVING COUNT(*) = 1";
@@ -1217,6 +1260,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un caso2B para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "SELECT 
       reconciliation_local_pending.id AS localId,
       GROUP_CONCAT(reconciliation_external_pending.id) AS externalId,
@@ -1229,15 +1274,15 @@ class AutomaticReconciliation
       AND reconciliation_local_pending.valor_debito = reconciliation_external_pending.valor_credito
       AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
       WHERE
-      reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-      AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+      reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+      AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
       AND reconciliation_local_pending.valor_debito > 0
       GROUP BY 
       reconciliation_local_pending.id
       HAVING COUNT(*) > 1";
 
     $result = DB::select($queryStr);
-
+  
     $data = $this->reduceExternalToLocal($result, ReconciliationService::TYPE_LE, 'CASE2B', $process);
 
     return DB::table($pivotTable)->insert($data);
@@ -1254,6 +1299,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un caso2 para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "INSERT INTO " . $pivotTable . " (source_id, target_id,`type`,`case`, process)
       SELECT 
       reconciliation_local_pending.id AS localId,
@@ -1268,8 +1315,8 @@ class AutomaticReconciliation
       AND reconciliation_local_pending.valor_debito = reconciliation_external_pending.valor_credito
       AND reconciliation_local_pending.tx_type_name = reconciliation_external_pending.tx_type_name
       WHERE
-      reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-      AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+      reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+      AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
       AND reconciliation_local_pending.valor_debito > 0
       GROUP BY 
       reconciliation_local_pending.id
@@ -1289,6 +1336,8 @@ class AutomaticReconciliation
       throw new Exception('Ya existe un caso1C para este procesos', '400');
     }
 
+    $accountsStr = $accounts->toArray();
+
     $queryStr = "SELECT
           reconciliation_local_pending.id AS localId,
           GROUP_CONCAT(reconciliation_external_pending.id) AS externalId
@@ -1304,8 +1353,8 @@ class AutomaticReconciliation
             OR reconciliation_local_pending.referencia_3 = reconciliation_external_pending.referencia_1
           )
         WHERE
-          reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-          AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+          reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+          AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
           AND reconciliation_local_pending.valor_debito > 0
           group by localId
           HAVING COUNT(*) > 1";
@@ -1328,6 +1377,7 @@ class AutomaticReconciliation
     if (count($pivot) > 0) {
       throw new Exception('Ya existe un caso1B para este procesos', '400');
     }
+  $accountsStr = $accounts->toArray();
 
     $queryStr = "INSERT INTO " . $pivotTable . " (`source_id`,`target_id`,`type`,`case`, process)
           SELECT 
@@ -1348,8 +1398,8 @@ class AutomaticReconciliation
           OR reconciliation_local_pending.referencia_3 = reconciliation_external_pending.referencia_1
         )
         WHERE 
-          reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-          AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+          reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+          AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
           AND reconciliation_local_pending.valor_debito > 0
           group by localId
           HAVING COUNT(*) = 1";
@@ -1365,12 +1415,15 @@ class AutomaticReconciliation
     $pivotTable = $this->getReconciliationPivotTableName($companyId);
 
     $pivot = DB::select("SELECT * FROM " . $pivotTable . " WHERE `case` = 'CASE1' AND process = '" . $process . "'");
+
     if (count($pivot) > 0) {
       throw new Exception('Ya existe un caso 1 para este procesos', '400');
     }
 
     $this->prepareViews($accounts, $companyId, $startDate, $endDate);
 
+    $accountsStr = $accounts->toArray();
+  
     $queryStr = "INSERT INTO " . $pivotTable . " (`source_id`,`target_id`,`type`,`case`, process)
           SELECT 
             reconciliation_local_pending.id AS localId,
@@ -1388,8 +1441,8 @@ class AutomaticReconciliation
             OR reconciliation_local_pending.referencia_2 = reconciliation_external_pending.referencia_1
             OR reconciliation_local_pending.referencia_3 = reconciliation_external_pending.referencia_1)
           WHERE 
-            reconciliation_local_pending.local_account IN (11100501 , 11100502, 11100506, 11100507)
-            AND reconciliation_local_pending.fecha_movimiento BETWEEN '2023-09-1' AND '2023-09-30'
+            reconciliation_local_pending.local_account IN (" . implode(',', $accountsStr) . ")
+            AND reconciliation_local_pending.fecha_movimiento BETWEEN '$startDate' AND '$endDate'
             AND reconciliation_local_pending.valor_debito > 0";
 
     return DB::select($queryStr);
@@ -1397,55 +1450,59 @@ class AutomaticReconciliation
 
   private function prepareViews($accounts, $companyId, $startDate, $endDate)
   {
+    $externalValuesTable = $this->getReconciliationExternalValuesTableName($companyId);
+    $localValuesTable = $this->getReconciliationLocalValuesTableName($companyId);
+    $pivotTable = $this->getReconciliationPivotTableName($companyId);
+
     $localViewQuery = "CREATE OR REPLACE VIEW `reconciliation_local_pending` AS 
       SELECT 
-        `reconciliation_local_values_2`.`id` AS `id`,
-        `reconciliation_local_values_2`.`item_id` AS `item_id`,
-        `reconciliation_local_values_2`.`tx_type_id` AS `tx_type_id`,
-        `reconciliation_local_values_2`.`tx_type_name` AS `tx_type_name`,
-        `reconciliation_local_values_2`.`fecha_movimiento` AS `fecha_movimiento`,
-        `reconciliation_local_values_2`.`descripcion` AS `descripcion`,
-        `reconciliation_local_values_2`.`local_account` AS `local_account`,
-        `reconciliation_local_values_2`.`referencia_1` AS `referencia_1`,
-        `reconciliation_local_values_2`.`referencia_2` AS `referencia_2`,
-        `reconciliation_local_values_2`.`referencia_3` AS `referencia_3`,
-        `reconciliation_local_values_2`.`valor_debito` AS `valor_debito`,
-        `reconciliation_local_values_2`.`valor_credito` AS `valor_credito`,
-        `reconciliation_local_values_2`.`valor_debito_credito` AS `valor_debito_credito`,
-        `reconciliation_local_values_2`.`tipo_registro` AS `tipo_registro`
-      FROM `reconciliation_local_values_2`
-      WHERE NOT EXISTS (SELECT 1 FROM (SELECT `reconciliation_pivot_2`.`source_id`
-        FROM `mdp`.`reconciliation_pivot_2`
+        `" . $localValuesTable . "`.`id` AS `id`,
+        `" . $localValuesTable . "`.`item_id` AS `item_id`,
+        `" . $localValuesTable . "`.`tx_type_id` AS `tx_type_id`,
+        `" . $localValuesTable . "`.`tx_type_name` AS `tx_type_name`,
+        `" . $localValuesTable . "`.`fecha_movimiento` AS `fecha_movimiento`,
+        `" . $localValuesTable . "`.`descripcion` AS `descripcion`,
+        `" . $localValuesTable . "`.`local_account` AS `local_account`,
+        `" . $localValuesTable . "`.`referencia_1` AS `referencia_1`,
+        `" . $localValuesTable . "`.`referencia_2` AS `referencia_2`,
+        `" . $localValuesTable . "`.`referencia_3` AS `referencia_3`,
+        `" . $localValuesTable . "`.`valor_debito` AS `valor_debito`,
+        `" . $localValuesTable . "`.`valor_credito` AS `valor_credito`,
+        `" . $localValuesTable . "`.`valor_debito_credito` AS `valor_debito_credito`,
+        `" . $localValuesTable . "`.`tipo_registro` AS `tipo_registro`
+      FROM `" . $localValuesTable . "`
+      WHERE NOT EXISTS (SELECT 1 FROM (SELECT `" . $pivotTable . "`.`source_id`
+        FROM `mdp`.`" . $pivotTable . "`
         WHERE TYPE IN ('LE','LL')
         UNION 
-        SELECT `reconciliation_pivot_2`.`target_id`
-        FROM `mdp`.`reconciliation_pivot_2`
-        WHERE TYPE IN ('LL','EL')) as R1 where R1.source_id = reconciliation_local_values_2.id)";
+        SELECT `" . $pivotTable . "`.`target_id`
+        FROM `mdp`.`" . $pivotTable . "`
+        WHERE TYPE IN ('LL','EL')) as R1 where R1.source_id = " . $localValuesTable . ".id)";
 
     $externalViewQuery = "CREATE OR REPLACE VIEW `reconciliation_external_pending` AS 
       SELECT 
-        `reconciliation_external_values_2`.`id` AS `id`,
-        `reconciliation_external_values_2`.`item_id` AS `item_id`,
-        `reconciliation_external_values_2`.`tx_type_id` AS `tx_type_id`,
-        `reconciliation_external_values_2`.`tx_type_name` AS `tx_type_name`,
-        `reconciliation_external_values_2`.`descripcion` AS `descripcion`,
-        `reconciliation_external_values_2`.`local_account` AS `local_account`,
-        `reconciliation_external_values_2`.`valor_credito` AS `valor_credito`,
-        `reconciliation_external_values_2`.`valor_debito` AS `valor_debito`,
-        `reconciliation_external_values_2`.`valor_debito_credito` AS `valor_debito_credito`,
-        `reconciliation_external_values_2`.`fecha_movimiento` AS `fecha_movimiento`,
-        `reconciliation_external_values_2`.`referencia_1` AS `referencia_1`,
-        `reconciliation_external_values_2`.`referencia_2` AS `referencia_2`,
-        `reconciliation_external_values_2`.`referencia_3` AS `referencia_3`
+        `" . $externalValuesTable . "`.`id` AS `id`,
+        `" . $externalValuesTable . "`.`item_id` AS `item_id`,
+        `" . $externalValuesTable . "`.`tx_type_id` AS `tx_type_id`,
+        `" . $externalValuesTable . "`.`tx_type_name` AS `tx_type_name`,
+        `" . $externalValuesTable . "`.`descripcion` AS `descripcion`,
+        `" . $externalValuesTable . "`.`local_account` AS `local_account`,
+        `" . $externalValuesTable . "`.`valor_credito` AS `valor_credito`,
+        `" . $externalValuesTable . "`.`valor_debito` AS `valor_debito`,
+        `" . $externalValuesTable . "`.`valor_debito_credito` AS `valor_debito_credito`,
+        `" . $externalValuesTable . "`.`fecha_movimiento` AS `fecha_movimiento`,
+        `" . $externalValuesTable . "`.`referencia_1` AS `referencia_1`,
+        `" . $externalValuesTable . "`.`referencia_2` AS `referencia_2`,
+        `" . $externalValuesTable . "`.`referencia_3` AS `referencia_3`
       FROM
-        `reconciliation_external_values_2`
-      WHERE NOT EXISTS (SELECT 1 FROM (SELECT `reconciliation_pivot_2`.`source_id`
-        FROM `mdp`.`reconciliation_pivot_2`
+        `" . $externalValuesTable . "`
+      WHERE NOT EXISTS (SELECT 1 FROM (SELECT `" . $pivotTable . "`.`source_id`
+        FROM `mdp`.`" . $pivotTable . "`
         WHERE TYPE IN ('EL','EE')
         UNION 
-        SELECT `reconciliation_pivot_2`.`target_id`
-        FROM `mdp`.`reconciliation_pivot_2`
-        WHERE TYPE IN ('EE','LE')) as R1 where R1.source_id = reconciliation_external_values_2.id)";
+        SELECT `" . $pivotTable . "`.`target_id`
+        FROM `mdp`.`" . $pivotTable . "`
+        WHERE TYPE IN ('EE','LE')) as R1 where R1.source_id = " . $externalValuesTable . ".id)";
 
     DB::select($localViewQuery);
     DB::select($externalViewQuery);

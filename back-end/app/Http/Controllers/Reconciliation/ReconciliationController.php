@@ -180,7 +180,6 @@ class ReconciliationController extends ApiController
 
     public function autoReconciliation(Request $request)
     {
-
         return $this->reconciliationService->autoProcess($request->process, $this->companyId);
     }
 
