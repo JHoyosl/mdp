@@ -20,6 +20,7 @@ class ReconciliationItem extends Model
 
     const STEP_UPLOADED = 'UPLOADED';
     const STEP_SET_BALANCE = 'SET_BALANCE';
+    const STEP_AUTOMATIC = 'AUTOMATIC';
     const STEP_MANUAL = 'MANUAL';
     const STEP_DONE = 'DONE';
 
